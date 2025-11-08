@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {  doApiMethod } from '../services/apiService';
+import reactIcon from '../assets/react.svg';
 
 const Varification = () => {
   let nav = useNavigate();
@@ -21,17 +22,15 @@ const Varification = () => {
   };
 
   const handleKeyDown = (event, index) => {
-    // מעבר לשדה הקודם בלחיצה על Backspace כשהשדה ריק
     if (event.key === 'Backspace' && !code[index] && index > 0) {
       document.getElementById(`input-${index - 1}`).focus();
     }
   };
 
-  // בדיקת תקינות האם כל השדות מולאו
   const isCodeComplete = code.every((digit) => digit !== '');
 
   const handleSubmit = () => {
-    const codeString = code.join(''); // חיבור הערכים למחרוזת
+    const codeString = code.join(''); 
     let _dataObg = {
       email: myEmail,
       verificationCode: codeString,
@@ -53,7 +52,6 @@ const Varification = () => {
     }
     catch (error) {
       console.log(error.response.data);
-      nav("/");
     }
   }
 
@@ -66,7 +64,7 @@ const Varification = () => {
     <>
       <div className=" container mt-5 shadow-lg p-4 d-flex flex-column text-center" style={{ width: '80%', maxWidth: '500px', backgroundColor: 'white' }}>
         <div className="row justify-content-center">
-          {/* <img src="" alt="" /> */}
+         <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
           <h1 className=''>password verification</h1>
 
           <p className="text-center mb-4 mt-2">Enter the 5-digit security code we send to : <strong>{myEmail}</strong></p>

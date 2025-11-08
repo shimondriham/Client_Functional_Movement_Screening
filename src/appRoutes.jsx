@@ -23,11 +23,11 @@ function AppRoutes() {
 
         <Route path="/" element={<LayoutClient />}>
           <Route index element={<Welcome />} />
-          <Route path="/login" element={<LogInClient />} />
-          <Route path="/logout" element={<LogoutClient />} />
           <Route path="/signup" element={<SignUpClient />} />
           <Route path="/varification" element={<Varification/>}/>
+          <Route path="/login" element={<LogInClient />} />
           <Route path="/homeClient" element={<HomeClient />} /> 
+          <Route path="/logout" element={<LogoutClient />} />
           <Route path="/*" element={<Page404 />} />
         </Route>
       </Routes>

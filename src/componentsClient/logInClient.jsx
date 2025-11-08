@@ -2,9 +2,10 @@ import React from 'react';
 import { useForm } from "react-hook-form";
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { addEmail, addIfShowNav } from '../featuers/myDetailsSlice';
-import {doApiMethod } from '../services/apiService';
+import { addEmail, addIfShowNav, addName } from '../featuers/myDetailsSlice';
+import { doApiMethod } from '../services/apiService';
 import { saveTokenLocal } from '../services/localService';
+import reactIcon from '../assets/react.svg';
 
 
 const loginClient = () => {
@@ -19,13 +20,14 @@ const loginClient = () => {
 
   const doApi = async (_dataBody) => {
     console.log(_dataBody);
-    let url =  "/users/login";
+    let url = "/users/login";
     try {
       let resp = await doApiMethod(url, "POST", _dataBody);
       console.log(resp.data);
 
       if (resp.data.token) {
         saveTokenLocal(resp.data.token);
+        dispatch(addName({ name: _dataBody.fullName }));
         dispatch(addEmail({ email: _dataBody.email }));
         dispatch(addIfShowNav({ ifShowNav: true }));
         nav("/homeClient");
@@ -53,10 +55,11 @@ const loginClient = () => {
   return (
     <div className=" container mt-5 shadow-lg p-4 d-flex flex-column text-center" style={{ width: '80%', maxWidth: '500px', backgroundColor: 'white' }}>
       <div className="row justify-content-center">
-        {/* <img src="" alt="" /> */}
+        <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
         <h3 className='m-2'>Sign in</h3>
 
         <form onSubmit={handleSubmit(onSubForm)} className="text-center">
+          
           <div className="m-2 flex-grow-1 text-start">
             <input {...emailRef} type="email" className="form-control" placeholder="Enter email" style={{ fontSize: '1rem' }} />
             {errors.email ? <small className='text-danger '>* Email invalid</small> : ""}

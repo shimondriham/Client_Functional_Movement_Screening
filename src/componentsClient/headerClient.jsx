@@ -51,6 +51,8 @@ function HeaderClient() {
         {IfShowNav ? " " :
           <button className='btn btn-info border-black ' onClick={onloginClick}>Login</button>
         }
+
+
         {IfShowNav ?
           <button className='btn btn-info border-black ' onClick={onHomeClick}>Home</button>
           : ""}

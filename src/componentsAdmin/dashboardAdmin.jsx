@@ -71,7 +71,6 @@ const DashboardAdmin = () => {
   }
 
   const toAdmin2 = (id) => {
-    console.log("_id");
     console.log(id);
     dispatch(addIdMorInfoAdmin({ idMorInfoAdmin: id }));
     nav("/admin/admin222");
@@ -81,7 +80,7 @@ const DashboardAdmin = () => {
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4 ">
         <div className="d-flex">
-          <input style={{ borderRadius: "6px" }} type="text" value={searchText} onChange={handleChange} className="d-flex justify-content-between align-items-center mb-4 " placeholder="Search Role" id="" />
+          <input style={{ borderRadius: "6px" }} type="text" value={searchText} onChange={handleChange} className="d-flex justify-content-between align-items-center mb-4 " placeholder="Search by name" id="" />
           <input style={{ color: "black" }} type="button" onClick={onSearchClick} value="Search" className="btn btn-outline-info info border-black  d-flex justify-content-between align-items-center mb-4 " stile={{ color: "black" }} />
         </div>
       </div>
@@ -90,7 +89,7 @@ const DashboardAdmin = () => {
         <thead>
           <tr>
             <th>List</th>
-            <th> Name</th>
+            <th>Name</th>
             <th>E-mail</th>
             <th>Role</th>
             <th>More Info</th>

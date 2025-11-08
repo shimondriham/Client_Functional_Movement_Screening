@@ -15,7 +15,6 @@ const Welcome = () => {
         nav("/login");
     };
     const toSignUp = () => {
-        
         nav("/SignUp");
     };
 
