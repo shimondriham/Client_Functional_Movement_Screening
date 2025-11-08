@@ -6,7 +6,7 @@ export const doApiGet = async (_url) => {
   try {
     let data = await axios.get(API_URL+_url, {
       headers: {
-        'x-api-key': localStorage["Health_Risk_Assessment"],
+        'x-api-key': localStorage["Functional_Movement_Screening"],
         'content-type': "application/json"
       }
     });
@@ -25,7 +25,7 @@ export const doApiMethod = async (_url,_method,_body) => {
         url:API_URL+_url,
         data: JSON.stringify(_body),
         headers:{
-          'x-api-key': localStorage["Health_Risk_Assessment"],
+          'x-api-key': localStorage["Functional_Movement_Screening"],
           'content-type': "application/json"
         }
       });
