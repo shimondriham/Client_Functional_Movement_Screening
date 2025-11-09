@@ -2,7 +2,7 @@
 
 function medicalIntakeForm() {
   return (
-    <div>MedicalIntakeForm</div>
+    <div>Medical Intake Form</div>
   )
 }
 
