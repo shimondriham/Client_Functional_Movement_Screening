@@ -1,9 +1,9 @@
 //import React from 'react'
 
-function performanceAnalysis() {
+function PerformanceAnalysis() {
   return (
     <div>Performace Analysis</div>
   )
 }
 
-export default performanceAnalysis
+export default PerformanceAnalysis

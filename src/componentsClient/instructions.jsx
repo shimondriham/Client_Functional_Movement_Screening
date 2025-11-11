@@ -1,9 +1,9 @@
 //import React from 'react'
 
-function instructions() {
+function Instructions() {
   return (
-    <div>instructions </div>
+    <div>Instructions </div>
   )
 }
 
-export default instructions
+export default Instructions
