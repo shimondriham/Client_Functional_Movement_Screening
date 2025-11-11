@@ -11,6 +11,15 @@ import DashboardAdmin from './componentsAdmin/dashboardAdmin';
 import DashboardAdmin222 from './componentsAdmin/dashboardAdmin222';
 import Varification from './componentsClient/varification';
 import LogoutClient from './componentsClient/logoutClient';
+import medicalIntakeForm from './componentsClient/medicalIntakeForm';
+import dashboard from './componentsClient/dashboard';
+import gameList from './componentsClient/gameList';
+import practiceList from './componentsClient/practiceList';
+import instructions from './componentsClient/instructions';
+import cameraCalibration from './componentsClient/cameraCalibration';
+import practice from './componentsClient/practice';
+import game from './componentsClient/game';
+import performanceAnalisys from './componentsClient/performanceAnalisys';
 
 function AppRoutes() {
   return (
@@ -29,6 +38,15 @@ function AppRoutes() {
           <Route path="/homeClient" element={<HomeClient />} /> 
           <Route path="/logout" element={<LogoutClient />} />
           <Route path="/*" element={<Page404 />} />
+          <Route path="/medicalIntakeForm" element={<MedicalIntakeForm />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/gameList" element={<GameList />} />
+          <Route path="/practiceList" element={<PracticeList />} />
+          <Route path="/instructions" element={<Instructions />} />
+          <Route path="/cameraCalibration" element={<CameraCalibration />} />
+          <Route path="/practice" element={<Practice />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/performanceAnalisys" element={<PerformanceAnalisys />} />
         </Route>
       </Routes>
     </BrowserRouter>
