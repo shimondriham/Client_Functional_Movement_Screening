@@ -19,7 +19,7 @@ import Instructions from './componentsClient/instructions';
 import CameraCalibration from './componentsClient/cameraCalibration';
 import Practice from './componentsClient/practice';
 import Game from './componentsClient/game';
-import PerformanceAnalisys from './componentsClient/performanceAnalisys';
+import PerformanceAnalysis from './componentsClient/performanceAnalysis';
 
 function AppRoutes() {
   return (
