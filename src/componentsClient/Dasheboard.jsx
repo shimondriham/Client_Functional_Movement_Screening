@@ -1,9 +1,9 @@
 // import React from 'react'
 
-function Dasheboard() {
+function dasheboard() {
   return (
-    <div>Dasheboard</div>
+    <div>dasheboard</div>
   )
 }
 
-export default Dasheboard
+export default dasheboard
