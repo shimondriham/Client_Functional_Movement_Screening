@@ -2,7 +2,7 @@
 
 function PracticeList() {
   return (
-    <div>Practice LIst</div>
+    <div>Practice List</div>
   )
 }
 

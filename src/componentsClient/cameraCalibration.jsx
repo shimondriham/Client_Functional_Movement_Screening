@@ -2,7 +2,7 @@
 
 function CameraCalibration() {
   return (
-    <div>CameraCalibration</div>
+    <div>Camera Calibration</div>
   )
 }
 

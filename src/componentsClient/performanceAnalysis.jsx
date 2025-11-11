@@ -2,7 +2,7 @@
 
 function PerformanceAnalysis() {
   return (
-    <div>Performace Analysis</div>
+    <div>Performance Analysis</div>
   )
 }
 
