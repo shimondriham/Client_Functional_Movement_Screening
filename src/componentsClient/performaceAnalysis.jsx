@@ -6,4 +6,4 @@ function performaceAnalysis() {
   )
 }
 
-export default practiceLIst
+export default performaceAnalysis

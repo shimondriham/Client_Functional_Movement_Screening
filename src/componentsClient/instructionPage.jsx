@@ -6,4 +6,4 @@ function instructionPage() {
   )
 }
 
-export default practiceLIst
+export default instructionPage
