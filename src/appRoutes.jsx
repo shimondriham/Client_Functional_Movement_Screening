@@ -46,7 +46,7 @@ function AppRoutes() {
           <Route path="/cameraCalibration" element={<CameraCalibration />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/game" element={<Game />} />
-          <Route path="/performanceAnalisys" element={<PerformanceAnalisys />} />
+          <Route path="/performanceAnalysis" element={<PerformanceAnalysis />} />
         </Route>
       </Routes>
     </BrowserRouter>
