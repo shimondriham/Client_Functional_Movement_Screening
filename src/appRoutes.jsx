@@ -11,15 +11,15 @@ import DashboardAdmin from './componentsAdmin/dashboardAdmin';
 import DashboardAdmin222 from './componentsAdmin/dashboardAdmin222';
 import Varification from './componentsClient/varification';
 import LogoutClient from './componentsClient/logoutClient';
-import medicalIntakeForm from './componentsClient/medicalIntakeForm';
-import dashboard from './componentsClient/dashboard';
-import gameList from './componentsClient/gameList';
-import practiceList from './componentsClient/practiceList';
-import instructions from './componentsClient/instructions';
-import cameraCalibration from './componentsClient/cameraCalibration';
-import practice from './componentsClient/practice';
-import game from './componentsClient/game';
-import performanceAnalisys from './componentsClient/performanceAnalisys';
+import MedicalIntakeForm from './componentsClient/medicalIntakeForm';
+import Dashboard from './componentsClient/dashboard';
+import GameList from './componentsClient/gameList';
+import PracticeList from './componentsClient/practiceList';
+import Instructions from './componentsClient/instructions';
+import CameraCalibration from './componentsClient/cameraCalibration';
+import Practice from './componentsClient/practice';
+import Game from './componentsClient/game';
+import PerformanceAnalisys from './componentsClient/performanceAnalisys';
 
 function AppRoutes() {
   return (
