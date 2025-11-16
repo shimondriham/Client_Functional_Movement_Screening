@@ -104,7 +104,7 @@ function Dashboard() {
         <button style={styles.circleButton}>Flexibility</button>
         <button style={styles.circleButton}>Cardio</button>
         <button style={styles.circleButton}>Relax</button>
-        <button style={styles.circleButton} onClick={handleGame}>game</button>
+        <button style={styles.circleButton} onClick={handleGame}>Game</button>
       </div>
       <button style={styles.resultBtn} onClick={handleResult}>Result</button>
     </div>
