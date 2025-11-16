@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const styles = {
@@ -60,6 +60,14 @@ function Dashboard() {
     navigate('/PerformanceAnalysis');
   };
 
+  const handleGame = () => {
+    navigate('/gameList');
+  };
+
+  const handlePhysio = () => {
+    navigate('/practiceList');
+  }
+
   return (
     <div style={styles.container}>
       {/* Home Icon placeholder */}
@@ -91,12 +99,12 @@ function Dashboard() {
       </div>
       <div style={styles.logo}>Logo</div>
       <div style={styles.circlesRow}>
-        <button style={styles.circleButton}>Physio</button>
+        <button style={styles.circleButton} onClick={handlePhysio} > Physio</button>
         <button style={styles.circleButton}>Strength</button>
         <button style={styles.circleButton}>Flexibility</button>
         <button style={styles.circleButton}>Cardio</button>
         <button style={styles.circleButton}>Relax</button>
-        <button style={styles.circleButton}>Play</button>
+        <button style={styles.circleButton} onClick={handleGame}>game</button>
       </div>
       <button style={styles.resultBtn} onClick={handleResult}>Result</button>
     </div>

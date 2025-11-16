@@ -1,6 +1,7 @@
 // import React, { useState } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const styles = {
   container: {
@@ -42,10 +43,14 @@ function Instructions () {
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
 
+  const location = useLocation();
+  const fromPage = location.state?.from;
+
   const handleContinue = () => {
-    navigate('/cameraCalibration');
+    navigate('/cameraCalibration',{state:fromPage});
   };
 
+  
   return (
     <div style={styles.container}>
       <div style={{ fontSize: 22, marginBottom: 18 }}>Logo</div>
@@ -76,6 +81,7 @@ function Instructions () {
         }}
         onClick={handleContinue}
         disabled={!checked}
+        
       >
         Continue
       </button>
