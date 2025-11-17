@@ -1,10 +1,11 @@
-// import { useState } from 'react';
-import FilterPopup from "../filterPopup";
+import { useState } from "react";
+import FilterPopup from "./FilterPopup";
+import "../styles/layout.css";
 
-function GamePage() {
+function GameList() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Mock game data - 8 games as shown in schema
+  // 8 games, as in your wireframe
   const games = Array(8)
     .fill(null)
     .map((_, index) => ({
@@ -12,65 +13,57 @@ function GamePage() {
       name: `Game ${index + 1}`,
     }));
 
-  const handleFilterClick = () => {
-    setIsFilterOpen(true);
-  };
-
-  const handleCloseFilter = () => {
-    setIsFilterOpen(false);
-  };
+  const handleFilterClick = () => setIsFilterOpen(true);
+  const handleCloseFilter = () => setIsFilterOpen(false);
 
   const handleResume = () => {
     console.log("Resume clicked");
-    // Add your resume logic here
   };
 
   const handleLunch = () => {
     console.log("Lunch clicked");
-    // Add your lunch logic here
   };
 
   return (
-    <div>
-      {/* Header Section */}
-      <div>
-        <div>
-          <div>Game list</div>
+    <div className="page-container">
+      {/* Header */}
+      <header className="page-header">
+        <div className="header-left">
+          <div className="home-icon" />
         </div>
-        <div>
-          <div>Instructions</div>
+        <div className="header-center">Logo</div>
+        <div className="header-right" />
+      </header>
+
+      {/* Filter button under home icon */}
+      <div className="top-controls">
+        <button className="outlined-btn" onClick={handleFilterClick}>
+          Filter
+        </button>
+      </div>
+
+      {/* Games grid */}
+      <main className="grid-wrapper">
+        <div className="circle-grid">
+          {games.map((game) => (
+            <button key={game.id} className="circle-btn">
+              Game
+            </button>
+          ))}
         </div>
-      </div>
+      </main>
 
-      {/* Top Icons */}
-      <div>
-        <div>Home Icon</div>
-        <div>Cart Icon</div>
-      </div>
+      {/* Bottom buttons */}
+      <footer className="footer-controls">
+        <button className="outlined-btn" onClick={handleResume}>
+          Resume
+        </button>
+        <button className="outlined-btn" onClick={handleLunch}>
+          Lunch
+        </button>
+      </footer>
 
-      {/* Filter Button */}
-      <div>
-        <button onClick={handleFilterClick}>Filter</button>
-      </div>
-
-      {/* Games Grid */}
-      <div>
-        {games.map((game) => (
-          <div key={game.id}>
-            <div>
-              <span>Game</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom Buttons */}
-      <div>
-        <button onClick={handleResume}>Resume</button>
-        <button onClick={handleLunch}>Lunch</button>
-      </div>
-
-      {/* Filter Popup */}
+      {/* Shared popup filter */}
       {isFilterOpen && (
         <FilterPopup isOpen={isFilterOpen} onClose={handleCloseFilter} />
       )}
@@ -78,4 +71,4 @@ function GamePage() {
   );
 }
 
-export default GamePage;
+export default GameList;

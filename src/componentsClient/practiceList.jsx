@@ -1,67 +1,58 @@
-// import { useState } from 'react';
-import FilterPopup from "../FilterPopup";
+import { useState } from "react";
+import FilterPopup from "./FilterPopup";
+import "../styles/layout.css";
 
 function PracticeList() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Mock practice data - 12 practices as shown in your schema
-  const practices = Array(12)
+  const practices = Array(8)
     .fill(null)
     .map((_, index) => ({
       id: index + 1,
       name: `EXE ${index + 1}`,
     }));
 
-  const handleFilterClick = () => {
-    setIsFilterOpen(true);
-  };
-
-  const handleCloseFilter = () => {
-    setIsFilterOpen(false);
-  };
-
-  const handleResume = () => {
-    console.log("Resume clicked");
-    // Add your resume logic here
-  };
-
-  const handleLunch = () => {
-    console.log("Lunch clicked");
-    // Add your lunch logic here
-  };
-
   return (
-    <div>
-      {/* Top Icon */}
-      {<div>
-        <div>Home Icon</div>
-      </div>}
+    <div className="page-container">
+      {/* Header */}
+      <header className="page-header">
+        <div className="header-left">
+          <div className="home-icon" />
+        </div>
+        <div className="header-center">Logo</div>
+        <div className="header-right" />
+      </header>
 
-      {/* Filter Button */}
-      <div>
-        <button onClick={handleFilterClick}>Filter</button>
+      {/* Filter button */}
+      <div className="top-controls">
+        <button className="outlined-btn" onClick={() => setIsFilterOpen(true)}>
+          Filter
+        </button>
       </div>
 
-      {/* Practices Grid */}
-      <div>
-        {practices.map((practice) => (
-          <div key={practice.id}>
-            <div>
-              <span>EXE</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Grid */}
+      <main className="grid-wrapper">
+        <div className="circle-grid">
+          {practices.map((practice) => (
+            <button key={practice.id} className="circle-btn">
+              EXE
+            </button>
+          ))}
+        </div>
+      </main>
 
-      {/* Bottom Buttons */}
-      <div>
-        <button onClick={handleResume}>Resume</button>
-        <button onClick={handleLunch}>Lunch</button>
-      </div>
+      {/* Footer */}
+      <footer className="footer-controls">
+        <button className="outlined-btn">Resume</button>
+        <button className="outlined-btn">Lunch</button>
+      </footer>
 
-      {/* Filter Popup */}
+      {/* Popup */}
       {isFilterOpen && (
-        <FilterPopup isOpen={isFilterOpen} onClose={handleCloseFilter} />
+        <FilterPopup
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+        />
       )}
     </div>
   );
