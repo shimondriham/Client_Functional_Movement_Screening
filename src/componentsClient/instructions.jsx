@@ -1,4 +1,3 @@
-// import React, { useState } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
@@ -15,22 +14,9 @@ const styles = {
   videoBox: {
     width: 480,
     height: 270,
-    background: '#ccc',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderRadius: 8,
-    margin: '24px 0'
-  },
-  playIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: '50%',
-    background: '#eee',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: 36
+    margin: '24px 0',
+    overflow: 'hidden'
   },
   instructions: {
     fontWeight: 'bold',
@@ -47,16 +33,22 @@ function Instructions () {
   const fromPage = location.state?.from;
 
   const handleContinue = () => {
-    navigate('/cameraCalibration',{state:fromPage});
+    navigate('/cameraCalibration', {state: fromPage});
   };
 
-  
   return (
     <div style={styles.container}>
-      <div style={{ fontSize: 22, marginBottom: 18 }}>Logo</div>
       <div style={styles.instructions}>General Instructions</div>
       <div style={styles.videoBox}>
-        <div style={styles.playIcon}>&#9654;</div>
+        <video 
+          width="480" 
+          height="270" 
+          controls
+          style={{ borderRadius: 8 }}
+        >
+          <source src="src/assets/videoplayback.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <input
@@ -81,7 +73,6 @@ function Instructions () {
         }}
         onClick={handleContinue}
         disabled={!checked}
-        
       >
         Continue
       </button>
