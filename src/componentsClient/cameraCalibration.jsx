@@ -4,11 +4,13 @@ import reactIcon from '../assets/react.svg';
 import React, { useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+
 function CameraCalibration() {
   let nav = useNavigate();
   const videoRef = useRef(null);
   const location = useLocation();
   const fromPage = location.state?.from
+
 
   const getVideo = () => {
     navigator.mediaDevices
@@ -23,33 +25,52 @@ function CameraCalibration() {
     })
   }
 
+
   useEffect(() => {
     getVideo();
+    // מונע גלילה
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    
+    return () => {
+      // מחזיר גלילה כשיוצאים מהקומפוננטה
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    };
   }, [videoRef]);
+
 
   return (
     <div style={{
-      minHeight: '100vh',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: '20px',
+      overflow: 'hidden',
+      padding: '10px',
       boxSizing: 'border-box'
     }}>
       <div className="container shadow-lg p-4 d-flex flex-column text-center" style={{ 
         width: '100%', 
         maxWidth: '800px', 
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        maxHeight: '95vh',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div className="row justify-content-center">
-          <img src={reactIcon} alt="React" style={{ width: '128px', height: '128px' }} />
+        <div className="row justify-content-center" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <h4 className='m-2'>Camera Calibration</h4>
           <video 
             ref={videoRef} 
             autoPlay 
             style={{ 
               width: '100%', 
-              height: '450px',
+              flex: 1,
+              maxHeight: 'calc(95vh - 100px)',
               border: '1px solid #ccc', 
               borderRadius: '8px',
               objectFit: 'cover',
@@ -82,5 +103,6 @@ function CameraCalibration() {
     </div>
   );
 }
+
 
 export default CameraCalibration;
