@@ -6,10 +6,8 @@ import { doApiMethod } from '../services/apiService';
 import { addName, addIfShowNav } from '../featuers/myDetailsSlice';
 
 
-// Generate height options in centimeters (140-220 cm)
 const heightOptions = Array.from({ length: 81 }, (_, i) => 140 + i);
 
-// Generate weight options in kilograms (40-150 kg)
 const weightOptions = Array.from({ length: 111 }, (_, i) => 40 + i);
 
 const fields = [
