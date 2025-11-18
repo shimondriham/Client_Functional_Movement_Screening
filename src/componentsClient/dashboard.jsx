@@ -1,5 +1,7 @@
 // import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 const styles = {
   container: {
@@ -55,58 +57,35 @@ const styles = {
 
 function Dashboard() {
   const navigate = useNavigate();
-
-  const handleResult = () => {
-    navigate('/PerformanceAnalysis');
-  };
+  const name = useSelector(state => state.myDetailsSlice?.name || 'Guest');
+  const [ifFill, setifFill] = useState(false);
 
   const handleGame = () => {
-    navigate('/gameList');
+    ifFill ? navigate('/gameList') : 
+     alert('Fill Medical Intake Form!');
+    
   };
 
   const handlePhysio = () => {
-    navigate('/practiceList');
+     ifFill ? navigate('/practiceList') :
+     alert('Fill Medical Intake Form!');
+  }
+
+  const handleComingSoon = () => {
+    alert('Coming Soon!');
   }
 
   return (
     <div style={styles.container}>
-      {/* Home Icon placeholder */}
-      <div style={styles.homeIcon}>
-        <div style={{
-          width: 46,
-          height: 60,
-          background: '#ebebeb',
-          borderRadius: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start'
-        }}>
-          <div style={{
-            width: 28,
-            height: 28,
-            background: '#cfcfcf',
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-            marginTop: 0
-          }}></div>
-          <div style={{
-            width: 28,
-            height: 26,
-            background: '#d6d6d6',
-            marginTop: -6
-          }}></div>
-        </div>
-      </div>
-      <div style={styles.logo}>Logo</div>
+      <div style={styles.logo}>Welcome -  {name}</div>
       <div style={styles.circlesRow}>
         <button style={styles.circleButton} onClick={handlePhysio} > Physio</button>
-        <button style={styles.circleButton}>Strength</button>
-        <button style={styles.circleButton}>Flexibility</button>
-        <button style={styles.circleButton}>Cardio</button>
-        <button style={styles.circleButton}>Relax</button>
+        <button style={styles.circleButton} onClick={handleComingSoon}>Strength</button>
+        <button style={styles.circleButton} onClick={handleComingSoon}>Flexibility</button>
+        <button style={styles.circleButton} onClick={handleComingSoon}>Cardio</button>
+        <button style={styles.circleButton} onClick={handleComingSoon}>Relax</button>
         <button style={styles.circleButton} onClick={handleGame}>Game</button>
       </div>
-      <button style={styles.resultBtn} onClick={handleResult}>Result</button>
     </div>
   );
 }
