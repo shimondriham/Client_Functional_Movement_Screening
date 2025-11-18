@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
-import { doApiMethod } from '../services/apiService';
+import { doApiGet, doApiMethod } from '../services/apiService';
 import { addName, addIfShowNav } from '../featuers/myDetailsSlice';
 
 
@@ -12,10 +12,10 @@ const weightOptions = Array.from({ length: 111 }, (_, i) => 40 + i);
 
 const fields = [
   {
-    name: 'birthdate',
+    name: 'dateOfBirth',
     label: 'Date of Birth',
     type: 'date',
-    rules: { 
+    rules: {
       required: 'Date of Birth is required'
     }
   },
@@ -45,37 +45,25 @@ function MedicalIntakeForm() {
 
 
   const onSubmit = async (data) => {
-    // Log the entire form data before sending
     console.log('Form Data:', data);
-
-
-    // send intake data to backend (adjust endpoint as needed)
-    setLoading(true);
+    // setLoading(true);
     setApiError('');
+    doApi(data);
+  };
+
+  const doApi = async (_data) => {
+    let url = "/users/edit";
     try {
-      // endpoint assumed - change to the real one if different
-      try {
-        const resp = await doApiMethod('/medicalIntake', 'POST', data);
-        console.log('intake resp', resp?.data);
-      } catch (apiErr) {
-        // If API endpoint doesn't exist, still allow navigation for now
-        console.warn('API call failed, but proceeding:', apiErr?.message);
+      let data = await doApiMethod(url, 'PUT', _data);
+      console.log(data);
+      if (data.status === 200) {
+        navigate('/dashboard');
       }
 
-
-      // dispatch to redux so header/navigation can show it
-      dispatch(addIfShowNav({ ifShowNav: true }));
-
-
-      // Navigate to dashboard on success
-      navigate('/dashboard');
-    }
-    catch (err) {
-      console.error(err?.response || err);
-      setApiError(err?.response?.data?.error || 'Failed to submit form.');
-    }
-    finally {
+    } catch (error) {
       setLoading(false);
+      setApiError(error?.response?.data?.error || 'Failed to submit form.');
+      console.log(error);
     }
   }
 

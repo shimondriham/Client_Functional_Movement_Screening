@@ -1,7 +1,8 @@
 // import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { doApiGet } from '../services/apiService';
 
 const styles = {
   container: {
@@ -55,20 +56,40 @@ const styles = {
   }
 };
 
+
 function Dashboard() {
   const navigate = useNavigate();
   const name = useSelector(state => state.myDetailsSlice?.name || 'Guest');
   const [ifFill, setifFill] = useState(false);
+  const [myInfo, setmyInfo] = useState({});
+
+useEffect(() => {
+  doApi()
+}, []);
+
+const doApi = async () => {
+  let url = "/users/myInfo";
+  try {
+    let data = await doApiGet(url);
+    console.log(data);
+    if (data.data.height && data.data.weight && data.data.dateOfBirth) {
+      setifFill(true);
+    }
+    setmyInfo(data.data);
+  } catch (error) {
+    console.log(error);
+  }
+}
 
   const handleGame = () => {
-    ifFill ? navigate('/gameList') : 
-     alert('Fill Medical Intake Form!');
-    
+    ifFill ? navigate('/gameList') :
+      alert('Fill Medical Intake Form!');
+
   };
 
   const handlePhysio = () => {
-     ifFill ? navigate('/practiceList') :
-     alert('Fill Medical Intake Form!');
+    ifFill ? navigate('/practiceList') :
+      alert('Fill Medical Intake Form!');
   }
 
   const handleComingSoon = () => {
