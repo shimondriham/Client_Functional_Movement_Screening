@@ -6,6 +6,12 @@ import { doApiMethod } from '../services/apiService';
 import { addName, addIfShowNav } from '../featuers/myDetailsSlice';
 
 
+// Generate height options in centimeters (140-220 cm)
+const heightOptions = Array.from({ length: 81 }, (_, i) => 140 + i);
+
+// Generate weight options in kilograms (40-150 kg)
+const weightOptions = Array.from({ length: 111 }, (_, i) => 40 + i);
+
 const fields = [
   {
     name: 'birthdate',
@@ -17,19 +23,18 @@ const fields = [
   },
   {
     name: 'height',
-    label: 'Height',
-    type: 'text',
-    inputMode: 'numeric',
-    rules: { required: 'Height is required', pattern: { value: /^\d+$/, message: 'Only numbers are allowed' } }
+    label: 'Height (cm)',
+    type: 'select',
+    options: heightOptions,
+    rules: { required: 'Height is required' }
   },
   {
     name: 'weight',
-    label: 'Weight',
-    type: 'text',
-    inputMode: 'numeric',
-    rules: { required: 'Weight is required', pattern: { value: /^\d+$/, message: 'Only numbers are allowed' } }
-  },
-  { name: 'allergies', label: 'Allergies', type: 'text', rules: { required: 'Allergies is required' } }
+    label: 'Weight (kg)',
+    type: 'select',
+    options: weightOptions,
+    rules: { required: 'Weight is required' }
+  }
 ];
 
 
@@ -78,7 +83,7 @@ function MedicalIntakeForm() {
 
 
   return (
-    <div className="container mt-3" style={{ maxWidth: 600 }}>
+    <div className="container mt-3" style={{ maxWidth: 600, paddingBottom: '300px' }}>
       <h2>Medical Intake Form</h2>
 
 
@@ -86,14 +91,29 @@ function MedicalIntakeForm() {
         {fields.map(field => (
           <div key={field.name} className="mb-3 text-start">
             <label className="form-label">{field.label}</label>
-            <input
-              {...register(field.name, field.rules)}
-              className="form-control"
-              type={field.type || 'text'}
-              inputMode={field.inputMode}
-              placeholder={field.label}
-              style={field.type === 'date' ? { direction: 'ltr', textAlign: 'left' } : {}}
-            />
+            {field.type === 'select' ? (
+              <select
+                {...register(field.name, field.rules)}
+                className="form-control"
+                size="1"
+              >
+                <option value="">Select {field.label}</option>
+                {field.options.map(option => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                {...register(field.name, field.rules)}
+                className="form-control"
+                type={field.type || 'text'}
+                inputMode={field.inputMode}
+                placeholder={field.label}
+                style={field.type === 'date' ? { direction: 'ltr', textAlign: 'left' } : {}}
+              />
+            )}
             {errors[field.name]
               ? <small className="text-danger">{errors[field.name].message || `* ${field.label} is required`}</small>
               : null}
