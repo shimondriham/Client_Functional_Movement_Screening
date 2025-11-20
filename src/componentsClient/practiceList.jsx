@@ -16,9 +16,7 @@ function PracticeList() {
     <div className="page-container">
       {/* Header */}
       <header className="page-header">
-        <div className="header-left">
-          <div className="home-icon" />
-        </div>
+        <div className="header-left"></div>
         <div className="header-center">Logo</div>
         <div className="header-right" />
       </header>

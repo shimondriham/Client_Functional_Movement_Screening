@@ -24,12 +24,12 @@
 }
 
 /* Home icon */
-.home-icon {
+/* .home-icon {
   width: 24px;
   height: 24px;
   background: lightgray;
   clip-path: polygon(50% 0%, 0% 50%, 0% 100%, 100% 100%, 100% 50%);
-}
+} */
 
 /* Filter and footer buttons */
 .outlined-btn {
