@@ -17,7 +17,10 @@ function HeaderClient() {
   const onVarifictionClick = () => nav("/varification");
   const onloginClick = () => nav("/login");
   const onAdminClick = () => nav("/Admin");
-  const onMedicalIntakeFormClick = () => nav("/medicalIntakeForm");
+  const onMedicalIntakeFormClick = () => {
+    setIsMenuOpen(false);
+    nav("/medicalIntakeForm");
+  };
   const onDashboardClick = () => nav("/dashboard");
   const onGameListClick = () => nav("/gameList");
   const onInstructionsClick = () => nav("/instructions");
@@ -50,6 +53,13 @@ function HeaderClient() {
 
           {isMenuOpen && (
             <div className="burger-dropdown">
+              <button
+                type="button"
+                className="burger-item"
+                onClick={onMedicalIntakeFormClick}
+              >
+                Medical Intake Form
+              </button>
               <button type="button" className="burger-item" onClick={onLogout}>
                 Logout
               </button>
@@ -98,12 +108,7 @@ function HeaderClient() {
             >
               Home
             </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onMedicalIntakeFormClick}
-            >
-              medicalIntakeForm
-            </button>
+
             <button
               className="btn btn-info border-black px-1 m-1"
               onClick={onDashboardClick}
