@@ -38,135 +38,152 @@ function HeaderClient() {
 
   return (
     <div className="p-2 position-relative">
-      {/* Burger in top-right – only after login */}
-      {IfShowNav && (
-        <div className="burger-menu position-absolute top-0 end-0 mt-2 me-3">
-          <button
-            type="button"
-            className="burger-btn"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-
-          {isMenuOpen && (
-            <div className="burger-dropdown">
-              <button
-                type="button"
-                className="burger-item"
-                onClick={onMedicalIntakeFormClick}
-              >
-                Medical Intake Form
-              </button>
-              <button type="button" className="burger-item" onClick={onLogout}>
-                Logout
-              </button>
-            </div>
-          )}
+      <div className="d-flex align-items-center justify-content-between">
+        {/* Logo on the left */}
+        <div className="header-logo">
+          <img
+            src="/favicon1.ico"
+            alt="Logo"
+            style={{ width: "40px", height: "40px", cursor: "pointer" }}
+            onClick={onHomeClick}
+          />
         </div>
-      )}
 
-      <div className="d-flex flex-wrap justify-content-center">
-        {/* before login */}
-        {!IfShowNav && (
-          <>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onWelcomeClick}
-            >
-              Welcom
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onSignUpClick}
-            >
-              Sign Up
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onVarifictionClick}
-            >
-              varifiction
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onloginClick}
-            >
-              Login
-            </button>
-          </>
-        )}
-
-        {/* after login (main nav buttons) */}
-        {IfShowNav && (
-          <>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onHomeClick}
-            >
-              Home
-            </button>
-
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onDashboardClick}
-            >
-              dashboard
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onGameListClick}
-            >
-              gameList
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onInstructionsClick}
-            >
-              instructions
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onCameraCalibrationClick}
-            >
-              cameraCalibration
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onGameClick}
-            >
-              game
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onPracticeListClick}
-            >
-              practiceList
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onPracticeClick}
-            >
-              practice
-            </button>
-            <button
-              className="btn btn-info border-black px-1 m-1"
-              onClick={onPerformanceAnalysisClick}
-            >
-              performanceAnalysis
-            </button>
-
-            {IsAdmin && (
+        {/* Navigation buttons in the center */}
+        <div className="d-flex flex-wrap justify-content-center flex-grow-1">
+          {/* before login */}
+          {!IfShowNav && (
+            <>
               <button
                 className="btn btn-info border-black px-1 m-1"
-                onClick={onAdminClick}
+                onClick={onWelcomeClick}
               >
-                Admin
+                Welcom
               </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onSignUpClick}
+              >
+                Sign Up
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onVarifictionClick}
+              >
+                varifiction
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onloginClick}
+              >
+                Login
+              </button>
+            </>
+          )}
+
+          {/* after login (main nav buttons) */}
+          {IfShowNav && (
+            <>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onHomeClick}
+              >
+                Home
+              </button>
+
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onDashboardClick}
+              >
+                dashboard
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onGameListClick}
+              >
+                gameList
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onInstructionsClick}
+              >
+                instructions
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onCameraCalibrationClick}
+              >
+                cameraCalibration
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onGameClick}
+              >
+                game
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onPracticeListClick}
+              >
+                practiceList
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onPracticeClick}
+              >
+                practice
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onPerformanceAnalysisClick}
+              >
+                performanceAnalysis
+              </button>
+
+              {IsAdmin && (
+                <button
+                  className="btn btn-info border-black px-1 m-1"
+                  onClick={onAdminClick}
+                >
+                  Admin
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Burger menu on the right – only after login */}
+        {IfShowNav && (
+          <div className="burger-menu">
+            <button
+              type="button"
+              className="burger-btn"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+
+            {isMenuOpen && (
+              <div className="burger-dropdown">
+                <button
+                  type="button"
+                  className="burger-item"
+                  onClick={onMedicalIntakeFormClick}
+                >
+                  Medical Intake Form
+                </button>
+                <button
+                  type="button"
+                  className="burger-item"
+                  onClick={onLogout}
+                >
+                  Logout
+                </button>
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
