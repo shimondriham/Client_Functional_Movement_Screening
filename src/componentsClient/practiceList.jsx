@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import FilterPopup from "./FilterPopup";
 import "../styles/layout.css";
 
 function PracticeList() {
+  const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const practices = Array(8)
@@ -32,7 +34,11 @@ function PracticeList() {
       <main className="grid-wrapper">
         <div className="circle-grid">
           {practices.map((practice) => (
-            <button key={practice.id} className="circle-btn">
+            <button
+              key={practice.id}
+              className="circle-btn"
+              onClick={() => navigate("/instructions")}
+            >
               EXE
             </button>
           ))}

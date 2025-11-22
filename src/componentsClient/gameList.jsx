@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import FilterPopup from "./FilterPopup";
 import "../styles/layout.css";
 
 function GameList() {
+  const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // 8 games, as in your wireframe
@@ -44,7 +46,11 @@ function GameList() {
       <main className="grid-wrapper">
         <div className="circle-grid">
           {games.map((game) => (
-            <button key={game.id} className="circle-btn">
+            <button
+              key={game.id}
+              className="circle-btn"
+              onClick={() => navigate("/instructions")}
+            >
               Game
             </button>
           ))}
