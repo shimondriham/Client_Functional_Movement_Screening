@@ -14,14 +14,13 @@ function CameraCalibration() {
   const [feedback, setFeedback] = useState('');
   const [isValid, setIsValid] = useState(false);
 
-  const poseLandmarkerRef = useRef(null); // Keep PoseLandmarker instance persistent
+  const poseLandmarkerRef = useRef(null);
 
   useEffect(() => {
     let animationId;
 
     const initPoseLandmarker = async () => {
       try {
-        // Load WASM and model
         const vision = await FilesetResolver.forVisionTasks(
           'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
         );
@@ -65,15 +64,55 @@ function CameraCalibration() {
           const now = performance.now();
           const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
 
+          const ctx = canvasRef.current.getContext('2d');
+          const videoWidth = videoRef.current.videoWidth;
+          const videoHeight = videoRef.current.videoHeight;
+
+          // Ensure canvas matches video size
+          canvasRef.current.width = videoWidth;
+          canvasRef.current.height = videoHeight;
+
+          ctx.clearRect(0, 0, videoWidth, videoHeight);
+          ctx.save(); // Save current state
+          ctx.scale(-1, 1); // Flip horizontally
+          ctx.translate(-videoWidth, 0); // Shift back after flip
           if (!results.landmarks || results.landmarks.length === 0) {
             setFeedback('No person detected');
             setIsValid(false);
           } else {
-            const landmarks = results.landmarks[0]; // First pose
-            const videoWidth = videoRef.current.videoWidth;
-            const videoHeight = videoRef.current.videoHeight;
+            const landmarks = results.landmarks[0];
 
-            // Compute bounding box
+            // Draw landmarks as dots
+            ctx.fillStyle = 'orange';
+            landmarks.forEach(point => {
+              const x = point.x * videoWidth;
+              const y = point.y * videoHeight;
+              ctx.beginPath();
+              ctx.arc(x, y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+            });
+
+            // Draw connections
+            
+
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            const connections = [
+              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
+              [12, 24], [11, 23], [23, 24], // torso
+              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31] // legs
+            ];
+            connections.forEach(([start, end]) => {
+              const p1 = landmarks[start];
+              const p2 = landmarks[end];
+              ctx.beginPath();
+              ctx.moveTo(p1.x * videoWidth, p1.y * videoHeight);
+              ctx.lineTo(p2.x * videoWidth, p2.y * videoHeight);
+              ctx.stroke();
+            });
+            ctx.restore();
+
+            // Validation logic
             const xs = landmarks.map(p => p.x);
             const ys = landmarks.map(p => p.y);
             const minX = Math.min(...xs);
@@ -81,23 +120,10 @@ function CameraCalibration() {
             const minY = Math.min(...ys);
             const maxY = Math.max(...ys);
 
-            const boxWidth = (maxX - minX) * videoWidth;
             const boxHeight = (maxY - minY) * videoHeight;
             const centerX = ((minX + maxX) / 2) * videoWidth;
             const centerY = ((minY + maxY) / 2) * videoHeight;
 
-            // Draw on canvas
-            const ctx = canvasRef.current.getContext('2d');
-            ctx.clearRect(0, 0, videoWidth, videoHeight);
-            ctx.strokeStyle = 'green';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(minX * videoWidth, minY * videoHeight, boxWidth, boxHeight);
-
-            // Draw center guide
-            ctx.strokeStyle = 'blue';
-            ctx.strokeRect(videoWidth * 0.4, videoHeight * 0.4, videoWidth * 0.2, videoHeight * 0.2);
-
-            // Check conditions
             const toleranceX = videoWidth * 0.1;
             const toleranceY = videoHeight * 0.1;
             const isCentered =
@@ -150,8 +176,6 @@ function CameraCalibration() {
             />
             <canvas
               ref={canvasRef}
-              width={640}
-              height={480}
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             />
           </div>
@@ -178,7 +202,7 @@ function CameraCalibration() {
             color: 'white',
             fontWeight: 'bold'
           }}
-          disabled={!isValid} // Disable until centered & visible
+          disabled={!isValid}
         >
           Continue
         </button>
