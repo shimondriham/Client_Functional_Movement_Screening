@@ -1,8 +1,5 @@
-// import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
-import { doApiGet } from '../services/apiService';
 
 const styles = {
   container: {
@@ -35,7 +32,16 @@ const styles = {
     alignItems: 'center',
     fontSize: 23,
     border: 'none',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    position: 'relative'
+  },
+  lockedButton: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
+  },
+  arrow: {
+    alignSelf: 'center',
+    fontSize: 28
   },
   resultBtn: {
     position: 'absolute',
@@ -49,64 +55,58 @@ const styles = {
     fontWeight: 'bold',
     cursor: 'pointer'
   },
-  homeIcon: {
+  lockIcon: {
     position: 'absolute',
-    left: 70,
-    top: 40
+    right: 18,
+    top: 18,
+    fontSize: 24
+  }
+};
+
+const games = [
+  { id: 1, name: 'Game1', locked: false },
+  { id: 2, name: 'Game2', locked: true },
+  { id: 3, name: 'Game3', locked: true },
+  { id: 4, name: 'Game4', locked: true },
+  { id: 5, name: 'Game5', locked: true },
+  { id: 6, name: 'Game6', locked: true },
+];
+
+function Dashboard() {
+  const navigate = useNavigate();
+
+  const handleGameClick = (game) => {
+  if (!game.locked) {
+    navigate('/game');
+  } else {
+    alert('You must complete Game 1 first');
   }
 };
 
 
-function Dashboard() {
-  const navigate = useNavigate();
-  const name = useSelector(state => state.myDetailsSlice?.name || 'Guest');
-  const [ifFill, setifFill] = useState(false);
-  const [myInfo, setmyInfo] = useState({});
-
-useEffect(() => {
-  doApi()
-}, []);
-
-const doApi = async () => {
-  let url = "/users/myInfo";
-  try {
-    let data = await doApiGet(url);
-    console.log(data);
-    if (data.data.height && data.data.weight && data.data.dateOfBirth) {
-      setifFill(true);
-    }
-    setmyInfo(data.data);
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-  const handleGame = () => {
-    ifFill ? navigate('/gameList') :
-      alert('Fill Medical Intake Form!');
-
-  };
-
-  const handlePhysio = () => {
-    ifFill ? navigate('/practiceList') :
-      alert('Fill Medical Intake Form!');
-  }
-
-  const handleComingSoon = () => {
-    alert('Coming Soon!');
-  }
-
   return (
     <div style={styles.container}>
-      <div style={styles.logo}>Welcome -  {name}</div>
+      <div style={styles.logo}>Logo</div>
       <div style={styles.circlesRow}>
-        <button style={styles.circleButton} onClick={handlePhysio} > Physio</button>
-        <button style={styles.circleButton} onClick={handleComingSoon}>Strength</button>
-        <button style={styles.circleButton} onClick={handleComingSoon}>Flexibility</button>
-        <button style={styles.circleButton} onClick={handleComingSoon}>Cardio</button>
-        <button style={styles.circleButton} onClick={handleComingSoon}>Relax</button>
-        <button style={styles.circleButton} onClick={handleGame}>Game</button>
+        {games.map((game, idx) => (
+          <React.Fragment key={game.id}>
+            <button
+              style={{
+                ...styles.circleButton,
+                ...(game.locked ? styles.lockedButton : {})
+              }}
+              onClick={() => handleGameClick(game)}
+            >
+              {game.name}
+              {game.locked && <span style={styles.lockIcon}></span>}
+            </button>
+            {idx < games.length - 1 && (
+              <span style={styles.arrow}>→</span>
+            )}
+          </React.Fragment>
+        ))}
       </div>
+      <button style={styles.resultBtn}>Result</button>
     </div>
   );
 }
