@@ -20,6 +20,7 @@ import CameraCalibration from './componentsClient/cameraCalibration';
 import Practice from './componentsClient/practice';
 import Game from './componentsClient/game';
 import PerformanceAnalysis from './componentsClient/performanceAnalysis';
+import PerformanceAnalysisAdmin from './componentsClient/performanceAnalysisAdmin';
 
 function AppRoutes() {
   return (
@@ -47,6 +48,7 @@ function AppRoutes() {
           <Route path="/practice" element={<Practice />} />
           <Route path="/game" element={<Game />} />
           <Route path="/performanceAnalysis" element={<PerformanceAnalysis />} />
+          <Route path="/performanceAnalysisAdmin" element={<PerformanceAnalysisAdmin />} />
         </Route>
       </Routes>
     </BrowserRouter>
