@@ -25,12 +25,9 @@ function HeaderClient() {
     nav("/medicalIntakeForm");
   };
   const onDashboardClick = () => nav("/dashboard");
-  const onGameListClick = () => nav("/gameList");
   const onInstructionsClick = () => nav("/instructions");
   const onCameraCalibrationClick = () => nav("/cameraCalibration");
   const onGameClick = () => nav("/game");
-  const onPracticeListClick = () => nav("/practiceList");
-  const onPracticeClick = () => nav("/practice");
   const onPerformanceAnalysisClick = () => nav("/performanceAnalysis");
 
   const onLogout = () => {
@@ -102,12 +99,6 @@ function HeaderClient() {
               </button>
               <button
                 className="btn btn-info border-black px-1 m-1"
-                onClick={onGameListClick}
-              >
-                gameList
-              </button>
-              <button
-                className="btn btn-info border-black px-1 m-1"
                 onClick={onInstructionsClick}
               >
                 instructions
@@ -123,18 +114,6 @@ function HeaderClient() {
                 onClick={onGameClick}
               >
                 game
-              </button>
-              <button
-                className="btn btn-info border-black px-1 m-1"
-                onClick={onPracticeListClick}
-              >
-                practiceList
-              </button>
-              <button
-                className="btn btn-info border-black px-1 m-1"
-                onClick={onPracticeClick}
-              >
-                practice
               </button>
               <button
                 className="btn btn-info border-black px-1 m-1"
