@@ -170,13 +170,15 @@ function HeaderClient() {
 
             {isMenuOpen && (
               <div className="burger-dropdown">
-                <button
-                  type="button"
-                  className="burger-item"
-                  onClick={onAdminClick}
-                >
-                  Admin
-                </button>
+                {IsAdmin && (
+                  <button
+                    type="button"
+                    className="burger-item"
+                    onClick={onAdminClick}
+                  >
+                    Admin
+                  </button>
+                )}
                 <button
                   type="button"
                   className="burger-item"
