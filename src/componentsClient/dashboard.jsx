@@ -1,4 +1,4 @@
-// import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const styles = {
@@ -32,7 +32,16 @@ const styles = {
     alignItems: 'center',
     fontSize: 23,
     border: 'none',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    position: 'relative'
+  },
+  lockedButton: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
+  },
+  arrow: {
+    alignSelf: 'center',
+    fontSize: 28
   },
   resultBtn: {
     position: 'absolute',
@@ -46,67 +55,58 @@ const styles = {
     fontWeight: 'bold',
     cursor: 'pointer'
   },
-  homeIcon: {
+  lockIcon: {
     position: 'absolute',
-    left: 70,
-    top: 40
+    right: 18,
+    top: 18,
+    fontSize: 24
   }
 };
+
+const games = [
+  { id: 1, name: 'Game1', locked: false },
+  { id: 2, name: 'Game2', locked: true },
+  { id: 3, name: 'Game3', locked: true },
+  { id: 4, name: 'Game4', locked: true },
+  { id: 5, name: 'Game5', locked: true },
+  { id: 6, name: 'Game6', locked: true },
+];
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  const handleResult = () => {
-    navigate('/PerformanceAnalysis');
-  };
-
-  const handleGame = () => {
-    navigate('/gameList');
-  };
-
-  const handlePhysio = () => {
-    navigate('/practiceList');
+  const handleGameClick = (game) => {
+  if (!game.locked) {
+    navigate('/game');
+  } else {
+    alert('You must complete Game 1 first');
   }
+};
+
 
   return (
     <div style={styles.container}>
-      {/* Home Icon placeholder */}
-      <div style={styles.homeIcon}>
-        <div style={{
-          width: 46,
-          height: 60,
-          background: '#ebebeb',
-          borderRadius: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start'
-        }}>
-          <div style={{
-            width: 28,
-            height: 28,
-            background: '#cfcfcf',
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-            marginTop: 0
-          }}></div>
-          <div style={{
-            width: 28,
-            height: 26,
-            background: '#d6d6d6',
-            marginTop: -6
-          }}></div>
-        </div>
-      </div>
       <div style={styles.logo}>Logo</div>
       <div style={styles.circlesRow}>
-        <button style={styles.circleButton} onClick={handlePhysio} > Physio</button>
-        <button style={styles.circleButton}>Strength</button>
-        <button style={styles.circleButton}>Flexibility</button>
-        <button style={styles.circleButton}>Cardio</button>
-        <button style={styles.circleButton}>Relax</button>
-        <button style={styles.circleButton} onClick={handleGame}>Game</button>
+        {games.map((game, idx) => (
+          <React.Fragment key={game.id}>
+            <button
+              style={{
+                ...styles.circleButton,
+                ...(game.locked ? styles.lockedButton : {})
+              }}
+              onClick={() => handleGameClick(game)}
+            >
+              {game.name}
+              {game.locked && <span style={styles.lockIcon}></span>}
+            </button>
+            {idx < games.length - 1 && (
+              <span style={styles.arrow}>→</span>
+            )}
+          </React.Fragment>
+        ))}
       </div>
-      <button style={styles.resultBtn} onClick={handleResult}>Result</button>
+      <button style={styles.resultBtn}>Result</button>
     </div>
   );
 }
