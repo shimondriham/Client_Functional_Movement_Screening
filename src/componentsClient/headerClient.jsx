@@ -115,15 +115,7 @@ function HeaderClient() {
               >
                 performanceAnalysis
               </button>
-
-              {IsAdmin && (
-                <button
-                  className="btn btn-info border-black px-1 m-1"
-                  onClick={onAdminClick}
-                >
-                  Admin
-                </button>
-              )}
+              
             </>
           )}
         </div>
