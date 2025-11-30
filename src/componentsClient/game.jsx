@@ -1,41 +1,66 @@
-// import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
 import React, { useRef, useEffect, useState } from 'react';
-
+import { useNavigate } from 'react-router-dom';
+import reactIcon from '../assets/react.svg'; // אם לא בשימוש, אפשר להסיר
 
 function Game() {
-  let nav = useNavigate();
+  const nav = useNavigate();
   const videoRef = useRef(null);
   const [showButton, setShowButton] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
 
   const getVideo = () => {
     navigator.mediaDevices
-      .getUserMedia({ video: {width: 1280, height: 720} })
-      .then(stream => {
-        let video = videoRef.current;
+      .getUserMedia({ video: { width: 1280, height: 720 } })
+      .then((stream) => {
+        const video = videoRef.current;
         video.srcObject = stream;
         video.play();
-    })
-    .catch(err => {
-      console.error(err);
-    })
-  }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
 
   useEffect(() => {
     getVideo();
   }, [videoRef]);
 
   return (
-    <div>
-      <video ref={videoRef} style={{width: '100%', height: '100%', objectFit: 'cover', position: 'fixed', top: 0, left: 0, zIndex: -1}} >
-      </video>
+    <div className="position-relative">
+      {/* וידאו כרקע במסך מלא, בלי אפקט מראה */}
+      <video
+        ref={videoRef}
+        className="position-fixed top-0 start-0"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: -1,
+        }}
+      />
+
+      {/* כפתור Play ממורכז עם Bootstrap */}
       {showButton && (
-        <button onClick={() => { setShowButton(false); setIsRunning(true); }} style={{ padding: '10px 20px', fontSize: '16px', borderRadius: '5px', border: 'none', backgroundColor: '#36e3d7',
-                                                                  color: 'white', fontWeight: 'bold', top: '50%', left: '50%', position: 'absolute', transform: 'translate(-50%, -50%)'}}>Play</button>
-          )}
+        <button
+          type="button"
+          className="btn fw-bold text-white position-absolute top-50 start-50 translate-middle"
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: 'none',
+            backgroundColor: '#36e3d7',
+          }}
+          onClick={() => {
+            setShowButton(false);
+            setIsRunning(true);
+          }}
+        >
+          Play
+        </button>
+      )}
     </div>
   );
-};
+}
 
 export default Game;
