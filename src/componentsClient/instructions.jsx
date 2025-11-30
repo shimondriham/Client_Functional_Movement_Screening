@@ -1,31 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    background: '#f8f8f8'
-  },
-  videoBox: {
-    width: 480,
-    height: 270,
-    borderRadius: 8,
-    margin: '24px 0',
-    overflow: 'hidden'
-  },
-  instructions: {
-    fontWeight: 'bold',
-    fontSize: 24,
-    margin: '16px 0 8px 0'
-  }
-};
-
-function Instructions () {
+function Instructions() {
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
 
@@ -33,43 +9,61 @@ function Instructions () {
   const fromPage = location.state?.from;
 
   const handleContinue = () => {
-    navigate('/cameraCalibration', {state: fromPage});
+    navigate('/cameraCalibration', { state: fromPage });
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.instructions}>General Instructions</div>
-      <div style={styles.videoBox}>
-        <video 
-          width="480" 
-          height="270" 
+    <div className="vh-100 d-flex flex-column justify-content-center align-items-center" style={{ background: '#f8f8f8' }}>
+      {/* כותרת */}
+      <div className="fw-bold" style={{ fontSize: 24, margin: '16px 0 8px 0' }}>
+        General Instructions
+      </div>
+
+      {/* וידאו – קופסה 480x270 (16:9) */}
+      <div
+        className="overflow-hidden my-3"
+        style={{ width: 480, height: 270, borderRadius: 8 }}
+      >
+        <video
+          width="480"
+          height="270"
           controls
+          className="w-100 h-100"
           style={{ borderRadius: 8 }}
         >
           <source src="src/assets/videoplayback.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+
+      {/* צ'קבוקס + טקסט בשורה */}
+      <div className="d-flex align-items-center">
         <input
+          className="form-check-input me-2"
           type="checkbox"
           checked={checked}
           onChange={e => setChecked(e.target.checked)}
-          style={{ width: 24, height: 24, marginRight: 7 }}
+          style={{ width: 24, height: 24 }}
+          id="confirmInstructions"
         />
-        <span>Confirm instructions</span>
+        <label htmlFor="confirmInstructions" className="form-check-label">
+          Confirm instructions
+        </label>
       </div>
+
+      {/* כפתור Continue – נשאר מימין אבל תוך שימוש ב-margin Bootstrap */}
       <button
+        type="button"
+        className="btn mt-3"
         style={{
           marginLeft: 700,
-          marginTop: 24,
           padding: '10px 30px',
           border: '1px solid #bbb',
           borderRadius: 6,
           background: checked ? 'white' : '#eee',
           fontSize: 18,
           color: checked ? 'black' : '#999',
-          cursor: checked ? 'pointer' : 'not-allowed'
+          cursor: checked ? 'pointer' : 'not-allowed',
         }}
         onClick={handleContinue}
         disabled={!checked}
