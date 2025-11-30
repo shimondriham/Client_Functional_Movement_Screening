@@ -14,16 +14,16 @@ const games = [
 ];
 
 function Dashboard() {
-   const myName = useSelector(state => state.myDetailsSlice.name);
+  //  const myName = useSelector(state => state.myDetailsSlice.name);
     const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
     const navigate = useNavigate();
-    const [ifD, setifD] = useState(false);
+    const [ifCompleate, setIfCompleate] = useState(false);
     const [myInfo, setmyInfo] = useState({});
     const dispatch = useDispatch();
 
     useEffect(() => {
         dispatch(addIfShowNav({ ifShowNav: true }));
-        console.log(myName);
+        // console.log(myName);
         doApi()
     }, []);
 
@@ -36,8 +36,10 @@ function Dashboard() {
             if (data.data.role == "admin") {
                 dispatch(addIsAdmin({ isAdmin: true }));
             }
-            if (data.data.dateOfBirth && data.data.height && data.data.weight && data.data.medicalConditions && data.data.equipment && data.data.workouts && data.data.timePerDay && data.data.goal && data.data.frequency && data.data.difficulty) {
-              setifD(true);
+            if (data.data.dateOfBirth && data.data.difficulty && data.data.equipment && data.data.frequency && data.data.goal && data.data.height && data.data.medical && data.data.timePerDay && data.data.weight && data.data.workouts) {
+              setIfCompleate(true);
+              console.log(true);
+              
             }
             console.log(data.data);
             
@@ -48,7 +50,7 @@ function Dashboard() {
 
 
   const handleGameClick = (game) => {
-    if (!game.locked) {
+    if (!game.locked && ifCompleate) {
       navigate('/instructions');
     } else {
       alert('You must complete Game 1 first');
@@ -80,20 +82,20 @@ function Dashboard() {
                 background: '#d6d6d6',
                 fontSize: 23,
                 border: 'none',
-                cursor: game.locked ? 'not-allowed' : 'pointer',
-                opacity: game.locked ? 0.6 : 1,
+                cursor: game.locked || !ifCompleate ? 'not-allowed' : 'pointer',
+                opacity: game.locked || !ifCompleate ? 0.6 : 1,
               }}
               onClick={() => handleGameClick(game)}
             >
               {game.name}
-              {game.locked && ifD && (
+              {/* {game.locked  && (
                 <span
                   className="position-absolute"
                   style={{ right: 18, top: 18, fontSize: 24 }}
                 >
                   🔒
                 </span>
-              )}
+              )} */}
             </button>
 
             {idx < games.length - 1 && (
