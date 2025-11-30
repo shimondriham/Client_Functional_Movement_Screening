@@ -136,10 +136,10 @@ function HeaderClient() {
 
         {/* Burger menu on the right – only after login */}
         {IfShowNav && (
-          <div className="dropstart">
+          <div className="dropend" style={{ position: "relative" }}>
             <button
               type="button"
-              className="btn btn-light dropdown-toggle"
+              className="btn btn-light border rounded"
               onClick={() => setIsMenuOpen((prev) => !prev)}
               aria-expanded={isMenuOpen}
             >
@@ -151,7 +151,20 @@ function HeaderClient() {
               </span>
             </button>
 
-            <ul className={"dropdown-menu" + (isMenuOpen ? " show" : "")}>
+            <ul
+              className={"dropdown-menu py-2 shadow-sm" + (isMenuOpen ? " show" : "")}
+              style={{
+                minWidth: 220,
+                whiteSpace: "normal",
+                zIndex: 3000,
+                position: "absolute",
+                top: "calc(100% + 6px)",
+                right: 0,
+                left: "auto",
+                padding: "8px 0",
+                borderRadius: 8,
+              }}
+            >
               {IsAdmin && (
                 <li>
                   <button className="dropdown-item" onClick={onAdminClick}>
