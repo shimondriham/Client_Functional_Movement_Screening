@@ -1,0 +1,44 @@
+.burger-btn {
+  width: 32px;
+  height: 32px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.burger-btn span {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background-color: #000;
+}
+
+.burger-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  min-width: 120px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  z-index: 1000;
+}
+
+.burger-item {
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.burger-item:hover {
+  background-color: #f5f5f5;
+}
