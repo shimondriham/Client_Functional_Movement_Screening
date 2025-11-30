@@ -76,12 +76,16 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const handleGameClick = (game) => {
-  if (!game.locked) {
-    navigate('/game');
-  } else {
-    alert('You must complete Game 1 first');
-  }
-};
+    if (!game.locked) {
+      navigate('/instructions');
+    } else {
+      alert('You must complete Game 1 first');
+    }
+  };
+
+  const handleResultClick = () => {
+    navigate('/performanceAnalysis');
+  };
 
 
   return (
@@ -106,7 +110,7 @@ function Dashboard() {
           </React.Fragment>
         ))}
       </div>
-      <button style={styles.resultBtn}>Result</button>
+      <button style={styles.resultBtn} onClick={handleResultClick}>Result</button>
     </div>
   );
 }
