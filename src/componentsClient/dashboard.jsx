@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { addIfShowNav, addIsAdmin, addName } from '../featuers/myDetailsSlice';
+import { doApiGet } from '../services/apiService';
 
 const games = [
   { id: 1, name: 'Game1', locked: false },
@@ -11,7 +14,38 @@ const games = [
 ];
 
 function Dashboard() {
-  const navigate = useNavigate();
+   const myName = useSelector(state => state.myDetailsSlice.name);
+    const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
+    const navigate = useNavigate();
+    const [ifD, setifD] = useState(false);
+    const [myInfo, setmyInfo] = useState({});
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(addIfShowNav({ ifShowNav: true }));
+        console.log(myName);
+        doApi()
+    }, []);
+
+    const doApi = async () => {
+        let url = "/users/myInfo";
+        try {
+            let data = await doApiGet(url);
+            setmyInfo(data.data);
+            dispatch(addName({ name: data.data.fullName }));
+            if (data.data.role == "admin") {
+                dispatch(addIsAdmin({ isAdmin: true }));
+            }
+            if (data.data.dateOfBirth && data.data.height && data.data.weight && data.data.medicalConditions && data.data.equipment && data.data.workouts && data.data.timePerDay && data.data.goal && data.data.frequency && data.data.difficulty) {
+              setifD(true);
+            }
+            console.log(data.data);
+            
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
   const handleGameClick = (game) => {
     if (!game.locked) {
@@ -52,7 +86,7 @@ function Dashboard() {
               onClick={() => handleGameClick(game)}
             >
               {game.name}
-              {game.locked && (
+              {game.locked && ifD && (
                 <span
                   className="position-absolute"
                   style={{ right: 18, top: 18, fontSize: 24 }}
