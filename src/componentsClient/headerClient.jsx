@@ -136,44 +136,40 @@ function HeaderClient() {
 
         {/* Burger menu on the right – only after login */}
         {IfShowNav && (
-          <div className="burger-menu">
+          <div className="dropstart">
             <button
               type="button"
-              className="burger-btn"
+              className="btn btn-light dropdown-toggle"
               onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-expanded={isMenuOpen}
             >
-              <span />
-              <span />
-              <span />
+              {/* use three small bars visually via Bootstrap utilities */}
+              <span className="d-block">
+                <span className="d-block bg-dark rounded mb-1" style={{ width: 18, height: 2 }} />
+                <span className="d-block bg-dark rounded mb-1" style={{ width: 18, height: 2 }} />
+                <span className="d-block bg-dark rounded" style={{ width: 18, height: 2 }} />
+              </span>
             </button>
 
-            {isMenuOpen && (
-              <div className="burger-dropdown">
-                {IsAdmin && (
-                  <button
-                    type="button"
-                    className="burger-item"
-                    onClick={onAdminClick}
-                  >
+            <ul className={"dropdown-menu" + (isMenuOpen ? " show" : "")}>
+              {IsAdmin && (
+                <li>
+                  <button className="dropdown-item" onClick={onAdminClick}>
                     Admin
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="burger-item"
-                  onClick={onMedicalIntakeFormClick}
-                >
+                </li>
+              )}
+              <li>
+                <button className="dropdown-item" onClick={onMedicalIntakeFormClick}>
                   Medical Intake Form
                 </button>
-                <button
-                  type="button"
-                  className="burger-item"
-                  onClick={onLogout}
-                >
+              </li>
+              <li>
+                <button className="dropdown-item" onClick={onLogout}>
                   Logout
                 </button>
-              </div>
-            )}
+              </li>
+            </ul>
           </div>
         )}
       </div>

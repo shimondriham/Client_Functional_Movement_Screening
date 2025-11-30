@@ -13,8 +13,6 @@ import Varification from './componentsClient/varification';
 import LogoutClient from './componentsClient/logoutClient';
 import MedicalIntakeForm from './componentsClient/medicalIntakeForm';
 import Dashboard from './componentsClient/dashboard';
-import GameList from './componentsClient/gameList';
-import PracticeList from './componentsClient/practiceList';
 import Instructions from './componentsClient/instructions';
 import CameraCalibration from './componentsClient/cameraCalibration';
 import Practice from './componentsClient/practice';
@@ -41,8 +39,8 @@ function AppRoutes() {
           <Route path="/*" element={<Page404 />} />
           <Route path="/medicalIntakeForm" element={<MedicalIntakeForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/gameList" element={<GameList />} />
-          <Route path="/practiceList" element={<PracticeList />} />
+          <Route path="/gameList" element={<Game />} />
+          <Route path="/practiceList" element={<Practice />} />
           <Route path="/instructions" element={<Instructions />} />
           <Route path="/cameraCalibration" element={<CameraCalibration />} />
           <Route path="/practice" element={<Practice />} />
