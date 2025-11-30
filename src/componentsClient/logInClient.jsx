@@ -30,7 +30,7 @@ const loginClient = () => {
         dispatch(addName({ name: _dataBody.fullName }));
         dispatch(addEmail({ email: _dataBody.email }));
         dispatch(addIfShowNav({ ifShowNav: true }));
-        nav("/homeClient");
+        nav("/dashboard");
       }
     }
     catch (error) {

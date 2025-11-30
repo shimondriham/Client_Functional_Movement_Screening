@@ -6,7 +6,7 @@ import LogInClient from './componentsClient/logInClient'
 import SignUpClient from './componentsClient/signUpClient'
 import Page404 from './componentsClient/Page404'
 import Welcome from './componentsClient/welcome';
-import HomeClient from './componentsClient/homeClient';
+// import HomeClient from './componentsClient/homeClient';
 import DashboardAdmin from './componentsAdmin/dashboardAdmin';
 import DashboardAdmin222 from './componentsAdmin/dashboardAdmin222';
 import Varification from './componentsClient/varification';
@@ -34,7 +34,7 @@ function AppRoutes() {
           <Route path="/signup" element={<SignUpClient />} />
           <Route path="/varification" element={<Varification/>}/>
           <Route path="/login" element={<LogInClient />} />
-          <Route path="/homeClient" element={<HomeClient />} /> 
+          {/* <Route path="/homeClient" element={<HomeClient />} />  */}
           <Route path="/logout" element={<LogoutClient />} />
           <Route path="/*" element={<Page404 />} />
           <Route path="/medicalIntakeForm" element={<MedicalIntakeForm />} />

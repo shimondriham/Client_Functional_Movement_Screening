@@ -12,7 +12,6 @@ function HeaderClient() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // burger state
 
   const onWelcomeClick = () => nav("/");
-  const onHomeClick = () => nav("/homeClient");
   const onSignUpClick = () => nav("/signup");
   const onVarifictionClick = () => nav("/varification");
   const onloginClick = () => nav("/login");
@@ -40,14 +39,14 @@ function HeaderClient() {
     <div className="p-2 position-relative">
       <div className="d-flex align-items-center justify-content-between">
         {/* Logo on the left */}
-        <div className="header-logo">
+        {/* <div className="header-logo">
           <img
             src="/favicon1.ico"
             alt="Logo"
             style={{ width: "40px", height: "40px", cursor: "pointer" }}
             onClick={onHomeClick}
           />
-        </div>
+        </div> */}
 
         {/* Navigation buttons in the center */}
         <div className="d-flex flex-wrap justify-content-center flex-grow-1">
@@ -84,12 +83,7 @@ function HeaderClient() {
           {/* after login (main nav buttons) */}
           {IfShowNav && (
             <>
-              <button
-                className="btn btn-info border-black px-1 m-1"
-                onClick={onHomeClick}
-              >
-                Home
-              </button>
+         
 
               <button
                 className="btn btn-info border-black px-1 m-1"

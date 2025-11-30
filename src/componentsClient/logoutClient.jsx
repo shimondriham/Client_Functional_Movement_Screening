@@ -15,7 +15,7 @@ function LogoutClient() {
       nav("/");
       window.location.reload();
     }
-    nav("/homeClient");
+    nav("/dashboard");
   }, [])
 
   return (
