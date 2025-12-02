@@ -82,8 +82,6 @@ function CameraCalibration() {
             setIsValid(false);
           } else {
             const landmarks = results.landmarks[0];
-
-            // Draw landmarks as dots
             ctx.fillStyle = 'orange';
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
@@ -91,10 +89,7 @@ function CameraCalibration() {
               ctx.beginPath();
               ctx.arc(x, y, 5, 0, 2 * Math.PI);
               ctx.fill();
-            });
-
-            // Draw connections
-            
+            });            
 
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 2;
@@ -152,17 +147,36 @@ function CameraCalibration() {
     };
   }, []);
 
+  
+  
+const stopCamera = () => {
+  try {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  } catch (err) {
+    console.warn('Error stopping camera:', err);
+    }
+};
+
+
+
   return (
     <div>
       <div
         className="container mt-5 shadow-lg p-4 d-flex flex-column text-center"
-        style={{ width: '80%', maxWidth: '500px', backgroundColor: 'white' }}
+        style={{ width: '95%', maxWidth: '900px', height: '90vh', backgroundColor: 'white' }}
       >
         <div className="row justify-content-center">
           <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
           <h4 className="m-2">Camera Calibration</h4>
-
-          {/* Video + Canvas Overlay */}
           <div style={{ position: 'relative', width: '100%' }}>
             <video
               ref={videoRef}
@@ -180,16 +194,12 @@ function CameraCalibration() {
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             />
           </div>
-
-          {/* Feedback */}
           <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
         </div>
       </div>
-
-      {/* Continue Button */}
       <div>
         <button
-          onClick={() => nav('/' + fromPage)}
+          onClick={() => {stopCamera(); nav('/' + fromPage)}}
           style={{
             width: '6%',
             maxWidth: '500px',
