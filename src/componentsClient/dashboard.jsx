@@ -1,67 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    background: '#f8f8f8'
-  },
-  logo: {
-    fontSize: 24,
-    textAlign: 'center',
-    margin: '32px 0 40px 0'
-  },
-  circlesRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 40,
-    margin: '40px 0'
-  },
-  circleButton: {
-    width: 100,
-    height: 100,
-    borderRadius: '50%',
-    background: '#d6d6d6',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: 23,
-    border: 'none',
-    cursor: 'pointer',
-    position: 'relative'
-  },
-  lockedButton: {
-    opacity: 0.6,
-    cursor: 'not-allowed'
-  },
-  arrow: {
-    alignSelf: 'center',
-    fontSize: 28
-  },
-  resultBtn: {
-    position: 'absolute',
-    bottom: 50,
-    right: 80,
-    padding: '18px 40px',
-    fontSize: 22,
-    borderRadius: 8,
-    background: 'white',
-    border: '3px solid #cfcfcf',
-    fontWeight: 'bold',
-    cursor: 'pointer'
-  },
-  lockIcon: {
-    position: 'absolute',
-    right: 18,
-    top: 18,
-    fontSize: 24
-  }
-};
+import { addIfShowNav, addIsAdmin, addName } from '../featuers/myDetailsSlice';
+import { doApiGet } from '../services/apiService';
 
 const games = [
   { id: 1, name: 'Game1', locked: false },
@@ -73,40 +14,115 @@ const games = [
 ];
 
 function Dashboard() {
-  const navigate = useNavigate();
+  //  const myName = useSelector(state => state.myDetailsSlice.name);
+    const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
+    const navigate = useNavigate();
+    const [ifCompleate, setIfCompleate] = useState(false);
+    const [myInfo, setmyInfo] = useState({});
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(addIfShowNav({ ifShowNav: true }));
+        // console.log(myName);
+        doApi()
+    }, []);
+
+    const doApi = async () => {
+        let url = "/users/myInfo";
+        try {
+            let data = await doApiGet(url);
+            setmyInfo(data.data);
+            dispatch(addName({ name: data.data.fullName }));
+            if (data.data.role == "admin") {
+                dispatch(addIsAdmin({ isAdmin: true }));
+            }
+            if (data.data.dateOfBirth && data.data.difficulty && data.data.equipment && data.data.frequency && data.data.goal && data.data.height && data.data.medical && data.data.timePerDay && data.data.weight && data.data.workouts) {
+              setIfCompleate(true);
+              console.log(true);
+              
+            }
+            console.log(data.data);
+            
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
   const handleGameClick = (game) => {
-  if (!game.locked) {
-    navigate('/game');
-  } else {
-    alert('You must complete Game 1 first');
-  }
-};
+    if (!game.locked && ifCompleate) {
+      navigate('/instructions');
+    } else {
+      alert('You must complete Game 1 first');
+    }
+  };
 
+  const handleResultClick = () => {
+    navigate('/performanceAnalysis');
+  };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.logo}>Logo</div>
-      <div style={styles.circlesRow}>
+    <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: '#f8f8f8' }}>
+      {/* Logo */}
+      <div className="text-center my-4" style={{ fontSize: 24 }}>
+        Logo
+      </div>
+
+      {/* Circles row */}
+      <div className="d-flex justify-content-center align-items-center my-4 gap-4">
         {games.map((game, idx) => (
           <React.Fragment key={game.id}>
             <button
+              type="button"
+              className="btn d-flex justify-content-center align-items-center position-relative"
               style={{
-                ...styles.circleButton,
-                ...(game.locked ? styles.lockedButton : {})
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                background: '#d6d6d6',
+                fontSize: 23,
+                border: 'none',
+                cursor: game.locked || !ifCompleate ? 'not-allowed' : 'pointer',
+                opacity: game.locked || !ifCompleate ? 0.6 : 1,
               }}
               onClick={() => handleGameClick(game)}
             >
               {game.name}
-              {game.locked && <span style={styles.lockIcon}></span>}
+              {/* {game.locked  && (
+                <span
+                  className="position-absolute"
+                  style={{ right: 18, top: 18, fontSize: 24 }}
+                >
+                  🔒
+                </span>
+              )} */}
             </button>
+
             {idx < games.length - 1 && (
-              <span style={styles.arrow}>→</span>
+              <span style={{ fontSize: 28 }}>→</span>
             )}
           </React.Fragment>
         ))}
       </div>
-      <button style={styles.resultBtn}>Result</button>
+
+      {/* Result button fixed bottom-right */}
+      <button
+        type="button"
+        onClick={handleResultClick}
+        className="btn fw-bold position-fixed"
+        style={{
+          bottom: 50,
+          right: 80,
+          padding: '18px 40px',
+          fontSize: 22,
+          borderRadius: 8,
+          background: 'white',
+          border: '3px solid #cfcfcf',
+          cursor: 'pointer',
+        }}
+      >
+        Result
+      </button>
     </div>
   );
 }

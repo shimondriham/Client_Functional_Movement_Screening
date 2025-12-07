@@ -6,15 +6,13 @@ import LogInClient from './componentsClient/logInClient'
 import SignUpClient from './componentsClient/signUpClient'
 import Page404 from './componentsClient/Page404'
 import Welcome from './componentsClient/welcome';
-import HomeClient from './componentsClient/homeClient';
+// import HomeClient from './componentsClient/homeClient';
 import DashboardAdmin from './componentsAdmin/dashboardAdmin';
 import DashboardAdmin222 from './componentsAdmin/dashboardAdmin222';
 import Varification from './componentsClient/varification';
 import LogoutClient from './componentsClient/logoutClient';
 import MedicalIntakeForm from './componentsClient/medicalIntakeForm';
 import Dashboard from './componentsClient/dashboard';
-import GameList from './componentsClient/gameList';
-import PracticeList from './componentsClient/practiceList';
 import Instructions from './componentsClient/instructions';
 import CameraCalibration from './componentsClient/cameraCalibration';
 import Practice from './componentsClient/practice';
@@ -36,13 +34,13 @@ function AppRoutes() {
           <Route path="/signup" element={<SignUpClient />} />
           <Route path="/varification" element={<Varification/>}/>
           <Route path="/login" element={<LogInClient />} />
-          <Route path="/homeClient" element={<HomeClient />} /> 
+          {/* <Route path="/homeClient" element={<HomeClient />} />  */}
           <Route path="/logout" element={<LogoutClient />} />
           <Route path="/*" element={<Page404 />} />
           <Route path="/medicalIntakeForm" element={<MedicalIntakeForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/gameList" element={<GameList />} />
-          <Route path="/practiceList" element={<PracticeList />} />
+          <Route path="/gameList" element={<Game />} />
+          <Route path="/practiceList" element={<Practice />} />
           <Route path="/instructions" element={<Instructions />} />
           <Route path="/cameraCalibration" element={<CameraCalibration />} />
           <Route path="/practice" element={<Practice />} />

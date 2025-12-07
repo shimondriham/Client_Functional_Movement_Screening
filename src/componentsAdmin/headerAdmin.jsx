@@ -5,7 +5,7 @@ function HeaderAdmin() {
   let nav = useNavigate()
 
   const onHomeClick = () => {
-    nav("/homeClient");
+    nav("/dashboard");
   }
   const onDashboardAdminClick = () => {
     nav("/admin");
