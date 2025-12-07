@@ -185,24 +185,33 @@ function Game() {
       className="position-relative"
       style={{ width: "100%", height: "100vh" }}
     >
-      {/* Camera Feed - Bottom Layer */}
+      {/* Camera Feed - Top Layer */}
       <video
         ref={cameraVideoRef}
+        autoPlay
+        playsInline
+        muted
         className="position-fixed top-0 start-0"
         style={{
           width: "100%",
           height: "100%",
           objectFit: "cover",
           zIndex: 10,
+          transform: "scaleX(-1)",
         }}
       />
 
-      {/* Hidden Canvas for Movement Detection */}
+      {/* Canvas for Pose Drawing - Overlay */}
       <canvas
         ref={canvasRef}
-        style={{ display: "none" }}
-        width={1280}
-        height={720}
+        className="position-fixed top-0 start-0"
+        style={{
+          width: "100%",
+          height: "100%",
+          zIndex: 11,
+        }}
+        width={640}
+        height={480}
       />
 
       {/* Reference Video - Background Layer */}
