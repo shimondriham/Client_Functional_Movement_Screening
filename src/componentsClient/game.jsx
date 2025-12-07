@@ -105,7 +105,7 @@ function Game() {
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          zIndex: 1,
+          zIndex: 10,
         }}
       />
 
@@ -126,13 +126,10 @@ function Game() {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: "60%",
-            height: "60%",
-            zIndex: 10,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-            borderRadius: "10px",
-            objectFit: "contain",
-            boxShadow: "0 0 20px rgba(255, 255, 255, 0.2)",
+            width: "100%",
+            height: "100%",
+            zIndex: 1,
+            objectFit: "cover",
           }}
           controls
           loop
