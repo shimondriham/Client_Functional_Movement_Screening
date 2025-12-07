@@ -13,7 +13,7 @@ function Game() {
   const canvasRef = useRef(null);
 
   const [feedback, setFeedback] = useState('');
-  const [isValid, setIsValid] = useState(false);
+  const isValid = useRef(false);
 
   const poseLandmarkerRef = useRef(null);
 
@@ -73,14 +73,12 @@ function Game() {
 
           if (!results.landmarks || results.landmarks.length === 0) {
             setFeedback('No person detected');
-            setIsValid(false);
           } else {
             const landmarks = results.landmarks[0];
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
               const y = point.y * videoHeight;
             });            
-
             const connections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
               [12, 24], [11, 23], [23, 24], // torso
@@ -95,28 +93,13 @@ function Game() {
                 p13Y.current = p2.y;
               }
             });
-
-            const xs = landmarks.map(p => p.x);
-            const ys = landmarks.map(p => p.y);
-            const minX = Math.min(...xs);
-            const maxX = Math.max(...xs);
-            const minY = Math.min(...ys);
-            const maxY = Math.max(...ys);
-
-            const boxHeight = (maxY - minY) * videoHeight;
-            const centerX = ((minX + maxX) / 2) * videoWidth;
-            const centerY = ((minY + maxY) / 2) * videoHeight;
-           
-            const toleranceX = videoWidth * 0.1;
-            const toleranceY = videoHeight * 0.1;
             
             const isAboveShoulder =
               p13Y.current < p11Y.current;
-              const isVisible = boxHeight > videoHeight * 0.6 && boxHeight < videoHeight * 0.95;
-
-            const valid = isAboveShoulder && isVisible;
-            setIsValid(valid);
-
+            
+            if(!isValid.current)
+              isValid.current = isAboveShoulder;
+            
             if (!isAboveShoulder) setFeedback('Raise your left hand higher');
             else setFeedback('Perfect!');
           }
@@ -209,46 +192,3 @@ const stopCamera = () => {
 }
 
 export default Game;
-
-
-// // import React from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import reactIcon from '../assets/react.svg';
-// import React, { useRef, useEffect, useState } from 'react';
-
-
-// function Game() {
-//   let nav = useNavigate();
-//   const videoRef = useRef(null);
-//   const [showButton, setShowButton] = useState(true);
-
-//   const getVideo = () => {
-//     navigator.mediaDevices
-//       .getUserMedia({ video: {width: 1280, height: 720} })
-//       .then(stream => {
-//         let video = videoRef.current;
-//         video.srcObject = stream;
-//         video.play();
-//     })
-//     .catch(err => {
-//       console.error(err);
-//     })
-//   }
-
-//   useEffect(() => {
-//     getVideo();
-//   }, [videoRef]);
-
-//   return (
-//     <div>
-//       <video ref={videoRef} style={{width: '100%', height: '100%', objectFit: 'cover', position: 'fixed', top: 0, left: 0, zIndex: -1}} >
-//       </video>
-//       {showButton && (
-//         <button onClick={() => { setShowButton(false); setIsRunning(true); }} style={{ padding: '10px 20px', fontSize: '16px', borderRadius: '5px', border: 'none', backgroundColor: '#36e3d7',
-//                                                                   color: 'white', fontWeight: 'bold', top: '50%', left: '50%', position: 'absolute', transform: 'translate(-50%, -50%)'}}>Play</button>
-//           )}
-//     </div>
-//   );
-// };
-
-// export default Game;

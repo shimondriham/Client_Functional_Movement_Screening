@@ -12,7 +12,7 @@ function CameraCalibration() {
   const canvasRef = useRef(null);
 
   const [feedback, setFeedback] = useState('');
-  const [isValid, setIsValid] = useState(false);
+  const isValid = useRef(false);
 
   const poseLandmarkerRef = useRef(null);
 
@@ -79,7 +79,6 @@ function CameraCalibration() {
           ctx.translate(-videoWidth, 0); // Shift back after flip
           if (!results.landmarks || results.landmarks.length === 0) {
             setFeedback('No person detected');
-            setIsValid(false);
           } else {
             const landmarks = results.landmarks[0];
             ctx.fillStyle = 'orange';
@@ -127,8 +126,8 @@ function CameraCalibration() {
               Math.abs(centerY - videoHeight / 2) < toleranceY;
             const isVisible = boxHeight > videoHeight * 0.6 && boxHeight < videoHeight * 0.95;
 
-            const valid = isCentered && isVisible;
-            setIsValid(valid);
+            if(!isValid.current)
+              isValid.current = isCentered && isVisible;
 
             if (!isCentered) setFeedback('Move to center');
             else if (!isVisible) setFeedback('Adjust distance');
