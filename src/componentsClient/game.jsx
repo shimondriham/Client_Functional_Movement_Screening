@@ -10,7 +10,6 @@ function Game() {
   const [showButton, setShowButton] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [score, setScore] = useState(0);
-  const [gameTime, setGameTime] = useState(0);
   const [movementDetected, setMovementDetected] = useState(false);
 
   // Get camera feed
@@ -31,17 +30,6 @@ function Game() {
   useEffect(() => {
     getVideo();
   }, [cameraVideoRef]);
-
-  // Game timer
-  useEffect(() => {
-    let interval;
-    if (isRunning) {
-      interval = setInterval(() => {
-        setGameTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isRunning]);
 
   // Movement detection (basic pixel difference detection)
   useEffect(() => {
@@ -101,7 +89,6 @@ function Game() {
     setIsRunning(false);
     setShowButton(true);
     setScore(0);
-    setGameTime(0);
   };
 
   return (
@@ -150,12 +137,12 @@ function Game() {
           loop
         >
           {/* Add your reference video source */}
-          <source src="/reference-video.mp4" type="video/mp4" />
+          <source src="/assets/videoplayback.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       )}
 
-      {/* Score and Time Display */}
+      {/* Score Display */}
       {isRunning && (
         <div
           style={{
@@ -172,7 +159,6 @@ function Game() {
           }}
         >
           <div>Score: {score}</div>
-          <div>Time: {gameTime}s</div>
         </div>
       )}
 
