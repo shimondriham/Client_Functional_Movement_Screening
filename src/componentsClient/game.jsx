@@ -48,6 +48,7 @@ function Game() {
           numPoses: 1,
         }
       );
+      console.log("PoseLandmarker initialized");
     } catch (error) {
       console.error("Error initializing PoseLandmarker:", error);
     }
@@ -58,8 +59,11 @@ function Game() {
       .getUserMedia({ video: { width: 640, height: 480 } })
       .then((stream) => {
         const video = videoRef.current;
-        video.srcObject = stream;
-        video.play();
+        if (video) {
+          video.srcObject = stream;
+          video.play();
+          console.log("Camera started");
+        }
       })
       .catch((err) => {
         console.error("Camera access error:", err);
@@ -67,8 +71,10 @@ function Game() {
   };
 
   const startGame = () => {
+    console.log("Starting game...");
     if (backgroundVideoRef.current) {
       backgroundVideoRef.current.play();
+      console.log("Background video playing");
     }
     processFrames();
   };
@@ -82,99 +88,102 @@ function Game() {
         return;
       }
 
-      if (poseLandmarkerRef.current && videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+
+      if (poseLandmarkerRef.current && video && canvas && video.readyState >= 2) {
         const now = performance.now();
-        const results = poseLandmarkerRef.current.detectForVideo(
-          videoRef.current,
-          now
-        );
-
-        const ctx = canvasRef.current.getContext("2d");
-        const canvas = canvasRef.current;
         
-        // Set canvas size to match window
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        try {
+          const results = poseLandmarkerRef.current.detectForVideo(video, now);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const ctx = canvas.getContext("2d");
+          
+          // Set canvas size to match window
+          if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+          }
 
-        // Draw the mirrored camera feed
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        
-        // Calculate dimensions to maintain aspect ratio
-        const videoAspect = videoRef.current.videoWidth / videoRef.current.videoHeight;
-        const canvasAspect = canvas.width / canvas.height;
-        
-        let drawWidth, drawHeight, offsetX, offsetY;
-        
-        if (canvasAspect > videoAspect) {
-          drawHeight = canvas.height;
-          drawWidth = drawHeight * videoAspect;
-          offsetX = (canvas.width - drawWidth) / 2;
-          offsetY = 0;
-        } else {
-          drawWidth = canvas.width;
-          drawHeight = drawWidth / videoAspect;
-          offsetX = 0;
-          offsetY = (canvas.height - drawHeight) / 2;
-        }
+          // Clear canvas with transparency
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.drawImage(
-          videoRef.current,
-          offsetX,
-          offsetY,
-          drawWidth,
-          drawHeight
-        );
+          // Only draw if person detected
+          if (results.landmarks && results.landmarks.length > 0) {
+            const landmarks = results.landmarks[0];
 
-        ctx.restore();
-
-        // Draw skeleton if person detected
-        if (results.landmarks && results.landmarks.length > 0) {
-          const landmarks = results.landmarks[0];
-
-          ctx.save();
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-
-          // Draw connections
-          ctx.strokeStyle = "rgba(54, 227, 215, 0.8)";
-          ctx.lineWidth = 4;
-          const connections = [
-            [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
-            [12, 24], [11, 23], [23, 24],
-            [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31],
-          ];
-
-          connections.forEach(([start, end]) => {
-            const p1 = landmarks[start];
-            const p2 = landmarks[end];
+            // Calculate dimensions to maintain aspect ratio and center the feed
+            const videoAspect = video.videoWidth / video.videoHeight;
+            const canvasAspect = canvas.width / canvas.height;
             
-            const x1 = offsetX + p1.x * drawWidth;
-            const y1 = offsetY + p1.y * drawHeight;
-            const x2 = offsetX + p2.x * drawWidth;
-            const y2 = offsetY + p2.y * drawHeight;
+            let drawWidth, drawHeight, offsetX, offsetY;
             
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-          });
+            if (canvasAspect > videoAspect) {
+              drawHeight = canvas.height;
+              drawWidth = drawHeight * videoAspect;
+              offsetX = (canvas.width - drawWidth) / 2;
+              offsetY = 0;
+            } else {
+              drawWidth = canvas.width;
+              drawHeight = drawWidth / videoAspect;
+              offsetX = 0;
+              offsetY = (canvas.height - drawHeight) / 2;
+            }
 
-          // Draw points
-          ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
-          landmarks.forEach((point) => {
-            const x = offsetX + point.x * drawWidth;
-            const y = offsetY + point.y * drawHeight;
+            ctx.save();
             
-            ctx.beginPath();
-            ctx.arc(x, y, 6, 0, 2 * Math.PI);
-            ctx.fill();
-          });
+            // Mirror the entire canvas
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
 
-          ctx.restore();
+            // Draw the camera feed
+            ctx.drawImage(
+              video,
+              offsetX,
+              offsetY,
+              drawWidth,
+              drawHeight
+            );
+
+            // Draw skeleton connections
+            ctx.strokeStyle = "rgba(54, 227, 215, 0.8)";
+            ctx.lineWidth = 4;
+            const connections = [
+              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
+              [12, 24], [11, 23], [23, 24],
+              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31],
+            ];
+
+            connections.forEach(([start, end]) => {
+              const p1 = landmarks[start];
+              const p2 = landmarks[end];
+              
+              const x1 = offsetX + p1.x * drawWidth;
+              const y1 = offsetY + p1.y * drawHeight;
+              const x2 = offsetX + p2.x * drawWidth;
+              const y2 = offsetY + p2.y * drawHeight;
+              
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.stroke();
+            });
+
+            // Draw skeleton points
+            ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
+            landmarks.forEach((point) => {
+              const x = offsetX + point.x * drawWidth;
+              const y = offsetY + point.y * drawHeight;
+              
+              ctx.beginPath();
+              ctx.arc(x, y, 6, 0, 2 * Math.PI);
+              ctx.fill();
+            });
+
+            ctx.restore();
+          }
+        } catch (error) {
+          console.error("Error processing frame:", error);
         }
       }
 
@@ -185,7 +194,7 @@ function Game() {
   };
 
   return (
-    <div className="position-relative" style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div className="position-relative" style={{ width: "100vw", height: "100vh", overflow: "hidden", backgroundColor: "#000" }}>
       {/* Background Video Layer (Layer 1) */}
       <video
         ref={backgroundVideoRef}
@@ -193,7 +202,7 @@ function Game() {
         style={{
           width: "100%",
           height: "100%",
-          objectFit: "cover",
+          objectFit: "contain",
           zIndex: 1,
         }}
         loop
@@ -219,6 +228,7 @@ function Game() {
           width: "100%",
           height: "100%",
           zIndex: 2,
+          pointerEvents: "none",
         }}
       />
 
@@ -243,18 +253,23 @@ function Game() {
               setIsRunning(true);
             }}
           >
-            Start Game
+            Play
           </button>
         )}
 
         {/* Back Button */}
-        <button
-          className="btn btn-secondary position-absolute bottom-0 start-0 m-4"
-          style={{ pointerEvents: "auto" }}
-          onClick={() => nav("/")}
-        >
-          Back to Menu
-        </button>
+        {isRunning && (
+          <button
+            className="btn btn-secondary position-absolute bottom-0 start-0 m-4"
+            style={{ pointerEvents: "auto" }}
+            onClick={() => {
+              setIsRunning(false);
+              nav("/");
+            }}
+          >
+            Back to Menu
+          </button>
+        )}
       </div>
     </div>
   );
