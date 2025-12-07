@@ -212,7 +212,7 @@ const stopCamera = () => {
             color: 'white',
             fontWeight: 'bold'
           }}
-          disabled={!isValid}
+          disabled={!isValid.current}
         >
           Continue
         </button>
