@@ -2,21 +2,49 @@ import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import reactIcon from "../assets/react.svg";
 import videoplayback from "../assets/videoplayback.mp4";
+import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 
 function Game() {
   const nav = useNavigate();
   const cameraVideoRef = useRef(null);
   const referenceVideoRef = useRef(null);
   const canvasRef = useRef(null);
+  const poseLandmarkerRef = useRef(null);
   const [showButton, setShowButton] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [score, setScore] = useState(0);
   const [movementDetected, setMovementDetected] = useState(false);
+  const previousLandmarksRef = useRef(null);
+
+  // Initialize PoseLandmarker
+  const initPoseLandmarker = async () => {
+    try {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      );
+
+      poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          },
+          runningMode: "VIDEO",
+          numPoses: 1,
+        }
+      );
+
+      getVideo();
+    } catch (error) {
+      console.error("Error initializing PoseLandmarker:", error);
+    }
+  };
 
   // Get camera feed
   const getVideo = () => {
     navigator.mediaDevices
-      .getUserMedia({ video: { width: 1280, height: 720 } })
+      .getUserMedia({ video: { width: 640, height: 480 } })
       .then((stream) => {
         const video = cameraVideoRef.current;
         video.srcObject = stream;
@@ -29,42 +57,102 @@ function Game() {
 
   // Initialize game
   useEffect(() => {
-    getVideo();
-  }, [cameraVideoRef]);
+    initPoseLandmarker();
+  }, []);
 
-  // Movement detection (basic pixel difference detection)
+  // Movement detection using pose landmarks
   useEffect(() => {
     let animationId;
-    if (isRunning && canvasRef.current && cameraVideoRef.current) {
+    if (isRunning && poseLandmarkerRef.current && cameraVideoRef.current) {
       const detectMovement = () => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        const video = cameraVideoRef.current;
+        if (
+          poseLandmarkerRef.current &&
+          cameraVideoRef.current &&
+          canvasRef.current
+        ) {
+          const now = performance.now();
+          const results = poseLandmarkerRef.current.detectForVideo(
+            cameraVideoRef.current,
+            now
+          );
 
-        // Draw current frame
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const ctx = canvasRef.current.getContext("2d");
+          const videoWidth = cameraVideoRef.current.videoWidth;
+          const videoHeight = cameraVideoRef.current.videoHeight;
 
-        // Get pixel data
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
+          canvasRef.current.width = videoWidth;
+          canvasRef.current.height = videoHeight;
 
-        // Simple movement detection: count pixels that changed significantly
-        let changedPixels = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          // Check brightness change
-          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          if (brightness > 50 && brightness < 200) {
-            changedPixels++;
-          }
-        }
+          ctx.clearRect(0, 0, videoWidth, videoHeight);
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.translate(-videoWidth, 0);
 
-        // If significant movement detected, award points
-        const movementThreshold = data.length * 0.05; // 5% of pixels changed
-        if (changedPixels > movementThreshold) {
-          if (!movementDetected) {
-            setMovementDetected(true);
-            setScore((prev) => prev + 10); // Award 10 points for movement
-            setTimeout(() => setMovementDetected(false), 500); // Reset after 500ms
+          if (results.landmarks && results.landmarks.length > 0) {
+            const landmarks = results.landmarks[0];
+
+            // Draw pose points
+            ctx.fillStyle = "orange";
+            landmarks.forEach((point) => {
+              const x = point.x * videoWidth;
+              const y = point.y * videoHeight;
+              ctx.beginPath();
+              ctx.arc(x, y, 5, 0, 2 * Math.PI);
+              ctx.fill();
+            });
+
+            // Draw pose connections
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            const connections = [
+              [11, 12],
+              [12, 14],
+              [14, 16],
+              [11, 13],
+              [13, 15],
+              [12, 24],
+              [11, 23],
+              [23, 24],
+              [24, 26],
+              [26, 28],
+              [28, 32],
+              [23, 25],
+              [25, 27],
+              [27, 31],
+            ];
+            connections.forEach(([start, end]) => {
+              const p1 = landmarks[start];
+              const p2 = landmarks[end];
+              ctx.beginPath();
+              ctx.moveTo(p1.x * videoWidth, p1.y * videoHeight);
+              ctx.lineTo(p2.x * videoWidth, p2.y * videoHeight);
+              ctx.stroke();
+            });
+            ctx.restore();
+
+            // Detect movement by comparing landmark positions
+            if (previousLandmarksRef.current) {
+              let totalMovement = 0;
+              for (let i = 0; i < landmarks.length; i++) {
+                const dx =
+                  landmarks[i].x - previousLandmarksRef.current[i].x;
+                const dy =
+                  landmarks[i].y - previousLandmarksRef.current[i].y;
+                totalMovement += Math.sqrt(dx * dx + dy * dy);
+              }
+
+              // If significant movement detected, award points
+              const movementThreshold = 0.02; // Threshold for movement
+              if (totalMovement > movementThreshold) {
+                if (!movementDetected) {
+                  setMovementDetected(true);
+                  setScore((prev) => prev + 10);
+                  setTimeout(() => setMovementDetected(false), 500);
+                }
+              }
+            }
+
+            previousLandmarksRef.current = landmarks;
           }
         }
 
@@ -117,15 +205,14 @@ function Game() {
         height={720}
       />
 
-      {/* Reference Video - Top Layer */}
+      {/* Reference Video - Background Layer */}
       {isRunning && (
         <video
           ref={referenceVideoRef}
           className="position-fixed"
           style={{
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            top: "0",
+            left: "0",
             width: "100%",
             height: "100%",
             zIndex: 1,
