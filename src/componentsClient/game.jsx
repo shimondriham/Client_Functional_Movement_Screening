@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
-import reactIcon from "../assets/react.svg";
+import backgroundVideo from "../assets/videoplayback.mp4";
 
 function Game() {
   const nav = useNavigate();
@@ -12,13 +12,6 @@ function Game() {
 
   const [showButton, setShowButton] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
-  const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState("");
-  const [gameState, setGameState] = useState("idle"); // idle, playing, paused, ended
-
-  // Game rules state
-  const [targetPose, setTargetPose] = useState(null);
-  const [poseTimer, setPoseTimer] = useState(0);
 
   useEffect(() => {
     initPoseLandmarker();
@@ -27,7 +20,7 @@ function Game() {
     return () => {
       // Cleanup
       if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
@@ -74,93 +67,22 @@ function Game() {
   };
 
   const startGame = () => {
-    setGameState("playing");
     if (backgroundVideoRef.current) {
       backgroundVideoRef.current.play();
     }
-    generateNewTargetPose();
     processFrames();
-  };
-
-  const generateNewTargetPose = () => {
-    // Define different target poses
-    const poses = [
-      { name: "Arms Up", type: "armsUp" },
-      { name: "Arms Out", type: "armsOut" },
-      { name: "Squat", type: "squat" },
-      { name: "Left Arm Up", type: "leftArmUp" },
-      { name: "Right Arm Up", type: "rightArmUp" },
-    ];
-
-    const randomPose = poses[Math.floor(Math.random() * poses.length)];
-    setTargetPose(randomPose);
-    setPoseTimer(5); // 5 seconds to complete pose
-  };
-
-  const checkPoseMatch = (landmarks) => {
-    if (!targetPose || !landmarks) return false;
-
-    // Get key landmarks
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-    const leftElbow = landmarks[13];
-    const rightElbow = landmarks[14];
-    const leftWrist = landmarks[15];
-    const rightWrist = landmarks[16];
-    const leftHip = landmarks[23];
-    const rightHip = landmarks[24];
-    const leftKnee = landmarks[25];
-    const rightKnee = landmarks[26];
-
-    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
-    const hipMidY = (leftHip.y + rightHip.y) / 2;
-
-    switch (targetPose.type) {
-      case "armsUp":
-        // Both wrists above shoulders
-        return (
-          leftWrist.y < leftShoulder.y - 0.1 &&
-          rightWrist.y < rightShoulder.y - 0.1
-        );
-
-      case "armsOut":
-        // Both arms extended horizontally
-        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.1;
-        const rightArmHorizontal =
-          Math.abs(rightWrist.y - rightShoulder.y) < 0.1;
-        return leftArmHorizontal && rightArmHorizontal;
-
-      case "squat":
-        // Knees bent, hips lowered
-        const hipKneeDistance = Math.abs(
-          hipMidY - (leftKnee.y + rightKnee.y) / 2
-        );
-        return hipKneeDistance < 0.2;
-
-      case "leftArmUp":
-        return leftWrist.y < leftShoulder.y - 0.1;
-
-      case "rightArmUp":
-        return rightWrist.y < rightShoulder.y - 0.1;
-
-      default:
-        return false;
-    }
   };
 
   const processFrames = () => {
     let animationId;
-    let lastPoseCheckTime = Date.now();
-    let poseHoldTime = 0;
-    const POSE_HOLD_DURATION = 1000; // Hold pose for 1 second to score
 
     const loop = () => {
-      if (!isRunning || gameState !== "playing") {
+      if (!isRunning) {
         cancelAnimationFrame(animationId);
         return;
       }
 
-      if (poseLandmarkerRef.current && videoRef.current) {
+      if (poseLandmarkerRef.current && videoRef.current && canvasRef.current) {
         const now = performance.now();
         const results = poseLandmarkerRef.current.detectForVideo(
           videoRef.current,
@@ -169,23 +91,51 @@ function Game() {
 
         const ctx = canvasRef.current.getContext("2d");
         const canvas = canvasRef.current;
-        const videoWidth = videoRef.current.videoWidth;
-        const videoHeight = videoRef.current.videoHeight;
-
+        
+        // Set canvas size to match window
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Draw the mirrored camera feed
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        
+        // Calculate dimensions to maintain aspect ratio
+        const videoAspect = videoRef.current.videoWidth / videoRef.current.videoHeight;
+        const canvasAspect = canvas.width / canvas.height;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (canvasAspect > videoAspect) {
+          drawHeight = canvas.height;
+          drawWidth = drawHeight * videoAspect;
+          offsetX = (canvas.width - drawWidth) / 2;
+          offsetY = 0;
+        } else {
+          drawWidth = canvas.width;
+          drawHeight = drawWidth / videoAspect;
+          offsetX = 0;
+          offsetY = (canvas.height - drawHeight) / 2;
+        }
+
+        ctx.drawImage(
+          videoRef.current,
+          offsetX,
+          offsetY,
+          drawWidth,
+          drawHeight
+        );
+
+        ctx.restore();
+
+        // Draw skeleton if person detected
         if (results.landmarks && results.landmarks.length > 0) {
           const landmarks = results.landmarks[0];
 
-          // Draw skeleton
           ctx.save();
-          const scaleX = canvas.width / videoWidth;
-          const scaleY = canvas.height / videoHeight;
-
-          // Mirror effect
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
 
@@ -193,74 +143,38 @@ function Game() {
           ctx.strokeStyle = "rgba(54, 227, 215, 0.8)";
           ctx.lineWidth = 4;
           const connections = [
-            [11, 12],
-            [12, 14],
-            [14, 16],
-            [11, 13],
-            [13, 15],
-            [12, 24],
-            [11, 23],
-            [23, 24],
-            [24, 26],
-            [26, 28],
-            [28, 32],
-            [23, 25],
-            [25, 27],
-            [27, 31],
+            [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
+            [12, 24], [11, 23], [23, 24],
+            [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31],
           ];
 
           connections.forEach(([start, end]) => {
             const p1 = landmarks[start];
             const p2 = landmarks[end];
+            
+            const x1 = offsetX + p1.x * drawWidth;
+            const y1 = offsetY + p1.y * drawHeight;
+            const x2 = offsetX + p2.x * drawWidth;
+            const y2 = offsetY + p2.y * drawHeight;
+            
             ctx.beginPath();
-            ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-            ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
             ctx.stroke();
           });
 
           // Draw points
           ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
           landmarks.forEach((point) => {
+            const x = offsetX + point.x * drawWidth;
+            const y = offsetY + point.y * drawHeight;
+            
             ctx.beginPath();
-            ctx.arc(
-              point.x * canvas.width,
-              point.y * canvas.height,
-              6,
-              0,
-              2 * Math.PI
-            );
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
             ctx.fill();
           });
 
           ctx.restore();
-
-          // Check pose match
-          const currentTime = Date.now();
-          const isPoseCorrect = checkPoseMatch(landmarks);
-
-          if (isPoseCorrect) {
-            poseHoldTime += currentTime - lastPoseCheckTime;
-            setFeedback(
-              `Hold it! ${((POSE_HOLD_DURATION - poseHoldTime) / 1000).toFixed(
-                1
-              )}s`
-            );
-
-            if (poseHoldTime >= POSE_HOLD_DURATION) {
-              // Score!
-              setScore((prev) => prev + 10);
-              setFeedback("Perfect! +10 points");
-              poseHoldTime = 0;
-              setTimeout(() => generateNewTargetPose(), 500);
-            }
-          } else {
-            poseHoldTime = 0;
-            setFeedback(`Do: ${targetPose?.name || "Loading..."}`);
-          }
-
-          lastPoseCheckTime = currentTime;
-        } else {
-          setFeedback("No person detected");
         }
       }
 
@@ -271,11 +185,8 @@ function Game() {
   };
 
   return (
-    <div
-      className="position-relative"
-      style={{ width: "100vw", height: "100vh", overflow: "hidden" }}
-    >
-      {/* Background Video Layer */}
+    <div className="position-relative" style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
+      {/* Background Video Layer (Layer 1) */}
       <video
         ref={backgroundVideoRef}
         className="position-absolute top-0 start-0"
@@ -288,14 +199,19 @@ function Game() {
         loop
         muted
       >
-        {/* Add your background video source */}
-        <source src="/path-to-your-background-video.mp4" type="video/mp4" />
+        <source src={backgroundVideo} type="video/mp4" />
       </video>
 
       {/* Hidden Camera Feed */}
-      <video ref={videoRef} autoPlay playsInline style={{ display: "none" }} />
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ display: "none" }}
+      />
 
-      {/* Canvas Layer for Pose Overlay */}
+      {/* Canvas Layer for Camera Feed + Skeleton (Layer 2) */}
       <canvas
         ref={canvasRef}
         className="position-absolute top-0 start-0"
@@ -306,26 +222,8 @@ function Game() {
         }}
       />
 
-      {/* UI Overlay */}
-      <div
-        className="position-absolute top-0 start-0 w-100 h-100"
-        style={{ zIndex: 3, pointerEvents: "none" }}
-      >
-        {/* Score Display */}
-        {isRunning && (
-          <div className="position-absolute top-0 start-0 m-4 p-3 bg-dark bg-opacity-75 rounded text-white">
-            <h2 className="mb-0">Score: {score}</h2>
-          </div>
-        )}
-
-        {/* Target Pose Display */}
-        {isRunning && targetPose && (
-          <div className="position-absolute top-0 end-0 m-4 p-3 bg-dark bg-opacity-75 rounded text-white text-center">
-            <h4 className="mb-2">{targetPose.name}</h4>
-            <p className="mb-0 small">{feedback}</p>
-          </div>
-        )}
-
+      {/* UI Overlay (Layer 3) */}
+      <div className="position-absolute top-0 start-0 w-100 h-100" style={{ zIndex: 3, pointerEvents: "none" }}>
         {/* Start Button */}
         {showButton && (
           <button
