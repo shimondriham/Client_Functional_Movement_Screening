@@ -134,7 +134,8 @@ function Game() {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
 
-        // Draw the camera feed
+        // Draw the camera feed with transparency
+        ctx.globalAlpha = 0.7; // Make camera feed semi-transparent so background shows through
         ctx.drawImage(
           video,
           offsetX,
@@ -142,6 +143,7 @@ function Game() {
           drawWidth,
           drawHeight
         );
+        ctx.globalAlpha = 1.0; // Reset alpha for skeleton
 
         ctx.restore();
 
@@ -162,8 +164,8 @@ function Game() {
               ctx.scale(-1, 1);
 
               // Draw skeleton connections
-              ctx.strokeStyle = "rgba(54, 227, 215, 0.8)";
-              ctx.lineWidth = 4;
+              ctx.strokeStyle = "rgba(54, 227, 215, 0.9)";
+              ctx.lineWidth = 5;
               const connections = [
                 [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
                 [12, 24], [11, 23], [23, 24],
@@ -186,13 +188,13 @@ function Game() {
               });
 
               // Draw skeleton points
-              ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
+              ctx.fillStyle = "rgba(255, 165, 0, 1)";
               landmarks.forEach((point) => {
                 const x = offsetX + point.x * drawWidth;
                 const y = offsetY + point.y * drawHeight;
                 
                 ctx.beginPath();
-                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.arc(x, y, 8, 0, 2 * Math.PI);
                 ctx.fill();
               });
 
