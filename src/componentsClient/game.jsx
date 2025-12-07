@@ -1,22 +1,43 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import reactIcon from "../assets/react.svg";
-import videoplayback from "../assets/videoplayback.mp4";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
+import reactIcon from "../assets/react.svg";
 
 function Game() {
   const nav = useNavigate();
-  const cameraVideoRef = useRef(null);
-  const referenceVideoRef = useRef(null);
+  const videoRef = useRef(null);
+  const backgroundVideoRef = useRef(null);
   const canvasRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
+
   const [showButton, setShowButton] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [score, setScore] = useState(0);
-  const [movementDetected, setMovementDetected] = useState(false);
-  const previousLandmarksRef = useRef(null);
+  const [feedback, setFeedback] = useState("");
+  const [gameState, setGameState] = useState("idle"); // idle, playing, paused, ended
 
-  // Initialize PoseLandmarker
+  // Game rules state
+  const [targetPose, setTargetPose] = useState(null);
+  const [poseTimer, setPoseTimer] = useState(0);
+
+  useEffect(() => {
+    initPoseLandmarker();
+    getVideo();
+
+    return () => {
+      // Cleanup
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isRunning) {
+      startGame();
+    }
+  }, [isRunning]);
+
   const initPoseLandmarker = async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
@@ -34,286 +55,309 @@ function Game() {
           numPoses: 1,
         }
       );
-
-      getVideo();
     } catch (error) {
       console.error("Error initializing PoseLandmarker:", error);
     }
   };
 
-  // Get camera feed
   const getVideo = () => {
     navigator.mediaDevices
       .getUserMedia({ video: { width: 640, height: 480 } })
       .then((stream) => {
-        const video = cameraVideoRef.current;
+        const video = videoRef.current;
         video.srcObject = stream;
         video.play();
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Camera access error:", err);
       });
   };
 
-  // Initialize game
-  useEffect(() => {
-    initPoseLandmarker();
-  }, []);
-
-  // Movement detection using pose landmarks
-  useEffect(() => {
-    let animationId;
-    if (isRunning && poseLandmarkerRef.current && cameraVideoRef.current) {
-      const detectMovement = () => {
-        if (
-          poseLandmarkerRef.current &&
-          cameraVideoRef.current &&
-          canvasRef.current
-        ) {
-          const now = performance.now();
-          const results = poseLandmarkerRef.current.detectForVideo(
-            cameraVideoRef.current,
-            now
-          );
-
-          const ctx = canvasRef.current.getContext("2d");
-          const videoWidth = cameraVideoRef.current.videoWidth;
-          const videoHeight = cameraVideoRef.current.videoHeight;
-
-          canvasRef.current.width = videoWidth;
-          canvasRef.current.height = videoHeight;
-
-          ctx.clearRect(0, 0, videoWidth, videoHeight);
-          ctx.save();
-          ctx.scale(-1, 1);
-          ctx.translate(-videoWidth, 0);
-
-          if (results.landmarks && results.landmarks.length > 0) {
-            const landmarks = results.landmarks[0];
-
-            // Draw pose points
-            ctx.fillStyle = "orange";
-            landmarks.forEach((point) => {
-              const x = point.x * videoWidth;
-              const y = point.y * videoHeight;
-              ctx.beginPath();
-              ctx.arc(x, y, 5, 0, 2 * Math.PI);
-              ctx.fill();
-            });
-
-            // Draw pose connections
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 2;
-            const connections = [
-              [11, 12],
-              [12, 14],
-              [14, 16],
-              [11, 13],
-              [13, 15],
-              [12, 24],
-              [11, 23],
-              [23, 24],
-              [24, 26],
-              [26, 28],
-              [28, 32],
-              [23, 25],
-              [25, 27],
-              [27, 31],
-            ];
-            connections.forEach(([start, end]) => {
-              const p1 = landmarks[start];
-              const p2 = landmarks[end];
-              ctx.beginPath();
-              ctx.moveTo(p1.x * videoWidth, p1.y * videoHeight);
-              ctx.lineTo(p2.x * videoWidth, p2.y * videoHeight);
-              ctx.stroke();
-            });
-            ctx.restore();
-
-            // Detect movement by comparing landmark positions
-            if (previousLandmarksRef.current) {
-              let totalMovement = 0;
-              for (let i = 0; i < landmarks.length; i++) {
-                const dx =
-                  landmarks[i].x - previousLandmarksRef.current[i].x;
-                const dy =
-                  landmarks[i].y - previousLandmarksRef.current[i].y;
-                totalMovement += Math.sqrt(dx * dx + dy * dy);
-              }
-
-              // If significant movement detected, award points
-              const movementThreshold = 0.02; // Threshold for movement
-              if (totalMovement > movementThreshold) {
-                if (!movementDetected) {
-                  setMovementDetected(true);
-                  setScore((prev) => prev + 10);
-                  setTimeout(() => setMovementDetected(false), 500);
-                }
-              }
-            }
-
-            previousLandmarksRef.current = landmarks;
-          }
-        }
-
-        animationId = requestAnimationFrame(detectMovement);
-      };
-
-      detectMovement();
+  const startGame = () => {
+    setGameState("playing");
+    if (backgroundVideoRef.current) {
+      backgroundVideoRef.current.play();
     }
+    generateNewTargetPose();
+    processFrames();
+  };
 
-    return () => cancelAnimationFrame(animationId);
-  }, [isRunning, movementDetected]);
+  const generateNewTargetPose = () => {
+    // Define different target poses
+    const poses = [
+      { name: "Arms Up", type: "armsUp" },
+      { name: "Arms Out", type: "armsOut" },
+      { name: "Squat", type: "squat" },
+      { name: "Left Arm Up", type: "leftArmUp" },
+      { name: "Right Arm Up", type: "rightArmUp" },
+    ];
 
-  const handlePlayClick = () => {
-    setShowButton(false);
-    setIsRunning(true);
-    // Start reference video
-    if (referenceVideoRef.current) {
-      referenceVideoRef.current.play();
+    const randomPose = poses[Math.floor(Math.random() * poses.length)];
+    setTargetPose(randomPose);
+    setPoseTimer(5); // 5 seconds to complete pose
+  };
+
+  const checkPoseMatch = (landmarks) => {
+    if (!targetPose || !landmarks) return false;
+
+    // Get key landmarks
+    const leftShoulder = landmarks[11];
+    const rightShoulder = landmarks[12];
+    const leftElbow = landmarks[13];
+    const rightElbow = landmarks[14];
+    const leftWrist = landmarks[15];
+    const rightWrist = landmarks[16];
+    const leftHip = landmarks[23];
+    const rightHip = landmarks[24];
+    const leftKnee = landmarks[25];
+    const rightKnee = landmarks[26];
+
+    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
+    const hipMidY = (leftHip.y + rightHip.y) / 2;
+
+    switch (targetPose.type) {
+      case "armsUp":
+        // Both wrists above shoulders
+        return (
+          leftWrist.y < leftShoulder.y - 0.1 &&
+          rightWrist.y < rightShoulder.y - 0.1
+        );
+
+      case "armsOut":
+        // Both arms extended horizontally
+        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.1;
+        const rightArmHorizontal =
+          Math.abs(rightWrist.y - rightShoulder.y) < 0.1;
+        return leftArmHorizontal && rightArmHorizontal;
+
+      case "squat":
+        // Knees bent, hips lowered
+        const hipKneeDistance = Math.abs(
+          hipMidY - (leftKnee.y + rightKnee.y) / 2
+        );
+        return hipKneeDistance < 0.2;
+
+      case "leftArmUp":
+        return leftWrist.y < leftShoulder.y - 0.1;
+
+      case "rightArmUp":
+        return rightWrist.y < rightShoulder.y - 0.1;
+
+      default:
+        return false;
     }
   };
 
-  const handleStopGame = () => {
-    setIsRunning(false);
-    setShowButton(true);
-    setScore(0);
+  const processFrames = () => {
+    let animationId;
+    let lastPoseCheckTime = Date.now();
+    let poseHoldTime = 0;
+    const POSE_HOLD_DURATION = 1000; // Hold pose for 1 second to score
+
+    const loop = () => {
+      if (!isRunning || gameState !== "playing") {
+        cancelAnimationFrame(animationId);
+        return;
+      }
+
+      if (poseLandmarkerRef.current && videoRef.current) {
+        const now = performance.now();
+        const results = poseLandmarkerRef.current.detectForVideo(
+          videoRef.current,
+          now
+        );
+
+        const ctx = canvasRef.current.getContext("2d");
+        const canvas = canvasRef.current;
+        const videoWidth = videoRef.current.videoWidth;
+        const videoHeight = videoRef.current.videoHeight;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (results.landmarks && results.landmarks.length > 0) {
+          const landmarks = results.landmarks[0];
+
+          // Draw skeleton
+          ctx.save();
+          const scaleX = canvas.width / videoWidth;
+          const scaleY = canvas.height / videoHeight;
+
+          // Mirror effect
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+
+          // Draw connections
+          ctx.strokeStyle = "rgba(54, 227, 215, 0.8)";
+          ctx.lineWidth = 4;
+          const connections = [
+            [11, 12],
+            [12, 14],
+            [14, 16],
+            [11, 13],
+            [13, 15],
+            [12, 24],
+            [11, 23],
+            [23, 24],
+            [24, 26],
+            [26, 28],
+            [28, 32],
+            [23, 25],
+            [25, 27],
+            [27, 31],
+          ];
+
+          connections.forEach(([start, end]) => {
+            const p1 = landmarks[start];
+            const p2 = landmarks[end];
+            ctx.beginPath();
+            ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+            ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+            ctx.stroke();
+          });
+
+          // Draw points
+          ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
+          landmarks.forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(
+              point.x * canvas.width,
+              point.y * canvas.height,
+              6,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+          });
+
+          ctx.restore();
+
+          // Check pose match
+          const currentTime = Date.now();
+          const isPoseCorrect = checkPoseMatch(landmarks);
+
+          if (isPoseCorrect) {
+            poseHoldTime += currentTime - lastPoseCheckTime;
+            setFeedback(
+              `Hold it! ${((POSE_HOLD_DURATION - poseHoldTime) / 1000).toFixed(
+                1
+              )}s`
+            );
+
+            if (poseHoldTime >= POSE_HOLD_DURATION) {
+              // Score!
+              setScore((prev) => prev + 10);
+              setFeedback("Perfect! +10 points");
+              poseHoldTime = 0;
+              setTimeout(() => generateNewTargetPose(), 500);
+            }
+          } else {
+            poseHoldTime = 0;
+            setFeedback(`Do: ${targetPose?.name || "Loading..."}`);
+          }
+
+          lastPoseCheckTime = currentTime;
+        } else {
+          setFeedback("No person detected");
+        }
+      }
+
+      animationId = requestAnimationFrame(loop);
+    };
+
+    loop();
   };
 
   return (
     <div
       className="position-relative"
-      style={{ width: "100%", height: "100vh" }}
+      style={{ width: "100vw", height: "100vh", overflow: "hidden" }}
     >
-      {/* Camera Feed - Top Layer */}
+      {/* Background Video Layer */}
       <video
-        ref={cameraVideoRef}
-        autoPlay
-        playsInline
-        muted
-        className="position-fixed top-0 start-0"
+        ref={backgroundVideoRef}
+        className="position-absolute top-0 start-0"
         style={{
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          zIndex: 10,
-          transform: "scaleX(-1)",
+          zIndex: 1,
         }}
-      />
+        loop
+        muted
+      >
+        {/* Add your background video source */}
+        <source src="/path-to-your-background-video.mp4" type="video/mp4" />
+      </video>
 
-      {/* Canvas for Pose Drawing - Overlay */}
+      {/* Hidden Camera Feed */}
+      <video ref={videoRef} autoPlay playsInline style={{ display: "none" }} />
+
+      {/* Canvas Layer for Pose Overlay */}
       <canvas
         ref={canvasRef}
-        className="position-fixed top-0 start-0"
+        className="position-absolute top-0 start-0"
         style={{
           width: "100%",
           height: "100%",
-          zIndex: 11,
+          zIndex: 2,
         }}
-        width={640}
-        height={480}
       />
 
-      {/* Reference Video - Background Layer */}
-      {isRunning && (
-        <video
-          ref={referenceVideoRef}
-          className="position-fixed"
-          style={{
-            top: "0",
-            left: "0",
-            width: "100%",
-            height: "100%",
-            zIndex: 1,
-            objectFit: "cover",
-          }}
-          controls
-          loop
-        >
-          {/* Add your reference video source */}
-          <source src={videoplayback} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      )}
+      {/* UI Overlay */}
+      <div
+        className="position-absolute top-0 start-0 w-100 h-100"
+        style={{ zIndex: 3, pointerEvents: "none" }}
+      >
+        {/* Score Display */}
+        {isRunning && (
+          <div className="position-absolute top-0 start-0 m-4 p-3 bg-dark bg-opacity-75 rounded text-white">
+            <h2 className="mb-0">Score: {score}</h2>
+          </div>
+        )}
 
-      {/* Score Display */}
-      {isRunning && (
-        <div
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-            padding: "20px 30px",
-            borderRadius: "10px",
-            zIndex: 20,
-            fontSize: "18px",
-            fontWeight: "bold",
-          }}
-        >
-          <div>Score: {score}</div>
-        </div>
-      )}
+        {/* Target Pose Display */}
+        {isRunning && targetPose && (
+          <div className="position-absolute top-0 end-0 m-4 p-3 bg-dark bg-opacity-75 rounded text-white text-center">
+            <h4 className="mb-2">{targetPose.name}</h4>
+            <p className="mb-0 small">{feedback}</p>
+          </div>
+        )}
 
-      {/* Play Button */}
-      {showButton && (
+        {/* Start Button */}
+        {showButton && (
+          <button
+            type="button"
+            className="btn fw-bold text-white position-absolute top-50 start-50 translate-middle"
+            style={{
+              padding: "20px 40px",
+              fontSize: "24px",
+              borderRadius: "10px",
+              border: "none",
+              backgroundColor: "#36e3d7",
+              pointerEvents: "auto",
+              boxShadow: "0 4px 15px rgba(54, 227, 215, 0.4)",
+            }}
+            onClick={() => {
+              setShowButton(false);
+              setIsRunning(true);
+            }}
+          >
+            Start Game
+          </button>
+        )}
+
+        {/* Back Button */}
         <button
-          type="button"
-          className="btn fw-bold text-white position-absolute top-50 start-50 translate-middle"
-          style={{
-            padding: "15px 40px",
-            fontSize: "18px",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: "#36e3d7",
-            zIndex: 15,
-          }}
-          onClick={handlePlayClick}
+          className="btn btn-secondary position-absolute bottom-0 start-0 m-4"
+          style={{ pointerEvents: "auto" }}
+          onClick={() => nav("/")}
         >
-          Play Game
+          Back to Menu
         </button>
-      )}
-
-      {/* Stop Button */}
-      {isRunning && (
-        <button
-          type="button"
-          className="btn fw-bold text-white position-absolute bottom-0 start-50 translate-middle-x"
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: "#ff6b6b",
-            zIndex: 15,
-            marginBottom: "20px",
-          }}
-          onClick={handleStopGame}
-        >
-          Stop Game
-        </button>
-      )}
-
-      {/* Movement Indicator */}
-      {isRunning && movementDetected && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "100px",
-            left: "20px",
-            backgroundColor: "#4caf50",
-            color: "white",
-            padding: "10px 15px",
-            borderRadius: "5px",
-            zIndex: 15,
-            fontWeight: "bold",
-            animation: "pulse 0.5s",
-          }}
-        >
-          ✓ Movement Detected +10 points
-        </div>
-      )}
+      </div>
     </div>
   );
 }
