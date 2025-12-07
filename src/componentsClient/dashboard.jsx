@@ -1,68 +1,79 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { addIfShowNav, addIsAdmin, addName } from '../featuers/myDetailsSlice';
-import { doApiGet } from '../services/apiService';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { addIfShowNav, addIsAdmin, addName } from "../featuers/myDetailsSlice";
+import { doApiGet } from "../services/apiService";
 
 const games = [
-  { id: 1, name: 'Game1', locked: false },
-  { id: 2, name: 'Game2', locked: true },
-  { id: 3, name: 'Game3', locked: true },
-  { id: 4, name: 'Game4', locked: true },
-  { id: 5, name: 'Game5', locked: true },
-  { id: 6, name: 'Game6', locked: true },
+  { id: 1, name: "Game1", locked: false },
+  { id: 2, name: "Game2", locked: true },
+  { id: 3, name: "Game3", locked: true },
+  { id: 4, name: "Game4", locked: true },
+  { id: 5, name: "Game5", locked: true },
+  { id: 6, name: "Game6", locked: true },
 ];
 
 function Dashboard() {
   //  const myName = useSelector(state => state.myDetailsSlice.name);
-    const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
-    const navigate = useNavigate();
-    const [ifCompleate, setIfCompleate] = useState(false);
-    const [myInfo, setmyInfo] = useState({});
-    const dispatch = useDispatch();
+  const IsAdmin = useSelector((state) => state.myDetailsSlice.isAdmin);
+  const navigate = useNavigate();
+  const [ifCompleate, setIfCompleate] = useState(false);
+  const [myInfo, setmyInfo] = useState({});
+  const dispatch = useDispatch();
 
-    useEffect(() => {
-        dispatch(addIfShowNav({ ifShowNav: true }));
-        // console.log(myName);
-        doApi()
-    }, []);
+  useEffect(() => {
+    dispatch(addIfShowNav({ ifShowNav: true }));
+    // console.log(myName);
+    doApi();
+  }, []);
 
-    const doApi = async () => {
-        let url = "/users/myInfo";
-        try {
-            let data = await doApiGet(url);
-            setmyInfo(data.data);
-            dispatch(addName({ name: data.data.fullName }));
-            if (data.data.role == "admin") {
-                dispatch(addIsAdmin({ isAdmin: true }));
-            }
-            if (data.data.dateOfBirth && data.data.difficulty && data.data.equipment && data.data.frequency && data.data.goal && data.data.height && data.data.medical && data.data.timePerDay && data.data.weight && data.data.workouts) {
-              setIfCompleate(true);
-              console.log(true);
-              
-            }
-            console.log(data.data);
-            
-        } catch (error) {
-            console.log(error);
-        }
+  const doApi = async () => {
+    let url = "/users/myInfo";
+    try {
+      let data = await doApiGet(url);
+      setmyInfo(data.data);
+      dispatch(addName({ name: data.data.fullName }));
+      if (data.data.role == "admin") {
+        dispatch(addIsAdmin({ isAdmin: true }));
+      }
+      if (
+        data.data.dateOfBirth &&
+        data.data.difficulty &&
+        data.data.equipment &&
+        data.data.frequency &&
+        data.data.goal &&
+        data.data.height &&
+        data.data.medical &&
+        data.data.timePerDay &&
+        data.data.weight &&
+        data.data.workouts
+      ) {
+        setIfCompleate(true);
+        console.log(true);
+      }
+      console.log(data.data);
+    } catch (error) {
+      console.log(error);
     }
-
+  };
 
   const handleGameClick = (game) => {
     if (!game.locked && ifCompleate) {
-      navigate('/instructions');
+      navigate("/instructions");
     } else {
-      alert('You must complete Game 1 first');
+      alert("You must complete Game 1 first");
     }
   };
 
   const handleResultClick = () => {
-    navigate('/performanceAnalysis');
+    navigate("/performanceAnalysis");
   };
 
   return (
-    <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: '#f8f8f8' }}>
+    <div
+      className="d-flex flex-column justify-content-center align-items-center vh-100"
+      style={{ background: "#f8f8f8" }}
+    >
       {/* Logo */}
       <div className="text-center my-4" style={{ fontSize: 24 }}>
         Logo
@@ -78,11 +89,11 @@ function Dashboard() {
               style={{
                 width: 100,
                 height: 100,
-                borderRadius: '50%',
-                background: '#d6d6d6',
+                borderRadius: "50%",
+                background: "#d6d6d6",
                 fontSize: 23,
-                border: 'none',
-                cursor: game.locked || !ifCompleate ? 'not-allowed' : 'pointer',
+                border: "none",
+                cursor: game.locked || !ifCompleate ? "not-allowed" : "pointer",
                 opacity: game.locked || !ifCompleate ? 0.6 : 1,
               }}
               onClick={() => handleGameClick(game)}
@@ -98,9 +109,7 @@ function Dashboard() {
               )} */}
             </button>
 
-            {idx < games.length - 1 && (
-              <span style={{ fontSize: 28 }}>→</span>
-            )}
+            {idx < games.length - 1 && <span style={{ fontSize: 28 }}>→</span>}
           </React.Fragment>
         ))}
       </div>
@@ -113,12 +122,12 @@ function Dashboard() {
         style={{
           bottom: 50,
           right: 80,
-          padding: '18px 40px',
+          padding: "18px 40px",
           fontSize: 22,
           borderRadius: 8,
-          background: 'white',
-          border: '3px solid #cfcfcf',
-          cursor: 'pointer',
+          background: "white",
+          border: "3px solid #cfcfcf",
+          cursor: "pointer",
         }}
       >
         Result

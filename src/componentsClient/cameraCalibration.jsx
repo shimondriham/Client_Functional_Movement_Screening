@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
-import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+import React, { useRef, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import reactIcon from "../assets/react.svg";
+import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 
 function CameraCalibration() {
   const nav = useNavigate();
@@ -11,7 +11,7 @@ function CameraCalibration() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState("");
   const [isValid, setIsValid] = useState(false);
 
   const poseLandmarkerRef = useRef(null);
@@ -22,7 +22,7 @@ function CameraCalibration() {
     const initPoseLandmarker = async () => {
       try {
         const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
 
         poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(
@@ -30,16 +30,16 @@ function CameraCalibration() {
           {
             baseOptions: {
               modelAssetPath:
-                'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+                "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
             },
-            runningMode: 'VIDEO',
+            runningMode: "VIDEO",
             numPoses: 1,
           }
         );
 
         startCamera();
       } catch (error) {
-        console.error('Error initializing PoseLandmarker:', error);
+        console.error("Error initializing PoseLandmarker:", error);
       }
     };
 
@@ -57,7 +57,7 @@ function CameraCalibration() {
           processFrames();
         };
       } catch (err) {
-        console.error('Camera access error:', err);
+        console.error("Camera access error:", err);
       }
     };
 
@@ -70,7 +70,7 @@ function CameraCalibration() {
             now
           );
 
-          const ctx = canvasRef.current.getContext('2d');
+          const ctx = canvasRef.current.getContext("2d");
           const videoWidth = videoRef.current.videoWidth;
           const videoHeight = videoRef.current.videoHeight;
 
@@ -83,13 +83,13 @@ function CameraCalibration() {
           ctx.translate(-videoWidth, 0);
 
           if (!results.landmarks || results.landmarks.length === 0) {
-            setFeedback('No person detected');
+            setFeedback("No person detected");
             setIsValid(false);
           } else {
             const landmarks = results.landmarks[0];
 
             // נקודות
-            ctx.fillStyle = 'orange';
+            ctx.fillStyle = "orange";
             landmarks.forEach((point) => {
               const x = point.x * videoWidth;
               const y = point.y * videoHeight;
@@ -99,7 +99,7 @@ function CameraCalibration() {
             });
 
             // קווים
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = "white";
             ctx.lineWidth = 2;
             const connections = [
               [11, 12],
@@ -150,9 +150,9 @@ function CameraCalibration() {
             const valid = isCentered && isVisible;
             setIsValid(valid);
 
-            if (!isCentered) setFeedback('Move to center');
-            else if (!isVisible) setFeedback('Adjust distance');
-            else setFeedback('Perfect!');
+            if (!isCentered) setFeedback("Move to center");
+            else if (!isVisible) setFeedback("Adjust distance");
+            else setFeedback("Perfect!");
           }
         }
         animationId = requestAnimationFrame(loop);
@@ -171,13 +171,16 @@ function CameraCalibration() {
     <div>
       {/* כרטיס מרכזי */}
       <div className="container mt-5 d-flex justify-content-center">
-        <div className="shadow-lg p-4 d-flex flex-column text-center bg-white w-100" style={{ maxWidth: '500px' }}>
+        <div
+          className="shadow-lg p-4 d-flex flex-column text-center bg-white w-100"
+          style={{ maxWidth: "500px" }}
+        >
           <div className="row justify-content-center">
             <img
               src={reactIcon}
               alt="React"
               className="mx-auto mb-2"
-              style={{ width: '64px', height: '64px' }}
+              style={{ width: "64px", height: "64px" }}
             />
             <h4 className="m-2">Camera Calibration</h4>
 
@@ -189,9 +192,9 @@ function CameraCalibration() {
                 playsInline
                 className="w-100"
                 style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '8px',
-                  transform: 'scaleX(-1)',
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                  transform: "scaleX(-1)",
                 }}
               />
               <canvas
@@ -208,18 +211,18 @@ function CameraCalibration() {
 
       {/* Continue Button */}
       <button
-        onClick={() => nav('/' + fromPage)}
+        onClick={() => nav("/" + fromPage)}
         className="btn fw-bold text-white"
         style={{
-          width: '6%',
-          maxWidth: '500px',
-          backgroundColor: 'rgb(54, 227, 215)',
-          borderColor: 'rgb(54, 227, 215)',
-          borderRadius: '5px',
-          padding: '10px',
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
+          width: "6%",
+          maxWidth: "500px",
+          backgroundColor: "rgb(54, 227, 215)",
+          borderColor: "rgb(54, 227, 215)",
+          borderRadius: "5px",
+          padding: "10px",
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
         }}
         disabled={!isValid}
       >
