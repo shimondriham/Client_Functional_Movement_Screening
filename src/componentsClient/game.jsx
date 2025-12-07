@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import reactIcon from "../assets/react.svg";
+import videoplayback from "../assets/videoplayback.mp4";
 
 function Game() {
   const nav = useNavigate();
@@ -137,7 +138,7 @@ function Game() {
           loop
         >
           {/* Add your reference video source */}
-          <source src="/assets/videoplayback.mp4" type="video/mp4" />
+          <source src={videoplayback} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       )}
