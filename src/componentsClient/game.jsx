@@ -1,25 +1,22 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import reactIcon from '../assets/react.svg'; // אם לא בשימוש, אפשר להסיר
+import { useNavigate, useLocation } from 'react-router-dom';
+import reactIcon from '../assets/react.svg';
+import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
 function Game() {
   const nav = useNavigate();
+  const location = useLocation();
+  const fromPage = location.state?.from;
+  const p11Y = useRef(null);
+  const p13Y = useRef(null);
   const videoRef = useRef(null);
-  const [showButton, setShowButton] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
+  const canvasRef = useRef(null);
 
-  const getVideo = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: { width: 1280, height: 720 } })
-      .then((stream) => {
-        const video = videoRef.current;
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
+  const [feedback, setFeedback] = useState('');
+  const isValid = useRef(false);
+
+  const poseLandmarkerRef = useRef(null);
+
 
   useEffect(() => {
     let animationId;
@@ -141,39 +138,55 @@ const stopCamera = () => {
 
 
   return (
-    <div className="position-relative">
-      {/* וידאו כרקע במסך מלא, בלי אפקט מראה */}
-      <video
-        ref={videoRef}
-        className="position-fixed top-0 start-0"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: -1,
-        }}
-      />
-
-      {/* כפתור Play ממורכז עם Bootstrap */}
-      {showButton && (
+    <div>
+      <div
+        className="container mt-5 shadow-lg p-4 d-flex flex-column text-center"
+        style={{ width: '95%', maxWidth: '900px', height: '90vh', backgroundColor: 'white' }}
+      >
+        <div className="row justify-content-center">
+          <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
+          <h4 className="m-2">Camera Calibration</h4>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              style={{
+                width: '100%',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                transform: 'scaleX(-1)'
+              }}
+            />
+            <canvas
+              ref={canvasRef}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+            />
+          </div>
+          <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
+        </div>
+      </div>
+      <div>
         <button
-          type="button"
-          className="btn fw-bold text-white position-absolute top-50 start-50 translate-middle"
+          onClick={() => {stopCamera(); nav('/' + fromPage)}}
           style={{
-            padding: '10px 20px',
-            fontSize: '16px',
+            width: '6%',
+            maxWidth: '500px',
+            backgroundColor: 'rgb(54, 227, 215)',
+            bottom: '20px',
+            right: '20px',
+            position: 'fixed',
+            borderColor: 'rgb(54, 227, 215)',
             borderRadius: '5px',
-            border: 'none',
-            backgroundColor: '#36e3d7',
+            padding: '10px',
+            color: 'white',
+            fontWeight: 'bold'
           }}
-          onClick={() => {
-            setShowButton(false);
-            setIsRunning(true);
-          }}
+          disabled={!isValid.current}
         >
-          Play
+          Continue
         </button>
-      )}
+      </div>
     </div>
   );
 }
