@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
 function CameraCalibration() {
@@ -15,7 +14,6 @@ function CameraCalibration() {
   const isValid = useRef(false);
 
   const poseLandmarkerRef = useRef(null);
-
 
   useEffect(() => {
     let animationId;
@@ -88,7 +86,7 @@ function CameraCalibration() {
               ctx.beginPath();
               ctx.arc(x, y, 5, 0, 2 * Math.PI);
               ctx.fill();
-            });            
+            });
 
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 2;
@@ -146,77 +144,73 @@ function CameraCalibration() {
     };
   }, []);
 
-  
-  
-const stopCamera = () => {
-  try {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  } catch (err) {
-    console.warn('Error stopping camera:', err);
-    }
-};
 
+  const stopCamera = () => {
+    try {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
 
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    } catch (err) {
+      console.warn('Error stopping camera:', err);
+    }
+  };
 
   return (
-    <div>
-      <div
-        className="container mt-5 shadow-lg p-4 d-flex flex-column text-center"
-        style={{ width: '95%', maxWidth: '900px', height: '90vh', backgroundColor: 'white' }}
-      >
-        <div className="row justify-content-center">
-          <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
-          <h4 className="m-2">Camera Calibration</h4>
-          <div style={{ position: 'relative', width: '100%' }}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              style={{
-                width: '100%',
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                transform: 'scaleX(-1)'
-              }}
-            />
-            <canvas
-              ref={canvasRef}
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-            />
-          </div>
-          <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
-        </div>
-      </div>
-      <div>
-        <button
-          onClick={() => {stopCamera(); nav('/' + fromPage)}}
+    <div className="d-flex flex-column align-items-center pt-4" style={{ minHeight: '100vh' }}>
+      
+      {/* כותרת בלבד - לוגו הוסר */}
+      <h4 className="m-2">Camera Calibration</h4>
+
+      {/* מיכל המצלמה */}
+      <div style={{ position: 'relative', width: '500px', maxWidth: '90%' }}>
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
           style={{
-            width: '6%',
-            maxWidth: '500px',
-            backgroundColor: 'rgb(54, 227, 215)',
-            bottom: '20px',
-            right: '20px',
-            position: 'fixed',
-            borderColor: 'rgb(54, 227, 215)',
-            borderRadius: '5px',
-            padding: '10px',
-            color: 'white',
-            fontWeight: 'bold'
+            width: '100%',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            transform: 'scaleX(-1)'
           }}
-          disabled={!isValid.current}
-        >
-          Continue
-        </button>
+        />
+        <canvas
+          ref={canvasRef}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+        />
       </div>
+
+      <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
+
+      {/* כפתור ההמשך */}
+      <button
+        onClick={() => {stopCamera(); nav('/' + fromPage)}}
+        style={{
+          width: '120px',
+          backgroundColor: 'rgb(54, 227, 215)',
+          bottom: '20px',
+          right: '20px',
+          position: 'fixed',
+          borderColor: 'rgb(54, 227, 215)',
+          borderRadius: '5px',
+          padding: '10px',
+          color: 'white',
+          fontWeight: 'bold',
+          border: 'none',
+          cursor: isValid.current ? 'pointer' : 'not-allowed',
+          opacity: isValid.current ? 1 : 0.6
+        }}
+        disabled={!isValid.current}
+      >
+        Continue
+      </button>
     </div>
   );
 }
