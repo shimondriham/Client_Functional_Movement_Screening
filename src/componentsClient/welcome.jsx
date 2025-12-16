@@ -30,7 +30,9 @@ const Welcome = () => {
                 <div className="px-4" style={{ height: '100%', width: "60%" }}>
                     <div className="bg-white p-4 shadow-lg text-center" style={{ height: '100%', width: "80%", borderRadius: '16px' }}>
                         <h3 className="py-2">About Us</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis deleniti dolore tenetur laboriosam numquam aliquam voluptas sint! Culpa iste mollitia nesciunt minus amet, labore eveniet beatae, rem quasi laboriosam tempora.</p>
+                        <p>Welcome to FIT WAVE, where innovation meets emotion, and movement becomes play.
+
+At FIT WAVE, we believe that the path to recovery and rehabilitation can and should be positive, empowering, and captivating. The company was born from a single vision: to harness the infectious power of games and the benefits of motion technology, to create a world where every step in the rehabilitation process is a step forward – both in mind and body.</p>
                     </div>
                 </div>
             </div>
