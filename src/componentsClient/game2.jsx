@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
-function Game() {
+function Game2() {
   const nav = useNavigate();
   const location = useLocation();
   const fromPage = location.state?.from;
@@ -191,4 +191,4 @@ const stopCamera = () => {
   );
 }
 
-export default Game;
+export default Game2;

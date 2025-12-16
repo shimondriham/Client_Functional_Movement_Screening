@@ -5,16 +5,15 @@ import { addIfShowNav, addIsAdmin, addName } from '../featuers/myDetailsSlice';
 import { doApiGet } from '../services/apiService';
 
 const games = [
-  { id: 1, name: 'Game1', locked: false },
-  { id: 2, name: 'Game2', locked: true },
-  { id: 3, name: 'Game3', locked: true },
-  { id: 4, name: 'Game4', locked: true },
-  { id: 5, name: 'Game5', locked: true },
-  { id: 6, name: 'Game6', locked: true },
+  { id: 1, name: 'game1', locked: false },
+  { id: 2, name: 'game2', locked: true },
+  { id: 3, name: 'game3', locked: true },
+  { id: 4, name: 'game4', locked: true },
+  { id: 5, name: 'game5', locked: true },
+  { id: 6, name: 'game6', locked: true },
 ];
 
 function Dashboard() {
-  //  const myName = useSelector(state => state.myDetailsSlice.name);
     const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
     const navigate = useNavigate();
     const [ifCompleate, setIfCompleate] = useState(false);
@@ -23,7 +22,6 @@ function Dashboard() {
 
     useEffect(() => {
         dispatch(addIfShowNav({ ifShowNav: true }));
-        // console.log(myName);
         doApi()
     }, []);
 
@@ -51,7 +49,7 @@ function Dashboard() {
 
   const handleGameClick = (game) => {
     if (!game.locked && ifCompleate) {
-      navigate('/instructions');
+      navigate('/instructions', { state: { from: game.name } });
     } else {
       alert('You must complete Game 1 first');
     }
@@ -63,7 +61,6 @@ function Dashboard() {
 
   return (
     <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: '#f8f8f8' }}>
-      {/* Logo */}
       <div className="text-center my-4" style={{ fontSize: 24 }}>
         Logo
       </div>

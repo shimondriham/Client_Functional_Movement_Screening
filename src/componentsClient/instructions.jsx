@@ -5,8 +5,8 @@ function Instructions() {
   const location = useLocation();
   const fromPage = location.state?.from;
 
-  const handleContinue = () => {
-    navigate('/cameraCalibration', { state: fromPage });
+  const handleContinue = () => {    
+    navigate('/cameraCalibration', { state:  { from: fromPage }  });
   };
 
   return (

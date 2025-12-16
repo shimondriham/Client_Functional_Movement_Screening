@@ -164,11 +164,7 @@ function CameraCalibration() {
 
   return (
     <div className="d-flex flex-column align-items-center pt-4" style={{ minHeight: '100vh' }}>
-      
-      {/* כותרת בלבד - לוגו הוסר */}
       <h4 className="m-2">Camera Calibration</h4>
-
-      {/* מיכל המצלמה */}
       <div style={{ position: 'relative', width: '500px', maxWidth: '90%' }}>
         <video
           ref={videoRef}
@@ -189,7 +185,6 @@ function CameraCalibration() {
 
       <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
 
-      {/* כפתור ההמשך */}
       <button
         onClick={() => {stopCamera(); nav('/' + fromPage)}}
         style={{

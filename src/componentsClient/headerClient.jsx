@@ -26,7 +26,8 @@ function HeaderClient() {
   const onDashboardClick = () => nav("/dashboard");
   const onInstructionsClick = () => nav("/instructions");
   const onCameraCalibrationClick = () => nav("/cameraCalibration");
-  const onGameClick = () => nav("/game");
+  const onGame1Click = () => nav("/game1");
+  const onGame2Click = () => nav("/game2");
   const onPerformanceAnalysisClick = () => nav("/performanceAnalysis");
 
   const onLogout = () => {
@@ -105,9 +106,15 @@ function HeaderClient() {
               </button>
               <button
                 className="btn btn-info border-black px-1 m-1"
-                onClick={onGameClick}
+                onClick={onGame1Click}
               >
-                game
+                game1
+              </button>
+              <button
+                className="btn btn-info border-black px-1 m-1"
+                onClick={onGame2Click}
+              >
+                game2
               </button>
               <button
                 className="btn btn-info border-black px-1 m-1"
