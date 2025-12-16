@@ -35,7 +35,6 @@ function Instructions() {
         type="button"
         className="btn mt-3"
         style={{
-          marginLeft: 700,
           padding: '10px 30px',
           border: '1px solid #bbb',
           borderRadius: 6,
