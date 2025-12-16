@@ -191,7 +191,6 @@ function CameraCalibration() {
           width: '120px',
           backgroundColor: 'rgb(54, 227, 215)',
           bottom: '20px',
-          right: '20px',
           position: 'fixed',
           borderColor: 'rgb(54, 227, 215)',
           borderRadius: '5px',
