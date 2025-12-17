@@ -4,47 +4,68 @@ import { useNavigate } from 'react-router-dom';
 import { addIfShowNav, addIsAdmin, addName } from '../featuers/myDetailsSlice';
 import { doApiGet } from '../services/apiService';
 
-const games = [
+const InitializeGames = [
   { id: 1, name: 'game1', locked: false },
   { id: 2, name: 'game2', locked: true },
   { id: 3, name: 'game3', locked: true },
   { id: 4, name: 'game4', locked: true },
   { id: 5, name: 'game5', locked: true },
-  { id: 6, name: 'game6', locked: true },
+  { id: 6, name: 'game6', locked: true }
 ];
 
 function Dashboard() {
-    const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
-    const navigate = useNavigate();
-    const [ifCompleate, setIfCompleate] = useState(false);
-    const [myInfo, setmyInfo] = useState({});
-    const dispatch = useDispatch();
+  const IsAdmin = useSelector(state => state.myDetailsSlice.isAdmin);
+  const navigate = useNavigate();
+  const [ifCompleate, setIfCompleate] = useState(false);
+  const [myInfo, setmyInfo] = useState({});
+  const [games, setGames] = useState(InitializeGames);
+  const dispatch = useDispatch();
 
-    useEffect(() => {
-        dispatch(addIfShowNav({ ifShowNav: true }));
-        doApi()
-    }, []);
+  useEffect(() => {
+    dispatch(addIfShowNav({ ifShowNav: true }));
+    doApimyInfo()
+    doApimyGames()
+  }, []);
 
-    const doApi = async () => {
-        let url = "/users/myInfo";
-        try {
-            let data = await doApiGet(url);
-            setmyInfo(data.data);
-            dispatch(addName({ name: data.data.fullName }));
-            if (data.data.role == "admin") {
-                dispatch(addIsAdmin({ isAdmin: true }));
-            }
-            if (data.data.dateOfBirth && data.data.difficulty && data.data.equipment && data.data.frequency && data.data.goal && data.data.height && data.data.medical && data.data.timePerDay && data.data.weight && data.data.workouts) {
-              setIfCompleate(true);
-              console.log(true);
-              
-            }
-            console.log(data.data);
-            
-        } catch (error) {
-            console.log(error);
-        }
+  const doApimyInfo = async () => {
+    let url = "/users/myInfo";
+    try {
+      let data = await doApiGet(url);
+      setmyInfo(data.data);
+      dispatch(addName({ name: data.data.fullName }));
+      if (data.data.role == "admin") {
+        dispatch(addIsAdmin({ isAdmin: true }));
+      }
+      if (data.data.dateOfBirth && data.data.difficulty && data.data.equipment && data.data.frequency && data.data.goal && data.data.height && data.data.medical && data.data.timePerDay && data.data.weight && data.data.workouts) {
+        setIfCompleate(true);
+        console.log(true);
+
+      }
+      console.log(data.data);
+
+    } catch (error) {
+      console.log(error);
     }
+  }
+  const doApimyGames = async () => {
+    let url = "/games/allUsergames";
+    try {
+      let data = await doApiGet(url);
+      console.log(data.data);
+      if (data.data.length > 0 && data.data[data.data.length - 1].game2 != null) {
+        setGames([
+          { id: 1, name: 'game1', locked: true },
+          { id: 2, name: 'game2', locked: false },
+          { id: 3, name: 'game3', locked: true },
+          { id: 4, name: 'game4', locked: true },
+          { id: 5, name: 'game5', locked: true },
+          { id: 6, name: 'game6', locked: true }
+        ]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
 
   const handleGameClick = (game) => {
