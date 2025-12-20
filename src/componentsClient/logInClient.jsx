@@ -7,24 +7,20 @@ import { doApiMethod } from '../services/apiService';
 import { saveTokenLocal } from '../services/localService';
 import reactIcon from '../assets/react.svg';
 
-
-const loginClient = () => {
+const LoginClient = () => {
   let nav = useNavigate();
   let { register, handleSubmit, formState: { errors } } = useForm();
   const dispatch = useDispatch();
 
-
   const onSubForm = (data) => {
+    data.email = data.email.toLowerCase();
     doApi(data);
   }
 
   const doApi = async (_dataBody) => {
-    console.log(_dataBody);
     let url = "/users/login";
     try {
       let resp = await doApiMethod(url, "POST", _dataBody);
-      console.log(resp.data);
-
       if (resp.data.token) {
         saveTokenLocal(resp.data.token);
         dispatch(addName({ name: _dataBody.fullName }));
@@ -34,7 +30,8 @@ const loginClient = () => {
       }
     }
     catch (error) {
-      console.log(error.response.data.error);
+      console.log(error.response?.data?.error);
+      alert("Something went wrong, please try again.");
     }
   }
 
@@ -45,38 +42,84 @@ const loginClient = () => {
 
   let passwordRef = register("password", { required: true, minLength: 3 });
 
+  const toSignUp = () => nav("/SignUp");
 
-
-  const toSignUp = () => {
-    nav("/SignUp");
+  // --- Styles to mimic ClickUp Background ---
+  const pageStyle = {
+    background: "#f8f9fa", // Light gray background
+    minHeight: "100vh",
+    position: "relative",
+    overflow: "hidden"
   };
 
+  const waveStyle = {
+    position: "absolute",
+    bottom: "-20%",
+    right: "-10%",
+    width: "120%",
+    height: "70%",
+    background: "linear-gradient(135deg, #7b68ee 0%, #ec4899 100%)", // Purple to Pink gradient
+    borderRadius: "100% 0 0 0 / 80% 0 0 0", // Creates the wave curve
+    zIndex: 0
+  };
 
   return (
-    <div className=" container mt-5 shadow-lg p-4 d-flex flex-column text-center" style={{ width: '80%', maxWidth: '500px', backgroundColor: 'white' }}>
-      <div className="row justify-content-center">
-        <img src={reactIcon} alt="React" style={{ width: '64px', height: '64px' }} />
-        <h3 className='m-2'>Sign in</h3>
+    <div className="d-flex align-items-center justify-content-center" style={pageStyle}>
 
-        <form onSubmit={handleSubmit(onSubForm)} className="text-center">
-          
-          <div className="m-2 flex-grow-1 text-start">
-            <input {...emailRef} type="email" className="form-control" placeholder="Enter email" style={{ fontSize: '1rem' }} />
-            {errors.email ? <small className='text-danger '>* Email invalid</small> : ""}
+      {/* Background Graphic */}
+      <div style={waveStyle}></div>
+
+      {/* Login Card */}
+      <div className="card shadow-lg border-0 p-4 p-md-5" style={{ width: '100%', maxWidth: '450px', borderRadius: '20px', zIndex: 1, backgroundColor: 'white' }}>
+
+        <div className="text-center mb-4">
+          <img src={reactIcon} alt="Logo" style={{ width: '50px', marginBottom: '15px' }} />
+          <h2 className="fw-bold" style={{ color: '#333' }}>Welcome back!</h2>
+          <p className="text-muted small">Please enter your details to sign in.</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubForm)}>
+
+          {/* Email Input */}
+          <div className="mb-3">
+            <label className="form-label small fw-bold text-secondary">Email</label>
+            <input
+              {...emailRef}
+              type="email"
+              className="form-control bg-light border-0 py-2"
+            // placeholder="name@example.com" 
+            />
+            {errors.email && <small className='text-danger d-block mt-1'>* Email is invalid</small>}
           </div>
 
-          <div className="m-2 flex-grow-1 text-start">
-            <input {...passwordRef} type="Password" className="form-control" placeholder="Password" style={{ fontSize: '1rem' }} />
-            {errors.password ? <small className='text-danger'>* Enter valid password, min 3 chars</small> : ""}
+          {/* Password Input */}
+          <div className="mb-4">
+            <div className="d-flex justify-content-between">
+              <label className="form-label small fw-bold text-secondary">Password</label>
+              <span className="small text-primary" style={{ cursor: 'pointer' }}>Forgot?</span>
+            </div>
+            <input
+              {...passwordRef}
+              type="password"
+              className="form-control bg-light border-0 py-2"
+            // placeholder="••••••••" 
+            />
+            {errors.password && <small className='text-danger d-block mt-1'>* Min 3 chars required</small>}
           </div>
 
-          <div className='m-2 text-center'>
-            <button className="btn btn-primary btn-lg w-75">Sign In</button>
-          </div>
+          {/* Submit Button */}
+          <button className="btn btn-primary w-100 py-2 fw-bold shadow-sm" style={{ background: '#7b68ee', border: 'none' }}>
+            Sign In
+          </button>
 
         </form>
-        <div className='m-2 text-center'>
-          <p onClick={toSignUp} className='text-info'>Create account</p>
+
+        {/* Footer Link */}
+        <div className="text-center mt-4">
+          <span className="text-muted small">Don't have an account? </span>
+          <span onClick={toSignUp} className="text-primary fw-bold small" style={{ cursor: 'pointer' }}>
+            Sign up
+          </span>
         </div>
 
       </div>
@@ -84,4 +127,4 @@ const loginClient = () => {
   );
 };
 
-export default loginClient;
+export default LoginClient;
