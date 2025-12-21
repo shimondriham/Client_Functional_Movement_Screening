@@ -78,9 +78,14 @@ function Game1() {
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
               const y = point.y * videoHeight;
+              // console.log("videoWidth: ", videoWidth, " x: ", x);
+              // console.log("videoHeight: ", videoHeight, " y: ", y);
+              // videoHeight:  480  y:  480.8592224121094
+              // videoWidth:  640  x:  521.3100051879883
             });            
             const connections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
+              [11, 12],
               [12, 24], [11, 23], [23, 24], // torso
               [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31] // legs
             ];
@@ -88,14 +93,40 @@ function Game1() {
               const p1 = landmarks[start];
               const p2 = landmarks[end];
 
-              if (start === 11 && end === 13) {
+              // if(startGameTime < 5) { // need to set a timer from when the game starts
+                // if(start === 11 || end === 11) {
+                //   if (p1.y <= 0.3) {
+                //     const isAboveShoulder = true;
+                //     console.log("good!!!!")
+                //   }
+                //   else {
+                //     const isAboveShoulder = false;
+                //   }
+                //   p13Y.current = p2.y;
+                // }
+              // }
+              if (start === 11 && end === 12) {
+                // console.log("p1: ", p1, " p2: ", p2);
                 p11Y.current = p1.y;
                 p13Y.current = p2.y;
               }
             });
-            
-            const isAboveShoulder =
-              p13Y.current < p11Y.current;
+
+            //   if (start === 11 && end === 13) {
+            //     p11Y.current = p1.y;
+            //     p13Y.current = p2.y;
+            //   }
+            // });
+            const pixel11Y = p11Y.current * videoHeight;
+            const pixel12Y = p13Y.current * videoHeight;
+            const isAboveShoulder = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
+            // if(p11Y.current > 1 || p13Y.current > 1) {
+
+            // console.log("p11Y: ", p11Y.current, " p13Y: ", p13Y.current, " isAboveShoulder: ", isAboveShoulder);
+            // console.log("p11Y: ", pixel11Y, " p13Y: ", pixel12Y, " isAboveShoulder: ", isAboveShoulder);
+            // }
+            // const isAboveShoulder =
+            //   p13Y.current < p11Y.current;
             
             if(!isValid.current)
               isValid.current = isAboveShoulder;
