@@ -98,11 +98,12 @@ function Game1() {
 
             const pixel11Y = p11Y.current * videoHeight;
             const pixel12Y = p13Y.current * videoHeight;
-
-            if(!isValid.current)
-              isValid.current = isBending;
+            const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
             
-            if (!isBending) setFeedback('Raise your left hand higher');
+            if(!isValid.current)
+              isValid.current = isBendingDown;
+            
+            if (!isBendingDown) setFeedback('Bend bit more down');
             else setFeedback('Perfect!');
           }
         }
@@ -120,13 +121,9 @@ function Game1() {
 
   const startGame = async () => {
     setIsPlaying(true);
-  await guideVideoRef.current.play();
-  await startCamera();
-  
-  
-};
-
-  
+    await guideVideoRef.current.play();
+    await startCamera();
+  };
   
 const stopCamera = () => {
   try {
@@ -144,8 +141,6 @@ const stopCamera = () => {
     console.warn('Error stopping camera:', err);
     }
 };
-
-
 
   return (
   <div
@@ -204,18 +199,32 @@ const stopCamera = () => {
           pointerEvents: 'none'
         }}
       />
+      {/* Feedback */}
+    <div
+      style={{
+        position: 'absolute',
+        top: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        color: 'deepskyblue',
+        fontWeight: 'bold',
+        fontSize: 22
+      }}
+    >
+      {feedback}
+    </div>
       {!isPlaying && (
-  <div
-    style={{
-      position: 'absolute',
-      inset: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10,
-      background: 'rgba(0,0,0,0.3)'
-    }}
-  >
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+        background: 'rgba(0,0,0,0.3)'
+      }}
+    >
     <button
       onClick={startGame}
       style={{
@@ -232,23 +241,9 @@ const stopCamera = () => {
       Start
     </button>
   </div>
-)}
+  )}
 
-      {/* Feedback */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: 'deepskyblue',
-          fontWeight: 'bold',
-          fontSize: 22
-        }}
-      >
-        {feedback}
-      </div>
-    </div>
+  </div>
     {/* Continue Button */}
       <button
         onClick={() => {
