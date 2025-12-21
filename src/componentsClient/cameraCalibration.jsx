@@ -10,9 +10,8 @@ function CameraCalibration() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState('Initializing...');
   const isValid = useRef(false);
-
   const poseLandmarkerRef = useRef(null);
 
   useEffect(() => {
@@ -36,12 +35,12 @@ function CameraCalibration() {
         startCamera();
       } catch (error) {
         console.error('Error initializing PoseLandmarker:', error);
+        setFeedback('Failed to load camera AI');
       }
     };
 
     const startCamera = async () => {
       if (!videoRef.current) return;
-
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480 }
@@ -54,6 +53,7 @@ function CameraCalibration() {
         };
       } catch (err) {
         console.error('Camera access error:', err);
+        setFeedback('Camera access denied');
       }
     };
 
@@ -67,33 +67,35 @@ function CameraCalibration() {
           const videoWidth = videoRef.current.videoWidth;
           const videoHeight = videoRef.current.videoHeight;
 
-          // Ensure canvas matches video size
           canvasRef.current.width = videoWidth;
           canvasRef.current.height = videoHeight;
 
           ctx.clearRect(0, 0, videoWidth, videoHeight);
-          ctx.save(); // Save current state
-          ctx.scale(-1, 1); // Flip horizontally
-          ctx.translate(-videoWidth, 0); // Shift back after flip
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.translate(-videoWidth, 0);
+
           if (!results.landmarks || results.landmarks.length === 0) {
             setFeedback('No person detected');
           } else {
             const landmarks = results.landmarks[0];
-            ctx.fillStyle = 'orange';
+            
+            // עיצוב נקודות הציון בכתום Fitwave
+            ctx.fillStyle = '#F2743E';
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
               const y = point.y * videoHeight;
               ctx.beginPath();
-              ctx.arc(x, y, 5, 0, 2 * Math.PI);
+              ctx.arc(x, y, 4, 0, 2 * Math.PI);
               ctx.fill();
             });
 
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.lineWidth = 2;
             const connections = [
-              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
-              [12, 24], [11, 23], [23, 24], // torso
-              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31] // legs
+              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
+              [12, 24], [11, 23], [23, 24],
+              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31]
             ];
             connections.forEach(([start, end]) => {
               const p1 = landmarks[start];
@@ -105,7 +107,6 @@ function CameraCalibration() {
             });
             ctx.restore();
 
-            // Validation logic
             const xs = landmarks.map(p => p.x);
             const ys = landmarks.map(p => p.y);
             const minX = Math.min(...xs);
@@ -117,12 +118,12 @@ function CameraCalibration() {
             const centerX = ((minX + maxX) / 2) * videoWidth;
             const centerY = ((minY + maxY) / 2) * videoHeight;
 
-            const toleranceX = videoWidth * 0.1;
-            const toleranceY = videoHeight * 0.1;
+            const toleranceX = videoWidth * 0.15;
+            const toleranceY = videoHeight * 0.15;
             const isCentered =
               Math.abs(centerX - videoWidth / 2) < toleranceX &&
               Math.abs(centerY - videoHeight / 2) < toleranceY;
-            const isVisible = boxHeight > videoHeight * 0.6 && boxHeight < videoHeight * 0.95;
+            const isVisible = boxHeight > videoHeight * 0.5 && boxHeight < videoHeight * 0.95;
 
             if(!isValid.current)
               isValid.current = isCentered && isVisible;
@@ -138,74 +139,100 @@ function CameraCalibration() {
     };
 
     initPoseLandmarker();
-
-    return () => {
-      if (animationId) cancelAnimationFrame(animationId);
-    };
+    return () => { if (animationId) cancelAnimationFrame(animationId); };
   }, []);
-
 
   const stopCamera = () => {
     try {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null;
       }
+      videoRef.current?.pause();
+    } catch (err) { console.warn('Error stopping camera:', err); }
+  };
 
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-    } catch (err) {
-      console.warn('Error stopping camera:', err);
+  const styles = {
+    wrapper: {
+      fontFamily: "'Inter', sans-serif",
+      backgroundColor: '#FFFFFF',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '40px 20px',
+      position: 'relative'
+    },
+    header: { fontSize: '2.2rem', fontWeight: '800', marginBottom: '8px' },
+    brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#F2743E' },
+    videoBox: {
+      position: 'relative',
+      width: '640px',
+      maxWidth: '100%',
+      aspectRatio: '4/3',
+      borderRadius: '24px',
+      overflow: 'hidden',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+      backgroundColor: '#000',
+      marginTop: '20px'
+    },
+    feedbackOverlay: {
+      position: 'absolute',
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: '8px 20px',
+      borderRadius: '20px',
+      fontWeight: '700',
+      color: feedback === 'Perfect!' ? '#28a745' : '#F2743E',
+      zIndex: 10,
+      boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+    },
+    button: {
+      backgroundColor: '#F2743E',
+      color: 'white',
+      border: 'none',
+      borderRadius: '30px',
+      padding: '14px 60px',
+      fontSize: '1.1rem',
+      fontWeight: '700',
+      cursor: isValid.current ? 'pointer' : 'not-allowed',
+      opacity: isValid.current ? 1 : 0.6,
+      marginTop: '40px',
+      boxShadow: '0 4px 15px rgba(242, 116, 62, 0.3)',
+      transition: '0.3s'
     }
   };
 
   return (
-    <div className="d-flex flex-column align-items-center pt-4" style={{ minHeight: '100vh' }}>
-      <h4 className="m-2">Camera Calibration</h4>
-      <div style={{ position: 'relative', width: '500px', maxWidth: '90%' }}>
+    <div style={styles.wrapper}>
+      <div style={{ position: 'absolute', top: '20px', left: '25px', fontWeight: 'bold' }}>🏆 Fitwave.ai</div>
+      
+      <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
+      <p style={{ color: '#666' }}>Ensure you are centered for the best vitality tracking.</p>
+
+      <div style={styles.videoBox}>
+        <div style={styles.feedbackOverlay}>{feedback}</div>
         <video
           ref={videoRef}
           autoPlay
           playsInline
-          style={{
-            width: '100%',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            transform: 'scaleX(-1)'
-          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
         />
-        <canvas
-          ref={canvasRef}
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-        />
+        <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
       </div>
 
-      <p style={{ marginTop: '10px', fontWeight: 'bold', color: 'blue' }}>{feedback}</p>
-
       <button
-        onClick={() => {stopCamera(); nav('/' + fromPage)}}
-        style={{
-          width: '120px',
-          backgroundColor: 'rgb(54, 227, 215)',
-          bottom: '20px',
-          position: 'fixed',
-          borderColor: 'rgb(54, 227, 215)',
-          borderRadius: '5px',
-          padding: '10px',
-          color: 'white',
-          fontWeight: 'bold',
-          border: 'none',
-          cursor: isValid.current ? 'pointer' : 'not-allowed',
-          opacity: isValid.current ? 1 : 0.6
-        }}
-        // for tests
-        // disabled={!isValid.current}
+        style={styles.button}
+        onClick={() => { if(isValid.current) { stopCamera(); nav('/' + fromPage); } }}
       >
         Continue
       </button>
+
+      <div style={{ marginTop: '40px', fontSize: '0.8rem', color: '#999' }}>
+        © Fitwave.ai 2026 | MediaPipe AI Tracking
+      </div>
     </div>
   );
 }
