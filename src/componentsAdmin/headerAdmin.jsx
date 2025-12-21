@@ -1,8 +1,9 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function HeaderAdmin() {
-  let nav = useNavigate()
+  const nav = useNavigate();
+  const location = useLocation();
 
   const onHomeClick = () => {
     nav("/dashboard");
@@ -11,15 +12,72 @@ function HeaderAdmin() {
     nav("/admin");
   }
 
+  // Styles based on Fitwave.ai design line
+  const uiStyle = {
+    headerWrapper: {
+      backgroundColor: '#FFFFFF',
+      borderBottom: '1px solid #EEE',
+      padding: '15px 40px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+      fontFamily: "'Inter', sans-serif"
+    },
+    logoSection: {
+      fontWeight: 'bold',
+      fontSize: '1.2rem',
+      cursor: 'pointer'
+    },
+    brandItalic: {
+      fontFamily: 'cursive',
+      fontStyle: 'italic',
+      fontWeight: '400',
+      color: '#F2743E'
+    },
+    navGroup: {
+      display: 'flex',
+      gap: '12px'
+    },
+    navBtn: (isActive) => ({
+      padding: '8px 20px',
+      borderRadius: '20px',
+      border: isActive ? 'none' : '1px solid #EEE',
+      backgroundColor: isActive ? '#F2743E' : 'transparent',
+      color: isActive ? '#FFFFFF' : '#666',
+      fontWeight: '600',
+      fontSize: '0.9rem',
+      cursor: 'pointer',
+      transition: '0.3s',
+      boxShadow: isActive ? '0 4px 12px rgba(242, 116, 62, 0.2)' : 'none'
+    })
+  };
 
   return (
-    <div className='p-2 container ' style={{ width: "30em" }}>
-      <div className='d-flex justify-content-between '>
-        <button className='btn btn-info border-black ' onClick={onDashboardAdminClick}>home Admin</button>
-        <button className='btn btn-info border-black ' onClick={onHomeClick}>home Client</button>
+    <header style={uiStyle.headerWrapper}>
+      {/* Brand Section */}
+      <div style={uiStyle.logoSection} onClick={() => nav("/")}>
+        🏆 Fitwave<span style={uiStyle.brandItalic}>.ai</span> <span style={{fontSize: '0.8rem', color: '#999', marginLeft: '5px'}}>Admin</span>
       </div>
-    </div>
-  )
+
+      {/* Navigation Section */}
+      <div style={uiStyle.navGroup}>
+        <button 
+          style={uiStyle.navBtn(location.pathname === "/admin")} 
+          onClick={onDashboardAdminClick}
+        >
+          Admin Panel
+        </button>
+        
+        <button 
+          style={uiStyle.navBtn(location.pathname === "/dashboard")} 
+          onClick={onHomeClick}
+        >
+          Client View
+        </button>
+      </div>
+    </header>
+  );
 }
 
-export default HeaderAdmin
+export default HeaderAdmin;
