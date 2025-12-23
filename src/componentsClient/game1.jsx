@@ -66,20 +66,70 @@ function Game1() {
         if (poseLandmarkerRef.current && videoRef.current) {
           const now = performance.now();
           const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+          const ctx = canvasRef.current.getContext('2d');
           const videoWidth = videoRef.current.videoWidth;
           const videoHeight = videoRef.current.videoHeight;
+                      const BODY_OUTLINE = [
+                      10, // right ear
+                      8,  // right eye
+                      6,  // right shoulder
+                      12, // right shoulder
+                      14, // right elbow
+                      16, // right wrist
+                      24, // right hip
+                      26, // right knee
+                      28, // right ankle
+                      32, // right foot
 
+                      31, // left foot
+                      27, // left ankle
+                      25, // left knee
+                      23, // left hip
+                      15, // left wrist
+                      13, // left elbow
+                      11, // left shoulder
+                      5,  // left ear
+                      7   // left eye
+                    ];
           canvasRef.current.width = videoWidth;
           canvasRef.current.height = videoHeight;
+
+          ctx.clearRect(0, 0, videoWidth, videoHeight);
+          ctx.save(); // Save current state
+          ctx.scale(-1, 1); // Flip horizontally
+          ctx.translate(-videoWidth, 0); // Shift back after flip
 
           if (!results.landmarks || results.landmarks.length === 0) {
             setFeedback('No person detected');
           } else {
             const landmarks = results.landmarks[0];
-            landmarks.forEach(point => {
-              const x = point.x * videoWidth;
-              const y = point.y * videoHeight;
-            });            
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Shadow style
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; // shadow color
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = 25;
+
+            ctx.beginPath();
+
+            BODY_OUTLINE.forEach((idx, i) => {
+              const p = landmarks[idx];
+              const x = p.x * width;
+              const y = p.y * height;
+
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            });
+
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
             const connections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
               [11, 12],
@@ -95,6 +145,7 @@ function Game1() {
                 p13Y.current = p2.y;
               }
             });
+            ctx.restore();
 
             const pixel11Y = p11Y.current * videoHeight;
             const pixel12Y = p13Y.current * videoHeight;
@@ -160,19 +211,21 @@ const stopCamera = () => {
     >
       {/* Live Camera */}
       <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          transform: 'scaleX(-1)',
-        }}
-      />
+    ref={videoRef}
+    autoPlay
+    playsInline
+    muted
+    style={{
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      transform: 'scaleX(-1)',
+      opacity: 0 // ✅ invisible but running
+    }}
+/>
+
       {/* Background MP4 */}
       <video
         ref={guideVideoRef}
@@ -194,6 +247,8 @@ const stopCamera = () => {
       <canvas
         ref={canvasRef}
         style={{
+          width: '100%',
+          height: '100%',
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none'
