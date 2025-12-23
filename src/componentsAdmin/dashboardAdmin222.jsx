@@ -5,8 +5,8 @@ import { doApiGet } from "../services/apiService";
 
 function DashboardAdmin222() {
   const initialUsers = [
-    { id: 1111, date_created: "2025-10-10T12:00:00", a: "Session Alpha", b: "a" },
-    { id: 22222, date_created: "2025-11-10T14:30:00", a: "Session Beta", b: "b" },
+    { _id: 1111, dateCreated: "2025-10-10T12:00:00", level:"start", game1: [true,false,true], game2: [true,false,true] },
+    { _id: 22222, dateCreated: "2025-11-10T14:30:00", level:"start", game1: [true,false,true], game2: [true,false,true] },
   ];
 
   let [ar, setAr] = useState(initialUsers);
@@ -15,21 +15,35 @@ function DashboardAdmin222() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    doApi();
+    doApiUser();
+    doApiQ();
   }, []);
 
-  const doApi = async () => {
+  const doApiUser = async () => {
     let url = "/users/single/" + ThisID;
     try {
       let data = await doApiGet(url);
+      console.log(data.data);
       setThisUser(data.data);
     } catch (error) {
       console.log(error);
     }
   };
 
+  const doApiQ = async () => {
+    let url = "/games/usergames/" + ThisID;
+    try {
+      let data = await doApiGet(url);
+      console.log(data.data);
+      
+      setAr(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const toAdminResult = (id) => {
-    navigate('/performanceAnalysisAdmin', { state: { gameId: id } });
+    // navigate('/performanceAnalysisAdmin', { state: { gameId: id } });
   };
 
   const uiStyle = {
@@ -83,23 +97,23 @@ function DashboardAdmin222() {
           User <span style={uiStyle.brandItalic}>Details</span>
         </h1>
         <p style={{ color: '#666', fontSize: '1.1rem' }}>
-          Viewing records for: <strong>{thisUser.fullName || "Loading..." }</strong>
+          Viewing records for: <strong>{thisUser.fullName || "Loading..."}</strong>
         </p>
       </div>
 
       {/* KPI Stats Cards */}
       <div style={uiStyle.statsRow}>
         <div style={uiStyle.statCard}>
-          <div style={{fontSize: '0.8rem', color: '#999', textTransform: 'uppercase'}}>Total Sessions</div>
-          <div style={{fontSize: '1.8rem', fontWeight: '800', color: '#F2743E'}}>{ar.length}</div>
+          <div style={{ fontSize: '0.8rem', color: '#999', textTransform: 'uppercase' }}>Total Sessions</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#F2743E' }}>{ar.length}</div>
         </div>
         <div style={uiStyle.statCard}>
-          <div style={{fontSize: '0.8rem', color: '#999', textTransform: 'uppercase'}}>Member Since</div>
-          <div style={{fontSize: '1.2rem', fontWeight: '700', marginTop: '8px'}}>Oct 2025</div>
+          <div style={{ fontSize: '0.8rem', color: '#999', textTransform: 'uppercase' }}>Member Since</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: '700', marginTop: '8px' }}>Oct 2025</div>
         </div>
         <div style={uiStyle.statCard}>
-          <div style={{fontSize: '0.8rem', color: '#999', textTransform: 'uppercase'}}>Avg. Score</div>
-          <div style={{fontSize: '1.8rem', fontWeight: '800', color: '#28a745'}}>84%</div>
+          <div style={{ fontSize: '0.8rem', color: '#999', textTransform: 'uppercase' }}>Avg. Score</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#28a745' }}>84%</div>
         </div>
       </div>
 
@@ -110,7 +124,9 @@ function DashboardAdmin222() {
             <tr>
               <th style={uiStyle.th}>#</th>
               <th style={uiStyle.th}>Date & Time</th>
-              <th style={uiStyle.th}>Session Info</th>
+              <th style={uiStyle.th}>level</th>
+              <th style={uiStyle.th}>game1</th>
+              <th style={uiStyle.th}>game2</th>
               <th style={uiStyle.th} className="text-center">Analysis</th>
             </tr>
           </thead>
@@ -119,14 +135,23 @@ function DashboardAdmin222() {
               <tr key={index} className="admin-table-row">
                 <td style={uiStyle.td}>{index + 1}</td>
                 <td style={uiStyle.td}>
-                  {game.date_created ? new Date(game.date_created).toLocaleDateString('he-IL') : "N/A"}
+                  {game.dateCreated ? new Date(game.dateCreated).toLocaleDateString('he-IL') : ""}
                 </td>
-                <td style={uiStyle.td}>{game.a || "General Training"}</td>
+                <td style={uiStyle.td}>{game.level}</td>
                 <td style={uiStyle.td}>
+  {game.game1.length > 0 
+    ? `${game.game1.filter(value => value === true).length} / ${game.game1.length}` 
+    : "uncomplete"}
+</td>
+<td style={uiStyle.td}>
+  {game.game2.length > 0 
+    ? `${game.game2.filter(value => value === true).length} / ${game.game2.length}` 
+    : "uncomplete"}
+</td>                <td style={uiStyle.td}>
                   <div className="d-flex justify-content-center">
-                    <button 
-                      style={uiStyle.actionBtn} 
-                      onClick={() => toAdminResult(game._id || game.id)}
+                    <button
+                      style={uiStyle.actionBtn}
+                      onClick={() => toAdminResult(game._id)}
                       onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                       onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
