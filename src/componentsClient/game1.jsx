@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
+import { doApiMethod } from '../services/apiService';
 
 function Game1() {
   const nav = useNavigate();
@@ -17,8 +18,11 @@ function Game1() {
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const processLoopRef = useRef(null);
+  const timerIntervalRef = useRef(null);
 
   // -------------------------------
   // CAMERA START
@@ -196,6 +200,31 @@ function Game1() {
 
   const startGame = async () => {
     setIsPlaying(true);
+    setElapsedTime(0);
+    setGameArr([false, false, false]);
+    
+    // Start the timer with timestamp
+    const startTime = Date.now();
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      setElapsedTime(elapsed);
+      console.log('Elapsed time:', elapsed, 'ms');
+      
+      // Check feedback and set arr based on time window
+      if (elapsed >= 0 && elapsed <= 5000) {
+        // First 5 seconds - set arr[0]
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [true, prev[1], prev[2]]);
+        }
+      } else if (elapsed > 5000 && elapsed <= 10000) {
+        // 5-10 seconds - set arr[1]
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], true, prev[2]]);
+        }
+      }
+    }, 100);
+    
     // Don't pause the selfie segmentation processing
     if (guideVideoRef.current) {
       guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
@@ -216,6 +245,11 @@ function Game1() {
       }
       if (videoRef.current) {
         videoRef.current.pause();
+      }
+      // Stop the timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
       }
     } catch (err) {
       console.warn('Error stopping camera:', err);
@@ -264,6 +298,30 @@ function Game1() {
           src="src/assets/videoplayback.mp4"
           muted
           playsInline
+          onEnded={() => {
+            if (timerIntervalRef.current) {
+              clearInterval(timerIntervalRef.current);
+              timerIntervalRef.current = null;
+            }
+            // send to backend route /games
+            (async () => {
+              let dataBody = {
+                level: "Easy",
+                // level: user.difficulty,
+                name: "game1",
+                game: gameArr,
+              };
+              try {
+              let data =  await doApiMethod('/games', 'POST', dataBody);
+              if (data.data._id) {
+                console.log(data.data._id);
+              }
+                console.log('arr sent to /games', gameArr);
+              } catch (err) {
+                console.error('Failed to send arr to backend:', err);
+              }
+            })();
+          }}
           style={{
             position: 'absolute',
             inset: 0,
