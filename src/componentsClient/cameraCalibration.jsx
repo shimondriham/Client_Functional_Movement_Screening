@@ -207,7 +207,7 @@ function CameraCalibration() {
 
   return (
     <div style={styles.wrapper}>
-      <div style={{ position: 'absolute', top: '20px', left: '25px', fontWeight: 'bold' }}>🏆 Fitwave.ai</div>
+      <div style={{ position: 'absolute', top: '20px', left: '25px', fontWeight: 'bold', fontFamily: 'OOOH Baby, cursive', fontSize: '1.2rem' }}>Fitwave.ai</div>
       
       <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
       <p style={{ color: '#666' }}>Ensure you are centered for the best vitality tracking.</p>

@@ -16,11 +16,15 @@ const Welcome = () => {
 
     return (
         <div className="welcome-container">
+            {/* הוספת הפונט OOOH Baby */}
+            <style jsx global>{`
+                @import url('https://fonts.googleapis.com/css2?family=OOOH+Baby&display=swap');
+            `}</style>
+            
             <div className="welcome-hero">
                 <div className="hero-content">
                     <div className="logo-section">
                         <div className="logo-circle">
-                            <div className="wave-icon">🏆</div>
                             <h1 className="logo-text">FITWAVE.AI</h1>
                         </div>
                         <p className="logo-subtitle">Waves of Rehabilitation. Waves of Enjoyment.</p>
@@ -161,17 +165,13 @@ const Welcome = () => {
                     box-shadow: var(--shadow);
                 }
 
-                .wave-icon {
-                    font-size: 1.8rem;
-                    margin-right: 0.8rem;
-                }
-
                 .logo-text {
-                    font-size: 1.6rem;
-                    font-weight: 800;
+                    font-family: 'OOOH Baby', cursive, sans-serif;
+                    font-size: 2.2rem; /* הגדלתי קצת כי הפונט הזה נראה קטן יותר */
+                    font-weight: 400; /* בפונט זה, 400 נראה יותר טוב מ-800 */
                     margin: 0;
                     color: var(--dark-text);
-                    letter-spacing: -0.5px;
+                    letter-spacing: 1px; /* שיניתי ממינוס לחיובי */
                 }
 
                 .logo-subtitle {
@@ -189,11 +189,12 @@ const Welcome = () => {
 
                 .highlight {
                     display: block;
-                    font-family: 'cursive';
+                    font-family: 'OOOH Baby', cursive, sans-serif; /* אותו פונט ל-highlight */
                     font-style: italic;
                     color: var(--primary-orange);
                     font-weight: 400;
                     margin-top: 10px;
+                    font-size: 3.4rem; /* קצת יותר גדול */
                 }
 
                 .hero-subtitle {
@@ -275,6 +276,11 @@ const Welcome = () => {
                     color: var(--gray-text);
                 }
 
+                .text-emphasis {
+                    color: var(--primary-orange);
+                    font-weight: 600;
+                }
+
                 .features-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -354,6 +360,12 @@ const Welcome = () => {
                     font-size: 1.2rem;
                     cursor: pointer;
                     margin: 10px;
+                    transition: 0.3s;
+                }
+
+                .btn-cta-primary:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 20px rgba(242, 116, 62, 0.4);
                 }
 
                 .btn-cta-secondary {
@@ -366,12 +378,47 @@ const Welcome = () => {
                     font-size: 1.2rem;
                     cursor: pointer;
                     margin: 10px;
+                    transition: 0.3s;
+                }
+
+                .btn-cta-secondary:hover {
+                    background: var(--light-bg);
                 }
 
                 @media (max-width: 768px) {
-                    .hero-title { font-size: 2.2rem; }
-                    .about-card { padding: 30px; }
-                    .hero-buttons { flex-direction: column; align-items: center; }
+                    .hero-title { 
+                        font-size: 2.2rem; 
+                    }
+                    .highlight {
+                        font-size: 2.4rem;
+                    }
+                    .logo-text {
+                        font-size: 1.8rem;
+                    }
+                    .about-card { 
+                        padding: 30px; 
+                    }
+                    .hero-buttons { 
+                        flex-direction: column; 
+                        align-items: center; 
+                    }
+                    .btn-hero {
+                        width: 100%;
+                        max-width: 300px;
+                        margin-bottom: 1rem;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .hero-title {
+                        font-size: 1.8rem;
+                    }
+                    .highlight {
+                        font-size: 2rem;
+                    }
+                    .logo-text {
+                        font-size: 1.6rem;
+                    }
                 }
             `}</style>
         </div>

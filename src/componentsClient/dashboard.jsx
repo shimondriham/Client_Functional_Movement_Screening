@@ -83,7 +83,7 @@ function Dashboard() {
   // אובייקט העיצוב (CSS-in-JS)
   const styles = {
     container: {
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'OOOH Baby', cursive, sans-serif",
       backgroundColor: '#FFFFFF',
       minHeight: '100vh',
       display: 'flex',
@@ -162,7 +162,7 @@ function Dashboard() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.logo}>🏆 Fitwave.ai</div>
+      <div style={styles.logo}>Fitwave.ai</div>
 
       <h1 style={styles.header}>
         Your <span style={styles.brandItalic}>Training</span> Path

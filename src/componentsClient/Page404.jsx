@@ -6,7 +6,7 @@ function Page404() {
 
   const styles = {
     wrapper: {
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'ooh baby', cursive, sans-serif",
       backgroundColor: '#FFFFFF',
       height: '100vh',
       display: 'flex',
@@ -77,7 +77,7 @@ function Page404() {
   return (
     <div style={styles.wrapper}>
       {/* לוגו המותג */}
-      <div style={styles.logo}>🏆 Fitwave.ai</div>
+      <div style={styles.logo}>Fitwave.ai</div>
 
       {/* מספר השגיאה ברקע */}
       <div style={styles.errorCode}>404</div>

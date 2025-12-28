@@ -36,7 +36,7 @@ const LoginClient = () => {
   // אובייקט עיצוב אחיד לפי הקו של Fitwave.ai
   const uiStyle = {
     wrapper: {
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'OOOH Baby', cursive, sans-serif",
       backgroundColor: '#FFFFFF',
       minHeight: '100vh',
       display: 'flex',
@@ -126,7 +126,7 @@ const LoginClient = () => {
     <div style={uiStyle.wrapper}>
       {/* לוגו עליון */}
       <div style={uiStyle.logoBox}>
-        🏆 Fitwave.ai
+        Fitwave.ai
       </div>
 
       <h1 style={uiStyle.header}>

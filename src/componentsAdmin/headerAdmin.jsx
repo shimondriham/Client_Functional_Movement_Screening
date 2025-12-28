@@ -22,7 +22,7 @@ function HeaderAdmin() {
       justifyContent: 'space-between',
       alignItems: 'center',
       boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-      fontFamily: "'Inter', sans-serif"
+      fontFamily: "'OOh Baby', cursive, sans-serif"
     },
     logoSection: {
       fontWeight: 'bold',
@@ -57,7 +57,7 @@ function HeaderAdmin() {
     <header style={uiStyle.headerWrapper}>
       {/* Brand Section */}
       <div style={uiStyle.logoSection} onClick={() => nav("/")}>
-        🏆 Fitwave<span style={uiStyle.brandItalic}>.ai</span> <span style={{fontSize: '0.8rem', color: '#999', marginLeft: '5px'}}>Admin</span>
+        Fitwave<span style={uiStyle.brandItalic}>.ai</span> <span style={{fontSize: '0.8rem', color: '#999', marginLeft: '5px'}}>Admin</span>
       </div>
 
       {/* Navigation Section */}
