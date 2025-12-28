@@ -13,7 +13,7 @@ function Instructions() {
   // אובייקט עיצוב Fitwave Instructions
   const styles = {
     wrapper: {
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'OOh Baby', cursive, sans-serif",
       backgroundColor: '#FFFFFF',
       minHeight: '100vh',
       display: 'flex',
@@ -80,7 +80,7 @@ function Instructions() {
   return (
     <div style={styles.wrapper}>
       {/* לוגו המותג */}
-      <div style={styles.logo}>🏆 Fitwave.ai</div>
+      <div style={styles.logo}>Fitwave.ai</div>
 
       <h1 style={styles.header}>
         General <span style={styles.brandItalic}>Instructions</span>

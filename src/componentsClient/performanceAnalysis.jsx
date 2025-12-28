@@ -13,7 +13,7 @@ function PerformanceAnalysis() {
 
   const styles = {
     wrapper: {
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'OOh Baby', cursive, sans-serif",
       backgroundColor: '#F7F7F7',
       minHeight: '100vh',
       display: 'flex',
@@ -112,7 +112,7 @@ function PerformanceAnalysis() {
     <div style={styles.wrapper}>
       <div style={styles.card}>
         {/* Logo */}
-        <div style={styles.logo}>🏆 Fitwave.ai</div>
+        <div style={styles.logo}>Fitwave.ai</div>
 
         {/* Home Button */}
         <button onClick={goHome} style={styles.homeBtn} title="Back to Dashboard">
