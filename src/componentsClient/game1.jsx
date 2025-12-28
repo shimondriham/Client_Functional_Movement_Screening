@@ -212,13 +212,11 @@ function Game1() {
       console.log('Elapsed time:', elapsed, 'ms');
       
       // Check feedback and set arr based on time window
-      if (elapsed >= 0 && elapsed <= 5000) {
-        // First 5 seconds - set arr[0]
+      if (elapsed >= 5000 && elapsed <= 6000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
         }
-      } else if (elapsed > 5000 && elapsed <= 10000) {
-        // 5-10 seconds - set arr[1]
+      } else if (elapsed > 9000 && elapsed <= 10000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], true, prev[2]]);
         }
