@@ -18,6 +18,7 @@ function Game1() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState('');
   const isValid = useRef(false);
+  const processLoopRef = useRef(null);
 
   // -------------------------------
   // CAMERA START
@@ -177,9 +178,9 @@ function Game1() {
         if (videoRef.current && selfieSegmentationRef.current) {
           await selfieSegmentationRef.current.send({ image: videoRef.current });
         }
-        requestAnimationFrame(processLoop);
+        processLoopRef.current = requestAnimationFrame(processLoop);
       };
-      processLoop();
+      processLoopRef.current = requestAnimationFrame(processLoop);
     } catch (err) {
       console.error('Failed to init segmentation', err);
     }
@@ -195,8 +196,14 @@ function Game1() {
 
   const startGame = async () => {
     setIsPlaying(true);
-    await guideVideoRef.current.play();
-    await startCamera();
+    // Don't pause the selfie segmentation processing
+    if (guideVideoRef.current) {
+      guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
+    }
+    // Ensure camera is running and segmentation continues
+    if (videoRef.current && videoRef.current.paused) {
+      videoRef.current.play().catch(err => console.error('Camera play error:', err));
+    }
   };
 
   const stopCamera = () => {
