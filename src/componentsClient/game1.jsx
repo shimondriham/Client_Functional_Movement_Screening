@@ -140,7 +140,7 @@ function Game1() {
     if (!isValid.current)
       isValid.current = isBendingDown;
     
-    if (!isBendingDown) setFeedback('Bend bit more down');
+    if (!isBendingDown) setFeedback('Bend a bit more down');
     else setFeedback('Perfect!');
   };
 
