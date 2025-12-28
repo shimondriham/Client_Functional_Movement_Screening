@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
 
 function Game1() {
   const nav = useNavigate();
@@ -12,162 +13,184 @@ function Game1() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const guideVideoRef = useRef(null);
+  const selfieSegmentationRef = useRef(null);
+  const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
-
   const [feedback, setFeedback] = useState('');
   const isValid = useRef(false);
-  const poseLandmarkerRef = useRef(null);
 
-  useEffect(() => {
-    let animationId;
+  // -------------------------------
+  // CAMERA START
+  // -------------------------------
+  const startCamera = async () => {
+    if (!videoRef.current) return;
 
-    const initPoseLandmarker = async () => {
-      try {
-        const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-        );
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 }
+      });
+      videoRef.current.srcObject = stream;
 
-        poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
-          },
-          runningMode: 'VIDEO',
-          numPoses: 1
-        });
-
-        startCamera();
-      } catch (error) {
-        console.error('Error initializing PoseLandmarker:', error);
-      }
-    };
-
-    const startCamera = async () => {
-      if (!videoRef.current) return;
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 }
-        });
-        videoRef.current.srcObject = stream;
-
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          processFrames();
-        };
-      } catch (err) {
-        console.error('Camera access error:', err);
-      }
-    };
-
-    const processFrames = () => {
-      const loop = () => {
-        if (poseLandmarkerRef.current && videoRef.current) {
-          const now = performance.now();
-          const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-          const ctx = canvasRef.current.getContext('2d');
-          const videoWidth = videoRef.current.videoWidth;
-          const videoHeight = videoRef.current.videoHeight;
-                      const BODY_OUTLINE = [
-                      10, // right ear
-                      8,  // right eye
-                      6,  // right shoulder
-                      12, // right shoulder
-                      14, // right elbow
-                      16, // right wrist
-                      24, // right hip
-                      26, // right knee
-                      28, // right ankle
-                      32, // right foot
-
-                      31, // left foot
-                      27, // left ankle
-                      25, // left knee
-                      23, // left hip
-                      15, // left wrist
-                      13, // left elbow
-                      11, // left shoulder
-                      5,  // left ear
-                      7   // left eye
-                    ];
-          canvasRef.current.width = videoWidth;
-          canvasRef.current.height = videoHeight;
-
-          ctx.clearRect(0, 0, videoWidth, videoHeight);
-          ctx.save(); // Save current state
-          ctx.scale(-1, 1); // Flip horizontally
-          ctx.translate(-videoWidth, 0); // Shift back after flip
-
-          if (!results.landmarks || results.landmarks.length === 0) {
-            setFeedback('No person detected');
-          } else {
-            const landmarks = results.landmarks[0];
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-
-            const width = canvas.width;
-            const height = canvas.height;
-
-            // Shadow style
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; // shadow color
-            ctx.shadowColor = 'black';
-            ctx.shadowBlur = 25;
-
-            ctx.beginPath();
-
-            BODY_OUTLINE.forEach((idx, i) => {
-              const p = landmarks[idx];
-              const x = p.x * width;
-              const y = p.y * height;
-
-              if (i === 0) ctx.moveTo(x, y);
-              else ctx.lineTo(x, y);
-            });
-
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
-
-            const connections = [
-              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15], // arms
-              [11, 12],
-              [12, 24], [11, 23], [23, 24], // torso
-              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31] // legs
-            ];
-            connections.forEach(([start, end]) => {
-              const p1 = landmarks[start];
-              const p2 = landmarks[end];
-
-              if (start === 11 && end === 12) {
-                p11Y.current = p1.y;
-                p13Y.current = p2.y;
-              }
-            });
-            ctx.restore();
-
-            const pixel11Y = p11Y.current * videoHeight;
-            const pixel12Y = p13Y.current * videoHeight;
-            const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
-            
-            if(!isValid.current)
-              isValid.current = isBendingDown;
-            
-            if (!isBendingDown) setFeedback('Bend bit more down');
-            else setFeedback('Perfect!');
-          }
-        }
-        animationId = requestAnimationFrame(loop);
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current.play();
       };
-      loop();
-    };
+    } catch (err) {
+      console.error('Camera access error:', err);
+    }
+  };
 
+  
+
+  // -------------------------------
+  // DRAW DRESSED CHARACTER ON BODY
+  // -------------------------------
+  const drawCharacter = (ctx, segmentationMask, width, height) => {
+    if (!segmentationMask) return;
+
+    // קנבס זמני כדי לקרוא פיקסלים
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(segmentationMask, 0, 0, width, height);
+
+    const maskData = tempCtx.getImageData(0, 0, width, height);
+    const data = maskData.data;
+
+    ctx.save();
+    ctx.scale(-1, 1); // Flip horizontally
+    ctx.translate(-width, 0); // Shift back after flip
+
+    for (let y = 0; y < height; y += 4) {
+      for (let x = 0; x < width; x += 4) {
+        const idx = (y * width + x) * 4;
+        const alpha = data[idx + 3];
+        if (alpha > 50) {
+          // גוף כחול
+          ctx.fillStyle = 'blue';
+          ctx.fillRect(x - 4, y - 4, 8, 8);
+          // ראש אדום
+          ctx.fillStyle = 'gray';
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    ctx.restore();
+  };
+
+  // -------------------------------
+  // INIT POSE LANDMARKER
+  // -------------------------------
+  const initPoseLandmarker = async () => {
+    try {
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+      );
+
+      poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
+        },
+        runningMode: 'VIDEO',
+        numPoses: 1
+      });
+    } catch (error) {
+      console.error('Error initializing PoseLandmarker:', error);
+    }
+  };
+
+  // -------------------------------
+  // PROCESS LANDMARKS
+  // -------------------------------
+  const processLandmarks = () => {
+    if (!poseLandmarkerRef.current || !videoRef.current) return;
+    
+    const now = performance.now();
+    const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
+
+    if (!results.landmarks || results.landmarks.length === 0) {
+      setFeedback('No person detected');
+      return;
+    }
+
+    const landmarks = results.landmarks[0];
+    
+    // Check shoulder positions (landmarks 11 and 12)
+    const leftShoulder = landmarks[11];
+    const rightShoulder = landmarks[12];
+    
+    p11Y.current = leftShoulder.y;
+    p13Y.current = rightShoulder.y;
+    
+    const pixel11Y = p11Y.current * videoHeight;
+    const pixel12Y = p13Y.current * videoHeight;
+    const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
+    
+    if (!isValid.current)
+      isValid.current = isBendingDown;
+    
+    if (!isBendingDown) setFeedback('Bend bit more down');
+    else setFeedback('Perfect!');
+  };
+
+  // -------------------------------
+  // INIT SELFIE SEGMENTATION
+  // -------------------------------
+  const initSelfieSegmentation = async () => {
+    try {
+      selfieSegmentationRef.current = new SelfieSegmentation({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+      });
+
+      selfieSegmentationRef.current.setOptions({
+        modelSelection: 1 // 0 = general, 1 = landscape
+      });
+
+      selfieSegmentationRef.current.onResults((results) => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ציור הדמות במקום האדם
+        drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
+        
+        // Process landmarks for pose detection
+        processLandmarks();
+      });
+
+      await startCamera();
+
+      // לולאה לשליחת כל פריים
+      const processLoop = async () => {
+        if (videoRef.current && selfieSegmentationRef.current) {
+          await selfieSegmentationRef.current.send({ image: videoRef.current });
+        }
+        requestAnimationFrame(processLoop);
+      };
+      processLoop();
+    } catch (err) {
+      console.error('Failed to init segmentation', err);
+    }
+  };
+
+  // -------------------------------
+  // USE EFFECT INIT
+  // -------------------------------
+  useEffect(() => {
+    initSelfieSegmentation();
     initPoseLandmarker();
-
-    return () => {
-      if (animationId) cancelAnimationFrame(animationId);
-    };
   }, []);
 
   const startGame = async () => {
@@ -175,131 +198,135 @@ function Game1() {
     await guideVideoRef.current.play();
     await startCamera();
   };
-  
-const stopCamera = () => {
-  try {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  } catch (err) {
-    console.warn('Error stopping camera:', err);
-    }
-};
 
+  const stopCamera = () => {
+    try {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    } catch (err) {
+      console.warn('Error stopping camera:', err);
+    }
+  };
+
+  // -------------------------------
+  // RENDER
+  // -------------------------------
   return (
-  <div
-    style={{
-      width: '100%',
-      height: 'calc(100vh - 60px)',
-      overflow: 'hidden',
-      background: 'black'
-    }}
-  >
     <div
       style={{
-        position: 'relative',
         width: '100%',
-        height: '100%'
+        height: 'calc(100vh - 60px)',
+        overflow: 'hidden',
+        background: 'black'
       }}
     >
-      {/* Live Camera */}
-      <video
-    ref={videoRef}
-    autoPlay
-    playsInline
-    muted
-    style={{
-      position: 'absolute',
-      inset: 0,
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-      transform: 'scaleX(-1)',
-      opacity: 0 // ✅ invisible but running
-    }}
-/>
-
-      {/* Background MP4 */}
-      <video
-        ref={guideVideoRef}
-        src="src/assets/videoplayback.mp4"
-        muted
-        playsInline
+      <div
         style={{
-          position: 'absolute',
-          inset: 0,
+          position: 'relative',
           width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          transform: 'scaleX(-1)',
-          opacity: 0.70
+          height: '100%'
         }}
-      />
+      >
+        {/* Live Camera */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scaleX(-1)',
+            opacity: 0
+          }}
+        />
 
-      {/* Pose Canvas */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none'
-        }}
-      />
-      {/* Feedback */}
-    <div
-      style={{
-        position: 'absolute',
-        top: 20,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        color: 'deepskyblue',
-        fontWeight: 'bold',
-        fontSize: 22
-      }}
-    >
-      {feedback}
-    </div>
-      {!isPlaying && (
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10,
-        background: 'rgba(0,0,0,0.3)'
-      }}
-    >
-    <button
-      onClick={startGame}
-      style={{
-        padding: '18px 32px',
-        fontSize: 22,
-        fontWeight: 'bold',
-        borderRadius: 8,
-        border: 'none',
-        cursor: 'pointer',
-        background: 'deepskyblue',
-        color: 'white'
-      }}
-    >
-      Start
-    </button>
-  </div>
-  )}
+        {/* Background MP4 */}
+        <video
+          ref={guideVideoRef}
+          src="src/assets/videoplayback.mp4"
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scaleX(-1)',
+            opacity: 0.7
+          }}
+        />
 
-  </div>
-    {/* Continue Button */}
+        {/* Pose Canvas */}
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none'
+          }}
+        />
+
+        {/* Feedback */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: 'deepskyblue',
+            fontWeight: 'bold',
+            fontSize: 22
+          }}
+        >
+          {feedback}
+        </div>
+
+        {!isPlaying && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+              background: 'rgba(0,0,0,0.3)'
+            }}
+          >
+            <button
+              onClick={startGame}
+              style={{
+                padding: '18px 32px',
+                fontSize: 22,
+                fontWeight: 'bold',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                background: 'deepskyblue',
+                color: 'white'
+              }}
+            >
+              Start
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Continue Button */}
       <button
         onClick={() => {
           stopCamera();
@@ -321,8 +348,8 @@ const stopCamera = () => {
       >
         Continue
       </button>
-  </div>
-);
+    </div>
+  );
 }
 
 export default Game1;
