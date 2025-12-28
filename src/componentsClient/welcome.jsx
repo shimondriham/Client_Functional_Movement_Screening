@@ -135,7 +135,8 @@ const Welcome = () => {
                 }
 
                 .welcome-hero {
-                    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=2000&q=80');
+                    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.5)), url('src/assets/welcomePhoto.png') no-repeat;
+; ;
                     background-size: cover;
                     background-position: center;
                     min-height: 100vh;
