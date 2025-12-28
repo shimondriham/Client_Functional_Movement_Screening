@@ -43,7 +43,8 @@ function CameraCalibration() {
       if (!videoRef.current) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 }
+          // הגדלת רזולוציית המקור לצילום איכותי יותר בחלון גדול
+          video: { width: 1280, height: 720 }
         });
         videoRef.current.srcObject = stream;
 
@@ -80,7 +81,6 @@ function CameraCalibration() {
           } else {
             const landmarks = results.landmarks[0];
             
-            // עיצוב נקודות הציון בכתום Fitwave
             ctx.fillStyle = '#F2743E';
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
@@ -91,7 +91,7 @@ function CameraCalibration() {
             });
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3; // קצת יותר עבה לחלון הגדול
             const connections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
               [12, 24], [11, 23], [23, 24],
@@ -140,7 +140,7 @@ function CameraCalibration() {
 
     initPoseLandmarker();
     return () => { if (animationId) cancelAnimationFrame(animationId); };
-  }, []);
+  }, [feedback]); // הוספת feedback לתלות כדי לעדכן את עיצוב הטקסט אם צריך
 
   const stopCamera = () => {
     try {
@@ -160,60 +160,69 @@ function CameraCalibration() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '40px 20px',
+      padding: '20px',
       position: 'relative'
     },
-    header: { fontSize: '2.2rem', fontWeight: '800', marginBottom: '8px' },
+    header: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '8px' },
     brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#F2743E' },
     videoBox: {
       position: 'relative',
-      width: '640px',
-      maxWidth: '100%',
-      aspectRatio: '4/3',
-      borderRadius: '24px',
+      width: '900px', // הגדלת החלון ל-900px
+      maxWidth: '95vw', // התאמה למסכים קטנים
+      aspectRatio: '16/9', // מעבר ליחס רחב יותר שמתאים למסכים מודרניים
+      borderRadius: '32px',
       overflow: 'hidden',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+      boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
       backgroundColor: '#000',
       marginTop: '20px'
     },
     feedbackOverlay: {
       position: 'absolute',
-      top: '20px',
+      top: '30px',
       left: '50%',
       transform: 'translateX(-50%)',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: '8px 20px',
-      borderRadius: '20px',
-      fontWeight: '700',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      padding: '12px 30px',
+      borderRadius: '50px',
+      fontWeight: '800',
+      fontSize: '1.2rem',
       color: feedback === 'Perfect!' ? '#28a745' : '#F2743E',
       zIndex: 10,
-      boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+      boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
     },
-    button: {
+    // עיצוב כפתור צף
+    floatingButton: {
+      position: 'absolute',
+      bottom: '40px',
+      left: '50%',
+      transform: 'translateX(-50%)',
       backgroundColor: '#F2743E',
       color: 'white',
       border: 'none',
-      borderRadius: '30px',
-      padding: '14px 60px',
-      fontSize: '1.1rem',
+      borderRadius: '50px',
+      padding: '18px 80px',
+      fontSize: '1.3rem',
       fontWeight: '700',
       cursor: isValid.current ? 'pointer' : 'not-allowed',
       opacity: isValid.current ? 1 : 0.6,
-      marginTop: '40px',
-      boxShadow: '0 4px 15px rgba(242, 116, 62, 0.3)',
-      transition: '0.3s'
+      boxShadow: '0 10px 25px rgba(242, 116, 62, 0.4)',
+      transition: 'all 0.3s ease',
+      zIndex: 20,
+      whiteSpace: 'nowrap'
     }
   };
 
   return (
     <div style={styles.wrapper}>
-      <div style={{ position: 'absolute', top: '20px', left: '25px', fontWeight: 'bold', fontFamily: 'OOOH Baby, cursive', fontSize: '1.2rem' }}>Fitwave.ai</div>
+      <div style={{ position: 'absolute', top: '25px', left: '30px', fontWeight: 'bold', fontFamily: 'OOOH Baby, cursive', fontSize: '1.5rem' }}>Fitwave.ai</div>
       
       <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
-      <p style={{ color: '#666' }}>Ensure you are centered for the best vitality tracking.</p>
+      <p style={{ color: '#666', fontSize: '1.1rem' }}>Position yourself so the AI can track your vitality effectively.</p>
 
       <div style={styles.videoBox}>
+        {/* פידבק טקסטואלי */}
         <div style={styles.feedbackOverlay}>{feedback}</div>
+        
         <video
           ref={videoRef}
           autoPlay
@@ -221,17 +230,20 @@ function CameraCalibration() {
           style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
         />
         <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+
+        {/* הכפתור הצף בתוך חלונית המצלמה */}
+        <button
+          style={styles.floatingButton}
+          onClick={() => { if(isValid.current) { stopCamera(); nav('/' + fromPage); } }}
+          onMouseOver={(e) => isValid.current && (e.target.style.transform = 'translateX(-50%) scale(1.05)')}
+          onMouseOut={(e) => e.target.style.transform = 'translateX(-50%) scale(1)'}
+        >
+          {isValid.current ? 'Ready to Start' : 'Checking Position...'}
+        </button>
       </div>
 
-      <button
-        style={styles.button}
-        onClick={() => { if(isValid.current) { stopCamera(); nav('/' + fromPage); } }}
-      >
-        Continue
-      </button>
-
-      <div style={{ marginTop: '40px', fontSize: '0.8rem', color: '#999' }}>
-        © Fitwave.ai 2026 | MediaPipe AI Tracking
+      <div style={{ marginTop: 'auto', padding: '20px', fontSize: '0.9rem', color: '#AAA' }}>
+        © Fitwave.ai 2026 | Powered by MediaPipe Vision
       </div>
     </div>
   );
