@@ -127,7 +127,7 @@ function DashboardAdmin222() {
               <th style={uiStyle.th}>level</th>
               <th style={uiStyle.th}>game1</th>
               <th style={uiStyle.th}>game2</th>
-              <th style={uiStyle.th} className="text-center">Analysis</th>
+              {/* <th style={uiStyle.th} className="text-center">Analysis</th> */}
             </tr>
           </thead>
           <tbody>
@@ -147,7 +147,8 @@ function DashboardAdmin222() {
   {game.game2.length > 0 
     ? `${game.game2.filter(value => value === true).length} / ${game.game2.length}` 
     : "uncomplete"}
-</td>                <td style={uiStyle.td}>
+</td>               
+ {/* <td style={uiStyle.td}>
                   <div className="d-flex justify-content-center">
                     <button
                       style={uiStyle.actionBtn}
@@ -160,7 +161,7 @@ function DashboardAdmin222() {
                       </svg>
                     </button>
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>
