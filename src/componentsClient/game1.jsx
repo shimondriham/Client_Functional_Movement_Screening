@@ -3,12 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
-import { doApiMethod } from '../services/apiService';
+import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game1() {
   const nav = useNavigate();
   const location = useLocation();
-  const fromPage = location.state?.from;
+  // const fromPage = location.state?.from;
   const p11Y = useRef(null);
   const p13Y = useRef(null);
   const videoRef = useRef(null);
@@ -17,12 +17,15 @@ function Game1() {
   const selfieSegmentationRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [idGame, setIdGame] = useState('');
   const [feedback, setFeedback] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const processLoopRef = useRef(null);
   const timerIntervalRef = useRef(null);
+  const [myInfo, setmyInfo] = useState({});
+
 
   // -------------------------------
   // CAMERA START
@@ -43,8 +46,6 @@ function Game1() {
       console.error('Camera access error:', err);
     }
   };
-
-  
 
   // -------------------------------
   // DRAW DRESSED CHARACTER ON BODY
@@ -113,7 +114,6 @@ function Game1() {
   // -------------------------------
   const processLandmarks = () => {
     if (!poseLandmarkerRef.current || !videoRef.current) return;
-    
     const now = performance.now();
     const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
     const videoWidth = videoRef.current.videoWidth;
@@ -125,21 +125,17 @@ function Game1() {
     }
 
     const landmarks = results.landmarks[0];
-    
     // Check shoulder positions (landmarks 11 and 12)
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
-    
     p11Y.current = leftShoulder.y;
     p13Y.current = rightShoulder.y;
-    
     const pixel11Y = p11Y.current * videoHeight;
     const pixel12Y = p13Y.current * videoHeight;
     const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
-    
-    if (!isValid.current)
-      isValid.current = isBendingDown;
-    
+
+
+
     if (!isBendingDown) setFeedback('Bend a bit more down');
     else setFeedback('Perfect!');
   };
@@ -170,7 +166,7 @@ function Game1() {
 
         // ציור הדמות במקום האדם
         drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
-        
+
         // Process landmarks for pose detection
         processLandmarks();
       });
@@ -194,23 +190,35 @@ function Game1() {
   // USE EFFECT INIT
   // -------------------------------
   useEffect(() => {
+    doApi();
     initSelfieSegmentation();
     initPoseLandmarker();
   }, []);
+
+
+  const doApi = async () => {
+    let url = "/users/myInfo";
+    try {
+      let data = await doApiGet(url);
+      setmyInfo(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const startGame = async () => {
     setIsPlaying(true);
     setElapsedTime(0);
     setGameArr([false, false, false]);
-    
+
     // Start the timer with timestamp
     const startTime = Date.now();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = setInterval(() => {
+    timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
       console.log('Elapsed time:', elapsed, 'ms');
-      
+
       // Check feedback and set arr based on time window
       if (elapsed >= 5000 && elapsed <= 6000) {
         if (feedback === 'Perfect!') {
@@ -222,7 +230,7 @@ function Game1() {
         }
       }
     }, 100);
-    
+
     // Don't pause the selfie segmentation processing
     if (guideVideoRef.current) {
       guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
@@ -304,16 +312,18 @@ function Game1() {
             // send to backend route /games
             (async () => {
               let dataBody = {
-                level: "Easy",
-                // level: user.difficulty,
+                level: myInfo.difficulty,
                 name: "game1",
                 game: gameArr,
               };
               try {
-              let data =  await doApiMethod('/games', 'POST', dataBody);
-              if (data.data._id) {
-                console.log(data.data._id);
-              }
+                let data = await doApiMethod('/games/', 'POST', dataBody);
+                if (data.data._id) {
+
+                  setIdGame(data.data._id);
+                  isValid.current = true;
+
+                }
                 console.log('arr sent to /games', gameArr);
               } catch (err) {
                 console.error('Failed to send arr to backend:', err);
@@ -392,8 +402,11 @@ function Game1() {
       {/* Continue Button */}
       <button
         onClick={() => {
+
           stopCamera();
-          nav('/' + fromPage);
+          nav('/game2', { state: { gameId: idGame, from: 'game1' } });
+          console.log('Navigating to game2 with gameId:', idGame);
+          // nav('/' + fromPage);
         }}
         disabled={!isValid.current}
         style={{

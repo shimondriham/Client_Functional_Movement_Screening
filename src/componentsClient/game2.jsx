@@ -2,12 +2,13 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { doApiMethod } from '../services/apiService';
+import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game2() {
   const nav = useNavigate();
   const location = useLocation();
-  const fromPage = location.state?.from;
+  const idGame = location.state?.gameId;
+  // const fromPage = location.state?.from;
   const p11Y = useRef(null);
   const p13Y = useRef(null);
   const videoRef = useRef(null);
@@ -20,6 +21,7 @@ function Game2() {
   const isValid = useRef(false);
   const timerIntervalRef = useRef(null);
   const processLoopRef = useRef(null);
+  const [myInfo, setmyInfo] = useState({});
 
   // -------------------------------
   // CAMERA START
@@ -41,7 +43,7 @@ function Game2() {
     }
   };
 
-  
+
 
   // -------------------------------
   // INIT POSE LANDMARKER
@@ -70,7 +72,7 @@ function Game2() {
   // -------------------------------
   const processLandmarks = () => {
     if (!poseLandmarkerRef.current || !videoRef.current) return;
-    
+
     const now = performance.now();
     const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
     const videoWidth = videoRef.current.videoWidth;
@@ -82,21 +84,20 @@ function Game2() {
     }
 
     const landmarks = results.landmarks[0];
-    
+
     // Check shoulder positions (landmarks 11 and 12)
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
-    
+
     p11Y.current = leftShoulder.y;
     p13Y.current = rightShoulder.y;
-    
+
     const pixel11Y = p11Y.current * videoHeight;
     const pixel12Y = p13Y.current * videoHeight;
     const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
-    
-    if (!isValid.current)
-      isValid.current = isBendingDown;
-    
+
+
+
     if (!isBendingDown) setFeedback('Bend bit more down');
     else setFeedback('Perfect!');
   };
@@ -107,7 +108,7 @@ function Game2() {
   const initSelfieSegmentation = async () => {
     try {
       await startCamera();
-      
+
       // Start continuous pose detection loop
       const processLoop = () => {
         if (videoRef.current && poseLandmarkerRef.current) {
@@ -125,23 +126,36 @@ function Game2() {
   // USE EFFECT INIT
   // -------------------------------
   useEffect(() => {
+    console.log(idGame);
+
+    doApi();
     initSelfieSegmentation();
     initPoseLandmarker();
   }, []);
+
+  const doApi = async () => {
+    let url = "/users/myInfo";
+    try {
+      let data = await doApiGet(url);
+      setmyInfo(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const startGame = async () => {
     setIsPlaying(true);
     setElapsedTime(0);
     setGameArr([false, false, false]);
-    
+
     // Start the timer with timestamp
     const startTime = Date.now();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = setInterval(() => {
+    timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
       console.log('Elapsed time:', elapsed, 'ms');
-      
+
       // Check feedback and set arr dynamically based on window size
       // windowSize (ms) defines how long each slot lasts (5000ms -> 5s windows)
       const windowSize = 5000;
@@ -155,7 +169,7 @@ function Game2() {
         });
       }
     }, 100);
-    
+
     // Don't pause the selfie segmentation processing
     if (guideVideoRef.current) {
       guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
@@ -241,15 +255,20 @@ function Game2() {
             // send to backend route /games
             (async () => {
               let dataBody = {
-                level: "Easy",
+                _id: idGame,
                 name: "game2",
                 game: gameArr,
               };
               try {
-              let data =  await doApiMethod('/games', 'POST', dataBody);
-              if (data.data._id) {
-                console.log(data.data._id);
-              }
+                console.log(idGame);
+
+                let data = await doApiMethod('/games/updateGame/', 'PATCH', dataBody);
+                console.log(data.data);
+
+                if (data.status === 200) {
+                  console.log('Game data updated successfully');
+                  isValid.current = true;
+                }
                 console.log('arr sent to /games', gameArr);
               } catch (err) {
                 console.error('Failed to send arr to backend:', err);
@@ -318,7 +337,8 @@ function Game2() {
       <button
         onClick={() => {
           stopCamera();
-          nav('/' + fromPage);
+          nav('/performanceAnalysis', { state: { gameId: idGame, from: 'game2' } });
+          console.log('Navigating to game2 with gameId:', idGame);
         }}
         disabled={!isValid.current}
         style={{
