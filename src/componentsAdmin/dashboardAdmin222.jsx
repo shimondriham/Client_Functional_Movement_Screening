@@ -42,9 +42,9 @@ function DashboardAdmin222() {
     }
   };
 
-  const toAdminResult = (id) => {
-    // navigate('/performanceAnalysisAdmin', { state: { gameId: id } });
-  };
+  // const toAdminResult = (id) => {
+  //   // navigate('/performanceAnalysisAdmin', { state: { gameId: id } });
+  // };
 
   const uiStyle = {
     wrapper: { fontFamily: "'Inter', sans-serif", padding: '20px', color: '#1A1A1A' },
