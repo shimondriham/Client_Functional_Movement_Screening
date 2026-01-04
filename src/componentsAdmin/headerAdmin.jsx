@@ -1,6 +1,9 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function HeaderAdmin() {
   const nav = useNavigate();
   const location = useLocation();
@@ -22,18 +25,25 @@ function HeaderAdmin() {
       justifyContent: 'space-between',
       alignItems: 'center',
       boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-      fontFamily: "'OOh Baby', cursive, sans-serif"
+      fontFamily: "'Inter', sans-serif" // עדכון לפונט נקי התואם לשאר הדפים
     },
     logoSection: {
-      fontWeight: 'bold',
-      fontSize: '1.2rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
       cursor: 'pointer'
     },
-    brandItalic: {
-      fontFamily: 'cursive',
-      fontStyle: 'italic',
-      fontWeight: '400',
-      color: '#F2743E'
+    logoImg: {
+      width: '110px', // גודל קומפקטי שמתאים ל-Header
+      height: 'auto',
+      borderRadius: '12px'
+    },
+    adminTag: {
+      fontSize: '0.85rem',
+      color: '#999',
+      fontWeight: '600',
+      letterSpacing: '0.5px',
+      textTransform: 'uppercase'
     },
     navGroup: {
       display: 'flex',
@@ -55,12 +65,13 @@ function HeaderAdmin() {
 
   return (
     <header style={uiStyle.headerWrapper}>
-      {/* Brand Section */}
+      {/* Brand Section - הוחלף בתמונה + המילה Admin */}
       <div style={uiStyle.logoSection} onClick={() => nav("/")}>
-        Fitwave<span style={uiStyle.brandItalic}>.ai</span> <span style={{fontSize: '0.8rem', color: '#999', marginLeft: '5px'}}>Admin</span>
+        <img src={Logo} alt="Fitwave.ai" style={uiStyle.logoImg} />
+        <span style={uiStyle.adminTag}>Admin</span>
       </div>
 
-      {/* Navigation Section */}
+      {/* Navigation Section - ללא שינוי בעיצוב */}
       <div style={uiStyle.navGroup}>
         <button 
           style={uiStyle.navBtn(location.pathname === "/admin")} 

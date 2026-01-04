@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { addEmail, addName } from '../featuers/myDetailsSlice';
 import { doApiMethod } from '../services/apiService';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function SignUpClient() {
   let nav = useNavigate();
   const dispatch = useDispatch();
@@ -49,23 +52,45 @@ function SignUpClient() {
     }
   }, [password, confirmPassword, setError, clearErrors]);
 
-  // סגנונות עיצוב לפי התמונה
   const styles = {
+    // הוספת position relative כדי שהלוגו המוחלט יתייחס למעטפת הזו
+    wrapper: {
+      position: 'relative',
+      minHeight: '100vh',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF'
+    },
+    logoContainer: {
+      position: 'absolute',
+      top: '30px',
+      left: '30px',
+      cursor: 'pointer'
+    },
+    logoImg: {
+      width: '130px', // גודל אחיד כמו בדף הלוגין
+      height: 'auto',
+      borderRadius: '12px' // השפה העיצובית המעוגלת שלך
+    },
     container: {
       fontFamily: "'Inter', sans-serif",
       maxWidth: '450px',
-      margin: '80px auto',
+      width: '100%',
+      margin: '100px auto', // הורדתי מעט כדי לתת מקום ללוגו
       textAlign: 'center',
+      padding: '0 20px'
     },
     header: {
       fontSize: '32px',
       fontWeight: '700',
-      marginBottom: '8px'
+      marginBottom: '8px',
+      color: '#1A1A1A'
     },
-    brandItalic: {
-      fontFamily: "'Playwrite IS', cursive", // פונט כתב יד דומה
-      fontStyle: 'italic',
-      fontWeight: '400'
+    brandName: {
+        fontFamily: "'Inter', sans-serif", // שימוש בפונט נקי במקום הכתב יד כדי שיהיה קריא
+        fontWeight: '700'
     },
     subHeader: {
       color: '#666',
@@ -78,7 +103,8 @@ function SignUpClient() {
       fontSize: '14px',
       fontWeight: '600',
       marginBottom: '8px',
-      marginLeft: '4px'
+      marginLeft: '4px',
+      color: '#1A1A1A'
     },
     input: {
       backgroundColor: '#F7F7F7',
@@ -86,19 +112,21 @@ function SignUpClient() {
       borderRadius: '12px',
       padding: '14px 20px',
       marginBottom: '4px',
-      fontSize: '15px'
+      fontSize: '15px',
+      width: '100%'
     },
     button: {
       backgroundColor: '#F2743E',
       color: 'white',
       border: 'none',
-      borderRadius: '25px',
-      padding: '12px 0',
+      borderRadius: '30px',
+      padding: '14px 0',
       fontSize: '16px',
       fontWeight: '600',
       width: '100%',
       marginTop: '20px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      transition: '0.3s'
     },
     footerLink: {
       color: '#F2743E',
@@ -117,56 +145,59 @@ function SignUpClient() {
   };
 
   return (
-    <div style={styles.container}>
-      {/* לוגו צדדי קטן בפינה (אופציונלי להוסיף כאן) */}
-      
-      <h1 style={styles.header}>
-        Create your <span style={styles.brandItalic}>Fitwave.ai</span> account
-      </h1>
-      <p style={styles.subHeader}>Start your journey to your vitality</p>
-
-      <form onSubmit={handleSubmit(onSubForm)}>
-        
-        <div className="mb-3">
-          <label style={styles.label}>Full Name*</label>
-          <input {...fullNameRef} type="text" style={styles.input} className="form-control" placeholder="Enter your full name" />
-          {errors.fullName && <small style={styles.errorText}>Please enter a valid name (2-20 chars)</small>}
-        </div>
-
-        <div className="mb-3">
-          <label style={styles.label}>Email*</label>
-          <input {...emailRef} type="email" style={styles.input} className="form-control" placeholder="Enter your email" />
-          {errors.email && <small style={styles.errorText}>Invalid email address</small>}
-        </div>
-
-        <div className="mb-3">
-          <label style={styles.label}>Password*</label>
-          <input {...passwordRef} type="password" style={styles.input} className="form-control" placeholder="Create a password" />
-          <small style={{...styles.subHeader, textAlign: 'left', display: 'block', marginTop: '4px', marginLeft: '4px'}}>
-            Must be at least 8 characters.
-          </small>
-          {errors.password && <small style={styles.errorText}>Password is too short</small>}
-        </div>
-
-        <div className="mb-3">
-          <label style={styles.label}>Confirm Password*</label>
-          <input {...ConfirmPasswordRef} type="password" style={styles.input} className="form-control" placeholder="Confirm your password" />
-          {errors.ConfirmPassword && <small style={styles.errorText}>{errors.ConfirmPassword.message || "Required field"}</small>}
-        </div>
-
-        <button 
-          style={{...styles.button, opacity: (!!errors.ConfirmPassword || !password) ? 0.7 : 1}} 
-          type="submit"
-          disabled={!!errors.ConfirmPassword || !password}
-        >
-          Create account
-        </button>
-      </form>
-
-      <div style={{ marginTop: '30px', fontSize: '14px' }}>
-        Already have an account? <span onClick={() => nav("/login")} style={styles.footerLink}>Log in</span>
+    <div style={styles.wrapper}>
+      {/* הלוגו בפינה השמאלית העליונה */}
+      <div style={styles.logoContainer} onClick={() => nav("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={styles.logoImg} />
       </div>
 
+      <div style={styles.container}>
+        <h1 style={styles.header}>
+          Create your <span style={styles.brandName}>Fitwave.ai</span> account
+        </h1>
+        <p style={styles.subHeader}>Start your journey to your vitality</p>
+
+        <form onSubmit={handleSubmit(onSubForm)}>
+          <div className="mb-3">
+            <label style={styles.label}>Full Name*</label>
+            <input {...fullNameRef} type="text" style={styles.input} placeholder="Enter your full name" />
+            {errors.fullName && <small style={styles.errorText}>Please enter a valid name (2-20 chars)</small>}
+          </div>
+
+          <div className="mb-3">
+            <label style={styles.label}>Email*</label>
+            <input {...emailRef} type="email" style={styles.input} placeholder="Enter your email" />
+            {errors.email && <small style={styles.errorText}>Invalid email address</small>}
+          </div>
+
+          <div className="mb-3">
+            <label style={styles.label}>Password*</label>
+            <input {...passwordRef} type="password" style={styles.input} placeholder="Create a password" />
+            <small style={{...styles.subHeader, textAlign: 'left', display: 'block', marginTop: '4px', marginLeft: '4px', marginBottom: '8px'}}>
+              Must be at least 8 characters.
+            </small>
+            {errors.password && <small style={styles.errorText}>Password is too short</small>}
+          </div>
+
+          <div className="mb-3">
+            <label style={styles.label}>Confirm Password*</label>
+            <input {...ConfirmPasswordRef} type="password" style={styles.input} placeholder="Confirm your password" />
+            {errors.ConfirmPassword && <small style={styles.errorText}>{errors.ConfirmPassword.message || "Required field"}</small>}
+          </div>
+
+          <button 
+            style={{...styles.button, opacity: (!!errors.ConfirmPassword || !password) ? 0.7 : 1}} 
+            type="submit"
+            disabled={!!errors.ConfirmPassword || !password}
+          >
+            Create account
+          </button>
+        </form>
+
+        <div style={{ marginTop: '30px', fontSize: '14px', color: '#666' }}>
+          Already have an account? <span onClick={() => nav("/login")} style={styles.footerLink}>Log in</span>
+        </div>
+      </div>
     </div>
   );
 }

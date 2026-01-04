@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function PerformanceAnalysis() {
   const navigate = useNavigate();
   const score = 80; // placeholder value
@@ -31,13 +34,17 @@ function PerformanceAnalysis() {
       position: 'relative',
       textAlign: 'center'
     },
-    logo: {
-      fontFamily: "'OOh Baby', cursive, sans-serif",
+    // קונטיינר ללוגו בפינה
+    logoContainer: {
       position: 'absolute',
       top: '30px',
       left: '40px',
-      fontWeight: 'bold',
-      fontSize: '1.2rem'
+      cursor: 'pointer'
+    },
+    logoImg: {
+      width: '120px',
+      height: 'auto',
+      borderRadius: '12px' // השפה העיצובית שלך
     },
     homeBtn: {
       position: 'absolute',
@@ -61,7 +68,7 @@ function PerformanceAnalysis() {
       color: '#1A1A1A'
     },
     brandItalic: {
-      fontFamily: 'cursive',
+      fontFamily: "'OOOH Baby', cursive",
       fontStyle: 'italic',
       fontWeight: '400',
       color: '#F2743E'
@@ -101,8 +108,10 @@ function PerformanceAnalysis() {
   return (
     <div style={styles.wrapper}>
       <div style={styles.card}>
-        {/* Logo */}
-        <div style={styles.logo}>Fitwave.ai</div>
+        {/* Logo - PNG Image */}
+        <div style={styles.logoContainer} onClick={() => navigate("/")}>
+          <img src={Logo} alt="Fitwave.ai" style={styles.logoImg} />
+        </div>
 
         {/* Home Button */}
         <button onClick={goHome} style={styles.homeBtn} title="Back to Dashboard">
@@ -126,8 +135,7 @@ function PerformanceAnalysis() {
           <h3 style={{fontWeight: '700', marginBottom: '15px'}}>Vitality Insights</h3>
           <p style={{ color: '#777', lineHeight: '1.8', fontSize: '1.05rem' }}>
             Your accuracy and consistency are improving! Keep maintaining this pace to reach your weekly goals. 
-            Phasellus urna justo, porta id semper eget, iaculis nec leo. Interdum et malesuada fames ac ante
-            ipsum primis in faucibus.
+            The movement patterns you practiced today directly contribute to your rehabilitation progress.
           </p>
         </div>
 
@@ -135,8 +143,15 @@ function PerformanceAnalysis() {
           Download Report (PDF)
         </button>
 
-        
+        <div style={styles.footerLine}>
+            © Fitwave.ai 2026 | Comprehensive Vitality Tracking
+        </div>
       </div>
+
+      {/* הזרקת פונט במידה וחסר בדף זה */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=OOOH+Baby&display=swap');
+      `}</style>
     </div>
   );
 }

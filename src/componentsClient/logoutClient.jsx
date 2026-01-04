@@ -4,6 +4,9 @@ import { deleteToken } from "../services/localService"
 import { addIfShowNav } from '../featuers/myDetailsSlice'
 import { useDispatch } from 'react-redux'
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function LogoutClient() {
   let nav = useNavigate()
   const dispatch = useDispatch();
@@ -30,7 +33,21 @@ function LogoutClient() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '20px',
+      position: 'relative' // הוספת position יחסי עבור הלוגו
+    },
+    // סטייל ללוגו בפינה
+    logoContainer: {
+      position: 'absolute',
+      top: '30px',
+      left: '30px',
+      cursor: 'pointer',
+      zIndex: 10
+    },
+    logoImg: {
+      width: '120px',
+      height: 'auto',
+      borderRadius: '12px'
     },
     card: {
       backgroundColor: '#FFFFFF',
@@ -72,6 +89,11 @@ function LogoutClient() {
 
   return (
     <div style={uiStyle.wrapper}>
+      {/* הלוגו שלנו בפינה השמאלית העליונה */}
+      <div style={uiStyle.logoContainer} onClick={() => nav("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={uiStyle.logoImg} />
+      </div>
+
       {showConfirm && (
         <div style={uiStyle.card}>
           <div style={{ fontSize: '2rem', marginBottom: '20px' }}>👋</div>
