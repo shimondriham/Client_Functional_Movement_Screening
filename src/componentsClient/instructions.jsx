@@ -33,7 +33,7 @@ function Instructions() {
     header: {
       fontSize: "2.5rem",
       fontWeight: "800",
-      margin: "70px 0 10px 0",
+      margin: "30px 0 10px 0",
       color: "#1A1A1A",
       textAlign: "center",
     },
@@ -94,7 +94,6 @@ function Instructions() {
     <div style={styles.wrapper}>
       {/* Brand logo */}
       <div style={styles.logo}>Fitwave.ai</div>
-
       <h1 style={styles.header}>
         General <span style={styles.brandItalic}>Instructions</span>
       </h1>

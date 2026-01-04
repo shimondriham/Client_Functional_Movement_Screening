@@ -360,7 +360,7 @@ function Game1() {
             top: 20,
             left: '50%',
             transform: 'translateX(-50%)',
-            color: 'deepskyblue',
+            color: '#F2743E',
             fontWeight: 'bold',
             fontSize: 22
           }}
@@ -389,7 +389,7 @@ function Game1() {
                 borderRadius: 8,
                 border: 'none',
                 cursor: 'pointer',
-                background: 'deepskyblue',
+                background: '#F2743E',
                 color: 'white'
               }}
             >
@@ -414,7 +414,7 @@ function Game1() {
           bottom: 20,
           right: 20,
           padding: '12px 24px',
-          background: 'rgb(54, 227, 215)',
+          background: '#F2743E',
           color: 'white',
           border: 'none',
           borderRadius: 6,
