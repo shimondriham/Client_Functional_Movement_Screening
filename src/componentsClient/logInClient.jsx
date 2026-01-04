@@ -6,6 +6,9 @@ import { addEmail, addIfShowNav, addName } from '../featuers/myDetailsSlice';
 import { doApiMethod } from '../services/apiService';
 import { saveTokenLocal } from '../services/localService';
 
+// וודאי שהקובץ נמצא בתיקיית assets שלך
+import Logo from '../assets/logo.png'; 
+
 const LoginClient = () => {
   const nav = useNavigate();
   const dispatch = useDispatch();
@@ -21,7 +24,6 @@ const LoginClient = () => {
       const resp = await doApiMethod(url, "POST", _dataBody);
       if (resp.data.token) {
         saveTokenLocal(resp.data.token);
-        // שאיבת השם מהתגובה של השרת - בטוח יותר
         dispatch(addName({ name: resp.data.fullName || resp.data.name || "User" }));
         dispatch(addEmail({ email: _dataBody.email }));
         dispatch(addIfShowNav({ ifShowNav: true }));
@@ -33,40 +35,42 @@ const LoginClient = () => {
     }
   };
 
-  // אובייקט עיצוב אחיד לפי הקו של Fitwave.ai
   const uiStyle = {
     wrapper: {
-      fontFamily: "'OOOH Baby', cursive, sans-serif",
       backgroundColor: '#FFFFFF',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: '100px',
-      position: 'relative'
+      justifyContent: 'center', 
+      position: 'relative', 
+      fontFamily: "'Inter', sans-serif",
     },
-    logoBox: {
+    logoContainer: {
       position: 'absolute',
-      top: '20px',
-      left: '20px',
-      fontSize: '1.2rem',
-      fontWeight: 'bold'
+      top: '30px',
+      left: '30px',
+      cursor: 'pointer'
+    },
+    logoImg: {
+      width: '130px', 
+      height: 'auto',
+      display: 'block',
+      // --- השינוי כאן ---
+      borderRadius: '12px' // עיגול פינות עדין שמתאים לשדות הקלט
     },
     header: {
       fontSize: '2.2rem',
       fontWeight: '700',
       marginBottom: '10px',
-      color: '#1A1A1A'
-    },
-    brandItalic: {
-      fontFamily: 'cursive',
-      fontStyle: 'italic',
-      fontWeight: '400'
+      color: '#1A1A1A',
+      textAlign: 'center'
     },
     subHeader: {
       color: '#666',
-      fontSize: '0.95rem',
-      marginBottom: '40px'
+      fontSize: '1rem',
+      marginBottom: '40px',
+      textAlign: 'center'
     },
     form: {
       width: '100%',
@@ -76,23 +80,25 @@ const LoginClient = () => {
     label: {
       display: 'block',
       textAlign: 'left',
-      fontSize: '0.9rem',
+      fontSize: '0.85rem',
       fontWeight: '600',
       marginBottom: '8px',
-      marginLeft: '4px',
-      color: '#1A1A1A'
+      color: '#1A1A1A',
+      paddingLeft: '4px'
     },
     input: {
       backgroundColor: '#F7F7F7',
-      border: 'none',
-      borderRadius: '12px',
+      border: '1px solid #EDEDED',
+      borderRadius: '12px', // תואם ללוגו עכשיו
       padding: '14px 20px',
       fontSize: '1rem',
       marginBottom: '4px',
-      width: '100%'
+      width: '100%',
+      outline: 'none',
+      transition: 'all 0.2s ease'
     },
     button: {
-      backgroundColor: '#F2743E', // הכתום מהתמונה
+      backgroundColor: '#F2743E', 
       color: '#FFFFFF',
       border: 'none',
       borderRadius: '30px',
@@ -102,41 +108,28 @@ const LoginClient = () => {
       marginTop: '24px',
       width: '100%',
       cursor: 'pointer',
-      transition: 'background 0.3s'
+      transition: 'transform 0.1s active'
     },
     link: {
       color: '#F2743E',
       fontWeight: '600',
       cursor: 'pointer',
       textDecoration: 'none'
-    },
-    footer: {
-      position: 'fixed',
-      bottom: '20px',
-      width: '100%',
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '0 40px',
-      fontSize: '0.8rem',
-      color: '#999'
     }
   };
 
   return (
     <div style={uiStyle.wrapper}>
-      {/* לוגו עליון */}
-      <div style={uiStyle.logoBox}>
-        Fitwave.ai
+      {/* הלוגו בצד שמאל למעלה עם פינות מעוגלות */}
+      <div style={uiStyle.logoContainer} onClick={() => nav("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={uiStyle.logoImg} />
       </div>
 
-      <h1 style={uiStyle.header}>
-        Welcome to <span style={uiStyle.brandItalic}>Fitwave.ai</span>
-      </h1>
+      <h1 style={uiStyle.header}>Welcome Back</h1>
       <p style={uiStyle.subHeader}>Start your journey to your vitality</p>
 
       <div style={uiStyle.form}>
         <form onSubmit={handleSubmit(onSubForm)}>
-          
           <div className="mb-4">
             <label style={uiStyle.label}>Email*</label>
             <input 
@@ -145,9 +138,10 @@ const LoginClient = () => {
                 pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Invalid email" } 
               })} 
               type="email" 
-              className="form-control shadow-none" 
               placeholder="Enter your email" 
               style={uiStyle.input}
+              onFocus={(e) => e.target.style.borderColor = '#F2743E'}
+              onBlur={(e) => e.target.style.borderColor = '#EDEDED'}
             />
             {errors.email && <small className="text-danger d-block text-start mt-1" style={{fontSize:'0.75rem'}}>{errors.email.message}</small>}
           </div>
@@ -160,9 +154,10 @@ const LoginClient = () => {
                 minLength: { value: 3, message: "Min 3 characters" } 
               })} 
               type="password" 
-              className="form-control shadow-none" 
               placeholder="Enter your password" 
               style={uiStyle.input}
+              onFocus={(e) => e.target.style.borderColor = '#F2743E'}
+              onBlur={(e) => e.target.style.borderColor = '#EDEDED'}
             />
             {errors.password && <small className="text-danger d-block text-start mt-1" style={{fontSize:'0.75rem'}}>{errors.password.message}</small>}
           </div>
@@ -173,18 +168,14 @@ const LoginClient = () => {
         </form>
 
         <div className='mt-4 text-center'>
-          <p style={{ fontSize: '0.9rem', color: '#333' }}>
-            <span 
-              onClick={() => nav("/SignUp")} 
-              style={uiStyle.link}
-            >
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>
+            Don't have an account?{' '}
+            <span onClick={() => nav("/SignUp")} style={uiStyle.link}>
               Create account
             </span>
           </p>
         </div>
       </div>
-
-     
     </div>
   );
 };

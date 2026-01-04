@@ -1,6 +1,9 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function Instructions() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -12,9 +15,9 @@ function Instructions() {
 
   const styles = {
     wrapper: {
-      fontFamily: "'OOh Baby', cursive, sans-serif",
+      fontFamily: "'Inter', sans-serif", // פונט נקי לשאר הטקסט
       backgroundColor: "#FFFFFF",
-      height: "100%",
+      minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -23,22 +26,27 @@ function Instructions() {
       overflow: "hidden",
       boxSizing: "border-box",
     },
-    logo: {
+    logoContainer: {
       position: "absolute",
-      top: "20px",
-      left: "25px",
-      fontWeight: "bold",
-      fontSize: "1.2rem",
+      top: "30px",
+      left: "30px",
+      cursor: "pointer",
+      zIndex: 10,
+    },
+    logoImg: {
+      width: "130px", // גודל אחיד לכל המערכת
+      height: "auto",
+      borderRadius: "12px", // השפה העיצובית שלך
     },
     header: {
-      fontSize: "2.5rem",
+      fontSize: "2.8rem",
       fontWeight: "800",
       margin: "30px 0 10px 0",
       color: "#1A1A1A",
       textAlign: "center",
     },
     brandItalic: {
-      fontFamily: "cursive",
+      fontFamily: "'OOOH Baby', cursive",
       fontStyle: "italic",
       fontWeight: "400",
       color: "#F2743E",
@@ -47,19 +55,21 @@ function Instructions() {
       color: "#666",
       textAlign: "center",
       maxWidth: "500px",
-      margin: "0 0 16px 0",
-      lineHeight: 1.4,
+      margin: "0 0 24px 0",
+      lineHeight: 1.6,
+      fontSize: "1.05rem",
     },
     videoContainer: {
       width: "100%",
-      maxWidth: "800px",
+      maxWidth: "750px",
       aspectRatio: "16/9",
       backgroundColor: "#F7F7F7",
       borderRadius: "24px",
       overflow: "hidden",
-      boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
-      margin: "16px 0 22px 0",
+      boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+      margin: "16px 0 32px 0",
       flexShrink: 0,
+      border: "1px solid #F0F0F0",
     },
     video: {
       width: "100%",
@@ -72,38 +82,33 @@ function Instructions() {
       color: "white",
       border: "none",
       borderRadius: "30px",
-      padding: "14px 50px",
+      padding: "16px 60px",
       fontSize: "1.1rem",
       fontWeight: "700",
       cursor: "pointer",
-      boxShadow: "0 4px 15px rgba(242, 116, 62, 0.3)",
-      transition: "transform 0.2s ease",
+      boxShadow: "0 6px 20px rgba(242, 116, 62, 0.3)",
+      transition: "all 0.3s ease",
       flexShrink: 0,
     },
   };
 
-  const handleMouseOver = (e) => {
-    e.currentTarget.style.transform = "scale(1.05)";
-  };
-
-  const handleMouseOut = (e) => {
-    e.currentTarget.style.transform = "scale(1)";
-  };
-
   return (
     <div style={styles.wrapper}>
-      {/* Brand logo */}
-      <div style={styles.logo}>Fitwave.ai</div>
+      {/* לוגו PNG בפינה השמאלית העליונה */}
+      <div style={styles.logoContainer} onClick={() => navigate("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={styles.logoImg} />
+      </div>
+
       <h1 style={styles.header}>
         General <span style={styles.brandItalic}>Instructions</span>
       </h1>
 
       <p style={styles.description}>
         Watch the video carefully to ensure your training session is effective
-        and safe.
+        and safe. Proper form is the key to recovery.
       </p>
 
-      {/* Video Display */}
+      {/* תצוגת וידאו */}
       <div style={styles.videoContainer}>
         <video
           controls
@@ -119,10 +124,16 @@ function Instructions() {
         type="button"
         style={styles.button}
         onClick={handleContinue}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = "scale(1.05)";
+          e.currentTarget.style.backgroundColor = "#E6632D";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.backgroundColor = "#F2743E";
+        }}
       >
-        Continue
+        Continue to Calibration
       </button>
     </div>
   );

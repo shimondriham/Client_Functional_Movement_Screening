@@ -2,6 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 function CameraCalibration() {
   const nav = useNavigate();
   const location = useLocation();
@@ -43,7 +46,6 @@ function CameraCalibration() {
       if (!videoRef.current) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          // הגדלת רזולוציית המקור לצילום איכותי יותר בחלון גדול
           video: { width: 1280, height: 720 }
         });
         videoRef.current.srcObject = stream;
@@ -91,7 +93,7 @@ function CameraCalibration() {
             });
 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 3; // קצת יותר עבה לחלון הגדול
+            ctx.lineWidth = 3; 
             const connections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
               [12, 24], [11, 23], [23, 24],
@@ -140,7 +142,7 @@ function CameraCalibration() {
 
     initPoseLandmarker();
     return () => { if (animationId) cancelAnimationFrame(animationId); };
-  }, [feedback]); // הוספת feedback לתלות כדי לעדכן את עיצוב הטקסט אם צריך
+  }, [feedback]); 
 
   const stopCamera = () => {
     try {
@@ -167,9 +169,9 @@ function CameraCalibration() {
     brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#F2743E' },
     videoBox: {
       position: 'relative',
-      width: '900px', // הגדלת החלון ל-900px
-      maxWidth: '95vw', // התאמה למסכים קטנים
-      aspectRatio: '16/9', // מעבר ליחס רחב יותר שמתאים למסכים מודרניים
+      width: '900px', 
+      maxWidth: '95vw', 
+      aspectRatio: '16/9', 
       borderRadius: '32px',
       overflow: 'hidden',
       boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
@@ -190,7 +192,6 @@ function CameraCalibration() {
       zIndex: 10,
       boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
     },
-    // עיצוב כפתור צף
     floatingButton: {
       position: 'absolute',
       bottom: '40px',
@@ -209,18 +210,34 @@ function CameraCalibration() {
       transition: 'all 0.3s ease',
       zIndex: 20,
       whiteSpace: 'nowrap'
+    },
+    // סטייל חדש ללוגו
+    logoImg: {
+        position: 'absolute',
+        top: '25px',
+        left: '30px',
+        width: '120px',
+        height: 'auto',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        zIndex: 100
     }
   };
 
   return (
     <div style={styles.wrapper}>
-      <div style={{ position: 'absolute', top: '25px', left: '30px', fontWeight: 'bold', fontFamily: 'OOOH Baby, cursive', fontSize: '1.5rem' }}>Fitwave.ai</div>
+      {/* הלוגו החדש במקום הטקסט הישן */}
+      <img 
+        src={Logo} 
+        alt="Fitwave.ai" 
+        style={styles.logoImg} 
+        onClick={() => nav("/")} 
+      />
       
       <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
       <p style={{ color: '#666', fontSize: '1.1rem' }}>Position yourself so the AI can track your vitality effectively.</p>
 
       <div style={styles.videoBox}>
-        {/* פידבק טקסטואלי */}
         <div style={styles.feedbackOverlay}>{feedback}</div>
         
         <video
@@ -231,7 +248,6 @@ function CameraCalibration() {
         />
         <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
 
-        {/* הכפתור הצף בתוך חלונית המצלמה */}
         <button
           style={styles.floatingButton}
           onClick={() => { if(isValid.current) { stopCamera(); nav('/' + fromPage); } }}

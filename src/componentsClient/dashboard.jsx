@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { addIfShowNav, addIsAdmin, addName } from "../featuers/myDetailsSlice";
 import { doApiGet } from "../services/apiService";
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png'; 
+
 const InitializeGames = [
   { id: 1, name: "game1", locked: false },
   { id: 2, name: "game2", locked: true },
@@ -122,25 +125,51 @@ function Dashboard() {
     navigate("/performanceAnalysis");
   };
 
-  /* ===== styles (נשארו שלך) ===== */
   const styles = {
     container: {
-      fontFamily: "'OOOH Baby', cursive, sans-serif",
+      fontFamily: "'Inter', sans-serif", // החלפתי לפונט נקי יותר לניהול הנתונים
       backgroundColor: "#FFFFFF",
       minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      paddingTop: "80px",
+      paddingTop: "100px",
       position: "relative",
+    },
+    topBar: {
+      position: "absolute",
+      top: "0",
+      left: "0",
+      right: "0",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "20px 25px",
+      width: "100%",
+      boxSizing: "border-box",
+      backgroundColor: "#FFFFFF",
+      zIndex: 100
+    },
+    // עיצוב הלוגו בפינה
+    logoContainer: {
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center"
+    },
+    logoImg: {
+      width: "110px", 
+      height: "auto",
+      borderRadius: "12px"
     },
     header: {
       fontSize: "2.5rem",
       fontWeight: "800",
       marginBottom: "8px",
+      color: "#1A1A1A",
+      fontFamily: "'Inter', sans-serif"
     },
     brandItalic: {
-      fontFamily: "cursive",
+      fontFamily: "'OOOH Baby', cursive",
       fontStyle: "italic",
       fontWeight: "400",
       color: "#F2743E",
@@ -172,48 +201,32 @@ function Dashboard() {
     resultBtn: {
       position: "fixed",
       bottom: "50px",
-      right: "80px",
+      right: "50px",
       padding: "16px 35px",
       fontSize: "1.1rem",
       fontWeight: "700",
-      borderRadius: "12px",
-      background: "white",
-      color: "#1A1A1A",
-      border: "2px solid #F0F0F0",
+      borderRadius: "30px",
+      background: "#1A1A1A",
+      color: "#FFFFFF",
+      border: "none",
       cursor: "pointer",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-    },
-    topBar: {
-      position: "absolute",
-      top: "20px",
-      left: "0",
-      right: "0",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "0 25px",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    logo: {
-      fontSize: "1.2rem",
-      fontWeight: "700",
+      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+      transition: "0.3s"
     },
     burgerContainer: {
       position: "relative",
       zIndex: 1000,
     },
     burgerButton: {
-      backgroundColor: isBurgerHover ? "#E9ECEF" : "#ffffff",
-      border: "1px solid #dee2e6",
-      borderRadius: "8px",
+      backgroundColor: isBurgerHover ? "#F7F7F7" : "#FFFFFF",
+      border: "1px solid #EDEDED",
+      borderRadius: "12px",
       padding: "10px 12px",
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       transition: "0.2s",
-      overflow: "hidden",
     },
     burgerIcon: {
       width: "18px",
@@ -228,23 +241,13 @@ function Dashboard() {
       margin: "auto",
       width: "18px",
       height: "2px",
-      backgroundColor: "#212529",
+      backgroundColor: "#1A1A1A",
       borderRadius: "2px",
       transition: "0.25s",
     },
-
-    line1: {
-      top: isMenuOpen ? "6px" : "0",
-      transform: isMenuOpen ? "rotate(45deg)" : "none",
-    },
-    line2: {
-      top: "6px",
-      opacity: isMenuOpen ? 0 : 1,
-    },
-    line3: {
-      top: isMenuOpen ? "6px" : "12px",
-      transform: isMenuOpen ? "rotate(-45deg)" : "none",
-    },
+    line1: { top: isMenuOpen ? "6px" : "0", transform: isMenuOpen ? "rotate(45deg)" : "none" },
+    line2: { top: "6px", opacity: isMenuOpen ? 0 : 1 },
+    line3: { top: isMenuOpen ? "6px" : "12px", transform: isMenuOpen ? "rotate(-45deg)" : "none" },
 
     dropdownMenu: {
       position: "absolute",
@@ -252,26 +255,33 @@ function Dashboard() {
       right: "0",
       minWidth: "220px",
       backgroundColor: "white",
-      borderRadius: "8px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      borderRadius: "16px",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
       padding: "8px 0",
       zIndex: 3000,
+      border: "1px solid #F0F0F0"
     },
     dropdownItem: {
       background: "none",
       border: "none",
       width: "100%",
       textAlign: "left",
-      padding: "8px 16px",
+      padding: "12px 20px",
       cursor: "pointer",
       fontSize: "14px",
+      fontWeight: "500",
+      color: "#1A1A1A",
+      transition: "0.2s"
     },
   };
 
   return (
     <div style={styles.container}>
+      {/* Top Bar המכיל לוגו PNG משמאל והמבורגר מימין */}
       <div style={styles.topBar}>
-        <div style={styles.logo}>Fitwave.ai</div>
+        <div style={styles.logoContainer} onClick={() => navigate("/")}>
+          <img src={Logo} alt="Fitwave.ai" style={styles.logoImg} />
+        </div>
 
         <div style={styles.burgerContainer} ref={burgerRef}>
           <button
@@ -291,17 +301,30 @@ function Dashboard() {
           {isMenuOpen && (
             <div style={styles.dropdownMenu}>
               {isAdmin && (
-                <button style={styles.dropdownItem} onClick={onAdminClick}>
-                  Admin
+                <button 
+                    style={styles.dropdownItem} 
+                    onClick={onAdminClick}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#F7F7F7'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  Admin Panel
                 </button>
               )}
               <button
                 style={styles.dropdownItem}
                 onClick={onMedicalIntakeFormClick}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#F7F7F7'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
-                Medical Intake Form
+                Medical Intake
               </button>
-              <button style={styles.dropdownItem} onClick={onLogout}>
+              <div style={{ height: '1px', backgroundColor: '#F0F0F0', margin: '4px 0' }} />
+              <button 
+                style={{ ...styles.dropdownItem, color: '#F2743E' }} 
+                onClick={onLogout}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#F7F7F7'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
                 Logout
               </button>
             </div>
@@ -322,13 +345,18 @@ function Dashboard() {
             >
               {game.name}
             </button>
-            {idx < games.length - 1 && <span>→</span>}
+            {idx < games.length - 1 && <span style={{ color: '#DDD', fontSize: '1.5rem' }}>→</span>}
           </React.Fragment>
         ))}
       </div>
 
-      <button style={styles.resultBtn} onClick={handleResultClick}>
-        Result
+      <button 
+        style={styles.resultBtn} 
+        onClick={handleResultClick}
+        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+      >
+        Performance Result
       </button>
     </div>
   );

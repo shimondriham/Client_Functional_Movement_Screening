@@ -3,6 +3,9 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { doApiMethod } from '../services/apiService';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 const Varification = () => {
   let nav = useNavigate();
   const myEmail = useSelector(state => state.myDetailsSlice.email);
@@ -38,23 +41,19 @@ const Varification = () => {
   };
 
   const doApi = async (_dataBody) => {
-    console.log(_dataBody);
     let url = "/users/verification";
     try {
       let resp = await doApiMethod(url, "PATCH", _dataBody);
-      console.log(resp);
-      // שים לב: בתיקון קטן השתמשתי ב-== להשוואה (במקום = שהיה במקור) כדי למנוע באגים עתידיים
-      if (resp.data.status == 200 || resp.status == 200) {
-        console.log("You are now a valid user");
+      if (resp.data.status === 200 || resp.status === 200) {
         nav("/login");
       }
     }
     catch (error) {
       console.log(error.response?.data);
+      alert("Invalid verification code, please try again.");
     }
   }
 
-  // אובייקט עיצוב אחיד
   const uiStyle = {
     wrapper: {
       fontFamily: "'Inter', sans-serif",
@@ -63,33 +62,38 @@ const Varification = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: '100px',
-      position: 'relative'
+      justifyContent: 'center', // ממרכז את התוכן אנכית
+      position: 'relative',
+      padding: '0 20px'
     },
-    logo: {
+    logoContainer: {
       position: 'absolute',
-      top: '20px',
-      left: '20px',
-      fontSize: '1.2rem',
-      fontWeight: 'bold'
+      top: '30px',
+      left: '30px',
+      cursor: 'pointer'
+    },
+    logoImg: {
+      width: '130px', // גודל אחיד לכל המערכת
+      height: 'auto',
+      borderRadius: '12px'
     },
     header: {
-      fontSize: '2rem',
+      fontSize: '2.2rem',
       fontWeight: '700',
-      marginBottom: '8px',
-      color: '#000'
+      marginBottom: '10px',
+      color: '#1A1A1A',
+      textAlign: 'center'
     },
-    brandItalic: {
-      fontFamily: 'cursive',
-      fontStyle: 'italic',
-      fontWeight: '400'
+    brandName: {
+      fontWeight: '700'
     },
     subHeader: {
       color: '#666',
-      fontSize: '0.95rem',
+      fontSize: '1rem',
       marginBottom: '40px',
-      maxWidth: '350px',
-      textAlign: 'center'
+      maxWidth: '400px',
+      textAlign: 'center',
+      lineHeight: '1.5'
     },
     input: {
       width: '55px',
@@ -97,11 +101,16 @@ const Varification = () => {
       fontSize: '24px',
       textAlign: 'center',
       backgroundColor: '#F7F7F7',
-      border: 'none',
+      border: '2px solid transparent',
       borderRadius: '12px',
       fontWeight: '600',
       outline: 'none',
-      transition: '0.3s'
+      transition: 'all 0.2s ease',
+      margin: '0 5px'
+    },
+    inputFocus: {
+        borderColor: '#F2743E',
+        backgroundColor: '#FFFFFF'
     },
     button: {
       backgroundColor: '#F2743E',
@@ -115,34 +124,39 @@ const Varification = () => {
       width: '100%',
       maxWidth: '320px',
       cursor: 'pointer',
+      transition: 'opacity 0.3s',
       opacity: isCodeComplete ? 1 : 0.6
     },
-    footer: {
-      position: 'fixed',
-      bottom: '20px',
-      width: '100%',
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '0 40px',
-      fontSize: '0.8rem',
-      color: '#999'
+    resendText: {
+        marginTop: '30px', 
+        fontSize: '14px', 
+        color: '#666'
+    },
+    resendLink: { 
+        color: '#F2743E', 
+        fontWeight: '600', 
+        cursor: 'pointer',
+        marginLeft: '5px'
     }
   };
 
   return (
     <div style={uiStyle.wrapper}>
-      <div style={uiStyle.logo}>🏆 Fitwave.ai</div>
+      {/* הלוגו בפינה השמאלית העליונה */}
+      <div style={uiStyle.logoContainer} onClick={() => nav("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={uiStyle.logoImg} />
+      </div>
 
       <h1 style={uiStyle.header}>
-        Account <span style={uiStyle.brandItalic}>Verification</span>
+        Account <span style={uiStyle.brandName}>Verification</span>
       </h1>
       
       <p style={uiStyle.subHeader}>
         Enter the 5-digit security code we sent to: <br />
-        <strong style={{ color: '#000' }}>{myEmail || "your email"}</strong>
+        <strong style={{ color: '#1A1A1A' }}>{myEmail || "your email"}</strong>
       </p>
 
-      <div className="d-flex justify-content-center gap-2">
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
         {code.map((value, index) => (
           <input
             key={index}
@@ -153,6 +167,14 @@ const Varification = () => {
             value={value}
             onChange={(event) => handleChange(event, index)}
             onKeyDown={(event) => handleKeyDown(event, index)}
+            onFocus={(e) => {
+                e.target.style.borderColor = '#F2743E';
+                e.target.style.backgroundColor = '#FFFFFF';
+            }}
+            onBlur={(e) => {
+                e.target.style.borderColor = 'transparent';
+                e.target.style.backgroundColor = '#F7F7F7';
+            }}
             autoFocus={index === 0}
           />
         ))}
@@ -166,11 +188,10 @@ const Varification = () => {
         Verify Account
       </button>
 
-      <div style={{ marginTop: '30px', fontSize: '14px', color: '#666' }}>
-       <span style={{ color: '#F2743E', fontWeight: '600', cursor: 'pointer' }}>Resend</span>
+      <div style={uiStyle.resendText}>
+        Didn't receive the code? 
+        <span style={uiStyle.resendLink}>Resend</span>
       </div>
-
-      
     </div>
   );
 }

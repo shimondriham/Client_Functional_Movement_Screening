@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { doApiMethod } from '../services/apiService';
 
+// ייבוא הלוגו כ-PNG
+import Logo from '../assets/logo.png';
+
 const heightOptions = Array.from({ length: 81 }, (_, i) => 140 + i);
 const weightOptions = Array.from({ length: 111 }, (_, i) => 40 + i);
 
@@ -61,10 +64,28 @@ function MedicalIntakeForm() {
 
   // Styles based on Fitwave.ai design line
   const uiStyle = {
-    wrapper: { fontFamily: "'Inter', sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh', padding: '40px 20px' },
-    container: { maxWidth: '650px', margin: '0 auto' },
-    header: { fontSize: '2rem', fontWeight: '800', marginBottom: '10px', textAlign: 'center' },
-    brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', fontWeight: '400', color: '#F2743E' },
+    wrapper: { 
+        fontFamily: "'Inter', sans-serif", 
+        backgroundColor: '#FFFFFF', 
+        minHeight: '100vh', 
+        padding: '40px 20px',
+        position: 'relative' // הוספת position יחסי עבור הלוגו
+    },
+    logoContainer: {
+        position: 'absolute',
+        top: '30px',
+        left: '30px',
+        cursor: 'pointer',
+        zIndex: 10
+    },
+    logoImg: {
+        width: '120px',
+        height: 'auto',
+        borderRadius: '12px'
+    },
+    container: { maxWidth: '650px', margin: '40px auto 0 auto' }, // הוספת מרווח עליון מהלוגו
+    header: { fontSize: '2.2rem', fontWeight: '800', marginBottom: '10px', textAlign: 'center' },
+    brandItalic: { fontFamily: "'OOOH Baby', cursive", fontStyle: 'italic', fontWeight: '400', color: '#F2743E' },
     sectionTitle: { fontSize: '1.1rem', fontWeight: '700', marginTop: '30px', marginBottom: '15px', color: '#1A1A1A' },
     input: { backgroundColor: '#F7F7F7', border: 'none', borderRadius: '12px', padding: '12px 15px', fontSize: '1rem' },
     label: { fontWeight: '600', fontSize: '0.9rem', marginBottom: '8px', display: 'block' },
@@ -77,6 +98,11 @@ function MedicalIntakeForm() {
 
   return (
     <div style={uiStyle.wrapper}>
+      {/* לוגו המותג בפינה השמאלית העליונה */}
+      <div style={uiStyle.logoContainer} onClick={() => navigate("/")}>
+        <img src={Logo} alt="Fitwave.ai" style={uiStyle.logoImg} />
+      </div>
+
       <div style={uiStyle.container}>
         <h1 style={uiStyle.header}>Medical <span style={uiStyle.brandItalic}>Intake</span> Form</h1>
         <p style={{textAlign: 'center', color: '#666', marginBottom: '40px'}}>Help us tailor the perfect vitality journey for you.</p>
@@ -154,6 +180,11 @@ function MedicalIntakeForm() {
       <div style={{textAlign: 'center', marginTop: '40px', fontSize: '0.8rem', color: '#999'}}>
         © Fitwave.ai 2026 | Privacy & Data Protection
       </div>
+      
+      {/* הזרקת פונט Google במידה וחסר בדף זה */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=OOOH+Baby&display=swap');
+      `}</style>
     </div>
   )
 }
