@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+
 function Instructions() {
   const navigate = useNavigate();
   const location = useLocation();

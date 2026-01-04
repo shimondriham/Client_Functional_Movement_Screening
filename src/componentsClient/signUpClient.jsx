@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { addEmail, addName } from '../featuers/myDetailsSlice';
 import { doApiMethod } from '../services/apiService';
+import thisIcon from '../assets/icon.png';
 
 function SignUpClient() {
   let nav = useNavigate();

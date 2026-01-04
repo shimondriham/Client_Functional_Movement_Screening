@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
+import thisIcon from '../assets/icon.png';
 
 function CameraCalibration() {
   const nav = useNavigate();
   const location = useLocation();
-  const fromPage = location.state?.from;
+  const fromPage = location.state?.from || 'dashboard';
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -13,6 +14,14 @@ function CameraCalibration() {
   const [feedback, setFeedback] = useState('Initializing...');
   const isValid = useRef(false);
   const poseLandmarkerRef = useRef(null);
+
+  // הוספת הפונט לדף באופן דינמי
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Oooh+Baby&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }, []);
 
   useEffect(() => {
     let animationId;
@@ -43,14 +52,15 @@ function CameraCalibration() {
       if (!videoRef.current) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          // הגדלת רזולוציית המקור לצילום איכותי יותר בחלון גדול
           video: { width: 1280, height: 720 }
         });
         videoRef.current.srcObject = stream;
 
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          processFrames();
+          if (videoRef.current) {
+            videoRef.current.play();
+            processFrames();
+          }
         };
       } catch (err) {
         console.error('Camera access error:', err);
@@ -60,77 +70,69 @@ function CameraCalibration() {
 
     const processFrames = () => {
       const loop = () => {
-        if (poseLandmarkerRef.current && videoRef.current) {
+        if (poseLandmarkerRef.current && videoRef.current && videoRef.current.readyState >= 2) {
           const now = performance.now();
           const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
 
-          const ctx = canvasRef.current.getContext('2d');
-          const videoWidth = videoRef.current.videoWidth;
-          const videoHeight = videoRef.current.videoHeight;
+          if (canvasRef.current && videoRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            const videoWidth = videoRef.current.videoWidth;
+            const videoHeight = videoRef.current.videoHeight;
 
-          canvasRef.current.width = videoWidth;
-          canvasRef.current.height = videoHeight;
+            canvasRef.current.width = videoWidth;
+            canvasRef.current.height = videoHeight;
 
-          ctx.clearRect(0, 0, videoWidth, videoHeight);
-          ctx.save();
-          ctx.scale(-1, 1);
-          ctx.translate(-videoWidth, 0);
+            ctx.clearRect(0, 0, videoWidth, videoHeight);
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.translate(-videoWidth, 0);
 
-          if (!results.landmarks || results.landmarks.length === 0) {
-            setFeedback('No person detected');
-          } else {
-            const landmarks = results.landmarks[0];
-            
-            ctx.fillStyle = '#F2743E';
-            landmarks.forEach(point => {
-              const x = point.x * videoWidth;
-              const y = point.y * videoHeight;
-              ctx.beginPath();
-              ctx.arc(x, y, 4, 0, 2 * Math.PI);
-              ctx.fill();
-            });
+            if (!results.landmarks || results.landmarks.length === 0) {
+              setFeedback('No person detected');
+            } else {
+              const landmarks = results.landmarks[0];
+              
+              ctx.fillStyle = '#F2743E';
+              landmarks.forEach(point => {
+                ctx.beginPath();
+                ctx.arc(point.x * videoWidth, point.y * videoHeight, 4, 0, 2 * Math.PI);
+                ctx.fill();
+              });
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 3; // קצת יותר עבה לחלון הגדול
-            const connections = [
-              [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
-              [12, 24], [11, 23], [23, 24],
-              [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31]
-            ];
-            connections.forEach(([start, end]) => {
-              const p1 = landmarks[start];
-              const p2 = landmarks[end];
-              ctx.beginPath();
-              ctx.moveTo(p1.x * videoWidth, p1.y * videoHeight);
-              ctx.lineTo(p2.x * videoWidth, p2.y * videoHeight);
-              ctx.stroke();
-            });
-            ctx.restore();
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+              ctx.lineWidth = 3;
+              const connections = [
+                [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
+                [12, 24], [11, 23], [23, 24],
+                [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31]
+              ];
+              connections.forEach(([start, end]) => {
+                const p1 = landmarks[start];
+                const p2 = landmarks[end];
+                ctx.beginPath();
+                ctx.moveTo(p1.x * videoWidth, p1.y * videoHeight);
+                ctx.lineTo(p2.x * videoWidth, p2.y * videoHeight);
+                ctx.stroke();
+              });
+              ctx.restore();
 
-            const xs = landmarks.map(p => p.x);
-            const ys = landmarks.map(p => p.y);
-            const minX = Math.min(...xs);
-            const maxX = Math.max(...xs);
-            const minY = Math.min(...ys);
-            const maxY = Math.max(...ys);
+              const ys = landmarks.map(p => p.y);
+              const minY = Math.min(...ys);
+              const maxY = Math.max(...ys);
+              const boxHeight = (maxY - minY);
+              
+              const isCentered = Math.abs(landmarks[0].x - 0.5) < 0.2;
+              const isVisible = boxHeight > 0.5;
 
-            const boxHeight = (maxY - minY) * videoHeight;
-            const centerX = ((minX + maxX) / 2) * videoWidth;
-            const centerY = ((minY + maxY) / 2) * videoHeight;
-
-            const toleranceX = videoWidth * 0.15;
-            const toleranceY = videoHeight * 0.15;
-            const isCentered =
-              Math.abs(centerX - videoWidth / 2) < toleranceX &&
-              Math.abs(centerY - videoHeight / 2) < toleranceY;
-            const isVisible = boxHeight > videoHeight * 0.5 && boxHeight < videoHeight * 0.95;
-
-            if(!isValid.current)
-              isValid.current = isCentered && isVisible;
-
-            if (!isCentered) setFeedback('Move to center');
-            else if (!isVisible) setFeedback('Adjust distance');
-            else setFeedback('Perfect!');
+              if (isCentered && isVisible) {
+                isValid.current = true;
+                setFeedback('Perfect!');
+              } else if (!isCentered) {
+                setFeedback('Move to center');
+              } else {
+                setFeedback('Adjust distance');
+              }
+            }
           }
         }
         animationId = requestAnimationFrame(loop);
@@ -139,17 +141,16 @@ function CameraCalibration() {
     };
 
     initPoseLandmarker();
-    return () => { if (animationId) cancelAnimationFrame(animationId); };
-  }, [feedback]); // הוספת feedback לתלות כדי לעדכן את עיצוב הטקסט אם צריך
+    return () => { 
+      if (animationId) cancelAnimationFrame(animationId);
+      stopCamera(); 
+    };
+  }, [feedback]);
 
   const stopCamera = () => {
-    try {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null;
-      }
-      videoRef.current?.pause();
-    } catch (err) { console.warn('Error stopping camera:', err); }
+    if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    }
   };
 
   const styles = {
@@ -160,16 +161,47 @@ function CameraCalibration() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '20px',
-      position: 'relative'
+      padding: '0',
+      margin: '0'
     },
-    header: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '8px' },
+    navBar: {
+      height: '60px',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+      backgroundColor: '#fff',
+      borderBottom: '1px solid #eee',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+      zIndex: 100
+    },
+    logoGroup: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    },
+    logoText: {
+      fontSize: '2.2rem', // הפונט הזה בדרך כלל דורש גודל קצת יותר גדול כדי להיות קריא
+      fontFamily: "'Oooh Baby', cursive",
+      color: '#111',
+      lineHeight: 1
+    },
+    contentArea: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '20px',
+      width: '100%',
+      flex: 1
+    },
+    header: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '8px', marginTop: '10px' },
     brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#F2743E' },
     videoBox: {
       position: 'relative',
-      width: '900px', // הגדלת החלון ל-900px
-      maxWidth: '95vw', // התאמה למסכים קטנים
-      aspectRatio: '16/9', // מעבר ליחס רחב יותר שמתאים למסכים מודרניים
+      width: '900px',
+      maxWidth: '95vw',
+      aspectRatio: '16/9',
       borderRadius: '32px',
       overflow: 'hidden',
       boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
@@ -178,72 +210,74 @@ function CameraCalibration() {
     },
     feedbackOverlay: {
       position: 'absolute',
-      top: '30px',
+      top: '20px',
       left: '50%',
       transform: 'translateX(-50%)',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      padding: '12px 30px',
+      padding: '10px 25px',
       borderRadius: '50px',
       fontWeight: '800',
-      fontSize: '1.2rem',
       color: feedback === 'Perfect!' ? '#28a745' : '#F2743E',
-      zIndex: 10,
-      boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+      zIndex: 10
     },
-    // עיצוב כפתור צף
     floatingButton: {
       position: 'absolute',
-      bottom: '40px',
+      bottom: '30px',
       left: '50%',
       transform: 'translateX(-50%)',
       backgroundColor: '#F2743E',
       color: 'white',
       border: 'none',
       borderRadius: '50px',
-      padding: '18px 80px',
-      fontSize: '1.3rem',
+      padding: '15px 60px',
+      fontSize: '1.2rem',
       fontWeight: '700',
-      cursor: isValid.current ? 'pointer' : 'not-allowed',
-      opacity: isValid.current ? 1 : 0.6,
-      boxShadow: '0 10px 25px rgba(242, 116, 62, 0.4)',
-      transition: 'all 0.3s ease',
+      cursor: 'pointer',
       zIndex: 20,
-      whiteSpace: 'nowrap'
+      transition: 'transform 0.2s'
     }
   };
 
   return (
     <div style={styles.wrapper}>
-      <div style={{ position: 'absolute', top: '25px', left: '30px', fontWeight: 'bold', fontFamily: 'OOOH Baby, cursive', fontSize: '1.5rem' }}>Fitwave.ai</div>
-      
-      <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
-      <p style={{ color: '#666', fontSize: '1.1rem' }}>Position yourself so the AI can track your vitality effectively.</p>
+      <nav style={styles.navBar}>
+        <div style={styles.logoGroup}>
+          <img src={thisIcon} alt="Logo" width="28" style={{ opacity: 0.75 }} />
+          <span style={styles.logoText}>Fitwave.ai</span>
+        </div>
+      </nav>
 
-      <div style={styles.videoBox}>
-        {/* פידבק טקסטואלי */}
-        <div style={styles.feedbackOverlay}>{feedback}</div>
-        
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
-        />
-        <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+      <div style={styles.contentArea}>
+        <h1 style={styles.header}>Camera <span style={styles.brandItalic}>Calibration</span></h1>
+        <p style={{ color: '#666', fontSize: '1.1rem' }}>Position yourself so the AI can track your vitality effectively.</p>
 
-        {/* הכפתור הצף בתוך חלונית המצלמה */}
-        <button
-          style={styles.floatingButton}
-          onClick={() => { if(isValid.current) { stopCamera(); nav('/' + fromPage); } }}
-          onMouseOver={(e) => isValid.current && (e.target.style.transform = 'translateX(-50%) scale(1.05)')}
-          onMouseOut={(e) => e.target.style.transform = 'translateX(-50%) scale(1)'}
-        >
-          {isValid.current ? 'Ready to Start' : 'Checking Position...'}
-        </button>
-      </div>
+        <div style={styles.videoBox}>
+          <div style={styles.feedbackOverlay}>{feedback}</div>
+          
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
+          />
+          <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
 
-      <div style={{ marginTop: 'auto', padding: '20px', fontSize: '0.9rem', color: '#AAA' }}>
-        © Fitwave.ai 2026 | Powered by MediaPipe Vision
+          {isValid.current && (
+            <button
+              style={styles.floatingButton}
+              onClick={() => { stopCamera(); nav('/' + fromPage); }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateX(-50%) scale(1.05)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateX(-50%) scale(1)'}
+            >
+              Ready to Start
+            </button>
+          )}
+        </div>
+
+        <div style={{ marginTop: 'auto', padding: '20px', color: '#AAA', fontSize: '0.8rem' }}>
+          © Fitwave.ai 2026
+        </div>
       </div>
     </div>
   );

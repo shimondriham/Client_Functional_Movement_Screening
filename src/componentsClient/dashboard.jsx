@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addIfShowNav, addIsAdmin, addName } from "../featuers/myDetailsSlice";
 import { doApiGet } from "../services/apiService";
+import thisIcon from '../assets/icon.png';
+
 
 const InitializeGames = [
   { id: 1, name: "game1", locked: false },

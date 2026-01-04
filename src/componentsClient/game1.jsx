@@ -4,6 +4,8 @@ import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
 import { doApiGet, doApiMethod } from '../services/apiService';
+import thisIcon from '../assets/icon.png';
+
 
 function Game1() {
   const nav = useNavigate();

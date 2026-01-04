@@ -2,6 +2,8 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import thisIcon from '../assets/icon.png';
+
 
 function Practice() {
   let nav = useNavigate();

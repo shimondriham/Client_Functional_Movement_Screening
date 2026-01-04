@@ -4,6 +4,7 @@ import reactIcon from '../assets/react.svg';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { doApiGet, doApiMethod } from '../services/apiService';
 
+
 function Game2() {
   const nav = useNavigate();
   const location = useLocation();

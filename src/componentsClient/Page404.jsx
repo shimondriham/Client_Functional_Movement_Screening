@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import thisIcon from '../assets/icon.png';
+
 
 function Page404() {
   const navigate = useNavigate();

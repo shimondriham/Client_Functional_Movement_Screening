@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import { addIfShowNav } from "../featuers/myDetailsSlice";
+import thisIcon from '../assets/icon.png';
 
 const Welcome = () => {
     const nav = useNavigate();
@@ -18,14 +19,16 @@ const Welcome = () => {
         <div className="welcome-container">
             {/* הוספת הפונט OOOH Baby */}
             <style jsx global>{`
-                @import url('https://fonts.googleapis.com/css2?family=OOOH+Baby&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Oooh+Baby&display=swap');
             `}</style>
             
             <div className="welcome-hero">
                 <div className="hero-content">
                     <div className="logo-section">
                         <div className="logo-circle">
-                            <h1 className="logo-text">FITWAVE.AI</h1>
+                            {/* הטמעת הלוגו לצד הטקסט */}
+                            <img src={thisIcon} alt="Fitwave Logo" className="welcome-logo-img" />
+                            <h1 className="logo-text">Fitwave.ai</h1>
                         </div>
                         <p className="logo-subtitle">Waves of Rehabilitation. Waves of Enjoyment.</p>
                     </div>
@@ -47,6 +50,7 @@ const Welcome = () => {
                 </div>
             </div>
 
+            {/* שאר הקטעים נשארים ללא שינוי... */}
             <div className="about-section">
                 <div className="about-card">
                     <h3 className="about-title">About Our Mission</h3>
@@ -140,7 +144,6 @@ const Welcome = () => {
 
                 .welcome-hero {
                     background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.5)), url('src/assets/welcomePhoto.png') no-repeat;
-; ;
                     background-size: cover;
                     background-position: center;
                     min-height: 100vh;
@@ -160,19 +163,25 @@ const Welcome = () => {
                     display: inline-flex;
                     align-items: center;
                     background: var(--white);
-                    padding: 0.8rem 1.8rem;
+                    padding: 0.6rem 1.5rem;
                     border-radius: 50px;
                     margin-bottom: 1.5rem;
                     box-shadow: var(--shadow);
+                    gap: 12px; /* רווח בין התמונה לטקסט */
+                }
+
+                .welcome-logo-img {
+                    width: 35px;
+                    height: auto;
+                    opacity: 0.9;
                 }
 
                 .logo-text {
-                    font-family: 'OOOH Baby', cursive, sans-serif;
-                    font-size: 2.2rem; /* הגדלתי קצת כי הפונט הזה נראה קטן יותר */
-                    font-weight: 400; /* בפונט זה, 400 נראה יותר טוב מ-800 */
+                    font-family: 'Oooh Baby', cursive, sans-serif;
+                    font-size: 2.2rem;
+                    font-weight: 400;
                     margin: 0;
                     color: var(--dark-text);
-                    letter-spacing: 1px; /* שיניתי ממינוס לחיובי */
                 }
 
                 .logo-subtitle {
@@ -190,12 +199,11 @@ const Welcome = () => {
 
                 .highlight {
                     display: block;
-                    font-family: 'OOOH Baby', cursive, sans-serif; /* אותו פונט ל-highlight */
-                    font-style: italic;
+                    font-family: 'Oooh Baby', cursive, sans-serif;
                     color: var(--primary-orange);
                     font-weight: 400;
                     margin-top: 10px;
-                    font-size: 3.4rem; /* קצת יותר גדול */
+                    font-size: 3.4rem;
                 }
 
                 .hero-subtitle {
@@ -243,183 +251,33 @@ const Welcome = () => {
                     box-shadow: 0 10px 20px rgba(242, 116, 62, 0.4);
                 }
 
-                .about-section {
-                    padding: 80px 20px;
-                    background: var(--light-bg);
-                }
-
-                .about-card {
-                    max-width: 1000px;
-                    margin: 0 auto;
-                    background: var(--white);
-                    border-radius: 32px;
-                    padding: 50px;
-                    box-shadow: var(--shadow);
-                }
-
-                .about-title, .section-title, .cta-title {
-                    color: var(--dark-text);
-                    font-size: 2.2rem;
-                    font-weight: 800;
-                    margin-bottom: 20px;
-                }
-
-                .about-lead {
-                    font-size: 1.3rem;
-                    color: var(--primary-orange);
-                    font-weight: 700;
-                    margin-bottom: 20px;
-                }
-
-                .about-text {
-                    font-size: 1.1rem;
-                    line-height: 1.8;
-                    color: var(--gray-text);
-                }
-
-                .text-emphasis {
-                    color: var(--primary-orange);
-                    font-weight: 600;
-                }
-
-                .features-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 30px;
-                    margin-top: 50px;
-                }
-
-                .feature-item {
-                    padding: 30px;
-                    background: var(--light-bg);
-                    border-radius: 20px;
-                    transition: 0.3s;
-                }
-
-                .feature-item h4 {
-                    font-weight: 700;
-                    margin: 15px 0 10px;
-                }
-
+                /* שאר הסטיילים נשארים אותו דבר... */
+                .about-section { padding: 80px 20px; background: var(--light-bg); }
+                .about-card { max-width: 1000px; margin: 0 auto; background: var(--white); border-radius: 32px; padding: 50px; box-shadow: var(--shadow); }
+                .about-title, .section-title, .cta-title { color: var(--dark-text); font-size: 2.2rem; font-weight: 800; margin-bottom: 20px; }
+                .about-lead { font-size: 1.3rem; color: var(--primary-orange); font-weight: 700; margin-bottom: 20px; }
+                .about-text { font-size: 1.1rem; line-height: 1.8; color: var(--gray-text); }
+                .text-emphasis { color: var(--primary-orange); font-weight: 600; }
+                .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 50px; }
+                .feature-item { padding: 30px; background: var(--light-bg); border-radius: 20px; transition: 0.3s; }
+                .feature-item h4 { font-weight: 700; margin: 15px 0 10px; }
                 .feature-icon { font-size: 2.5rem; }
-
-                .how-it-works {
-                    padding: 80px 20px;
-                    text-align: center;
-                }
-
-                .steps-container {
-                    display: flex;
-                    justify-content: center;
-                    gap: 40px;
-                    max-width: 1100px;
-                    margin: 50px auto 0;
-                    flex-wrap: wrap;
-                }
-
-                .step-number {
-                    width: 60px;
-                    height: 60px;
-                    background: var(--primary-orange);
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1.5rem;
-                    font-weight: 800;
-                    margin: 0 auto 20px;
-                }
-
-                .vision-section {
-                    background: var(--dark-text);
-                    color: var(--white);
-                    padding: 100px 20px;
-                    text-align: center;
-                }
-
-                .vision-quote {
-                    font-size: 1.8rem;
-                    font-style: italic;
-                    max-width: 800px;
-                    margin: 0 auto 30px;
-                    line-height: 1.5;
-                }
-
-                .cta-section {
-                    padding: 100px 20px;
-                    text-align: center;
-                }
-
-                .btn-cta-primary {
-                    background: var(--primary-orange);
-                    color: white;
-                    border: none;
-                    padding: 15px 40px;
-                    border-radius: 40px;
-                    font-weight: 700;
-                    font-size: 1.2rem;
-                    cursor: pointer;
-                    margin: 10px;
-                    transition: 0.3s;
-                }
-
-                .btn-cta-primary:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 20px rgba(242, 116, 62, 0.4);
-                }
-
-                .btn-cta-secondary {
-                    background: white;
-                    color: var(--primary-orange);
-                    border: 2px solid var(--primary-orange);
-                    padding: 15px 40px;
-                    border-radius: 40px;
-                    font-weight: 700;
-                    font-size: 1.2rem;
-                    cursor: pointer;
-                    margin: 10px;
-                    transition: 0.3s;
-                }
-
-                .btn-cta-secondary:hover {
-                    background: var(--light-bg);
-                }
+                .how-it-works { padding: 80px 20px; text-align: center; }
+                .steps-container { display: flex; justify-content: center; gap: 40px; max-width: 1100px; margin: 50px auto 0; flex-wrap: wrap; }
+                .step-number { width: 60px; height: 60px; background: var(--primary-orange); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 20px; }
+                .vision-section { background: var(--dark-text); color: var(--white); padding: 100px 20px; text-align: center; }
+                .vision-quote { font-size: 1.8rem; font-style: italic; max-width: 800px; margin: 0 auto 30px; line-height: 1.5; }
+                .cta-section { padding: 100px 20px; text-align: center; }
+                .btn-cta-primary { background: var(--primary-orange); color: white; border: none; padding: 15px 40px; border-radius: 40px; font-weight: 700; font-size: 1.2rem; cursor: pointer; margin: 10px; transition: 0.3s; }
+                .btn-cta-secondary { background: white; color: var(--primary-orange); border: 2px solid var(--primary-orange); padding: 15px 40px; border-radius: 40px; font-weight: 700; font-size: 1.2rem; cursor: pointer; margin: 10px; transition: 0.3s; }
 
                 @media (max-width: 768px) {
-                    .hero-title { 
-                        font-size: 2.2rem; 
-                    }
-                    .highlight {
-                        font-size: 2.4rem;
-                    }
-                    .logo-text {
-                        font-size: 1.8rem;
-                    }
-                    .about-card { 
-                        padding: 30px; 
-                    }
-                    .hero-buttons { 
-                        flex-direction: column; 
-                        align-items: center; 
-                    }
-                    .btn-hero {
-                        width: 100%;
-                        max-width: 300px;
-                        margin-bottom: 1rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .hero-title {
-                        font-size: 1.8rem;
-                    }
-                    .highlight {
-                        font-size: 2rem;
-                    }
-                    .logo-text {
-                        font-size: 1.6rem;
-                    }
+                    .hero-title { font-size: 2.2rem; }
+                    .highlight { font-size: 2.4rem; }
+                    .logo-text { font-size: 1.8rem; }
+                    .about-card { padding: 30px; }
+                    .hero-buttons { flex-direction: column; align-items: center; }
+                    .btn-hero { width: 100%; max-width: 300px; margin-bottom: 1rem; }
                 }
             `}</style>
         </div>

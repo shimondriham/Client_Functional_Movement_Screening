@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { doApiMethod } from '../services/apiService';
+import thisIcon from '../assets/icon.png';
+
 
 const heightOptions = Array.from({ length: 81 }, (_, i) => 140 + i);
 const weightOptions = Array.from({ length: 111 }, (_, i) => 40 + i);
