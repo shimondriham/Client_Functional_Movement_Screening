@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
-import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { doApiGet, doApiMethod } from '../services/apiService';
+import React, { useRef, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import reactIcon from "../assets/react.svg";
+import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
+import { doApiGet, doApiMethod } from "../services/apiService";
 
 function Game2() {
   const nav = useNavigate();
@@ -15,7 +15,7 @@ function Game2() {
   const guideVideoRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState("");
   const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
@@ -31,7 +31,7 @@ function Game2() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 }
+        video: { width: 640, height: 480 },
       });
       videoRef.current.srcObject = stream;
 
@@ -39,11 +39,9 @@ function Game2() {
         videoRef.current.play();
       };
     } catch (err) {
-      console.error('Camera access error:', err);
+      console.error("Camera access error:", err);
     }
   };
-
-
 
   // -------------------------------
   // INIT POSE LANDMARKER
@@ -51,19 +49,22 @@ function Game2() {
   const initPoseLandmarker = async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
 
-      poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
-        },
-        runningMode: 'VIDEO',
-        numPoses: 1
-      });
+      poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          },
+          runningMode: "VIDEO",
+          numPoses: 1,
+        }
+      );
     } catch (error) {
-      console.error('Error initializing PoseLandmarker:', error);
+      console.error("Error initializing PoseLandmarker:", error);
     }
   };
 
@@ -74,12 +75,15 @@ function Game2() {
     if (!poseLandmarkerRef.current || !videoRef.current) return;
 
     const now = performance.now();
-    const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+    const results = poseLandmarkerRef.current.detectForVideo(
+      videoRef.current,
+      now
+    );
     const videoWidth = videoRef.current.videoWidth;
     const videoHeight = videoRef.current.videoHeight;
 
     if (!results.landmarks || results.landmarks.length === 0) {
-      setFeedback('No person detected');
+      setFeedback("No person detected");
       return;
     }
 
@@ -94,12 +98,11 @@ function Game2() {
 
     const pixel11Y = p11Y.current * videoHeight;
     const pixel12Y = p13Y.current * videoHeight;
-    const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
+    const isBendingDown =
+      pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3;
 
-
-
-    if (!isBendingDown) setFeedback('Bend bit more down');
-    else setFeedback('Perfect!');
+    if (!isBendingDown) setFeedback("Bend bit more down");
+    else setFeedback("Perfect!");
   };
 
   // -------------------------------
@@ -118,7 +121,7 @@ function Game2() {
       };
       processLoopRef.current = requestAnimationFrame(processLoop);
     } catch (err) {
-      console.error('Failed to init camera', err);
+      console.error("Failed to init camera", err);
     }
   };
 
@@ -141,7 +144,7 @@ function Game2() {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   const startGame = async () => {
     setIsPlaying(true);
@@ -154,14 +157,14 @@ function Game2() {
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
-      console.log('Elapsed time:', elapsed, 'ms');
+      console.log("Elapsed time:", elapsed, "ms");
 
       // Check feedback and set arr dynamically based on window size
       // windowSize (ms) defines how long each slot lasts (5000ms -> 5s windows)
       const windowSize = 5000;
       const idx = Math.floor(elapsed / windowSize);
-      if (feedback === 'Perfect!' && idx >= 0 && idx < gameArr.length) {
-        setGameArr(prev => {
+      if (feedback === "Perfect!" && idx >= 0 && idx < gameArr.length) {
+        setGameArr((prev) => {
           if (prev[idx]) return prev; // already set
           const next = [...prev];
           next[idx] = true;
@@ -172,11 +175,15 @@ function Game2() {
 
     // Don't pause the selfie segmentation processing
     if (guideVideoRef.current) {
-      guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
+      guideVideoRef.current
+        .play()
+        .catch((err) => console.error("Guide video play error:", err));
     }
     // Ensure camera is running and segmentation continues
     if (videoRef.current && videoRef.current.paused) {
-      videoRef.current.play().catch(err => console.error('Camera play error:', err));
+      videoRef.current
+        .play()
+        .catch((err) => console.error("Camera play error:", err));
     }
   };
 
@@ -197,7 +204,7 @@ function Game2() {
         timerIntervalRef.current = null;
       }
     } catch (err) {
-      console.warn('Error stopping camera:', err);
+      console.warn("Error stopping camera:", err);
     }
   };
 
@@ -207,17 +214,17 @@ function Game2() {
   return (
     <div
       style={{
-        width: '100%',
-        height: 'calc(100vh - 60px)',
-        overflow: 'hidden',
-        background: 'black'
+        width: "100%",
+        height: "calc(100vh - 60px)",
+        overflow: "hidden",
+        background: "black",
       }}
     >
       <div
         style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%'
+          position: "relative",
+          width: "100%",
+          height: "100%",
         }}
       >
         {/* Live Camera - Small in bottom right */}
@@ -227,17 +234,17 @@ function Game2() {
           playsInline
           muted
           style={{
-            position: 'absolute',
+            position: "absolute",
             bottom: 20,
             right: 20,
-            width: '20%',
-            height: 'auto',
-            maxHeight: '30%',
-            objectFit: 'cover',
-            transform: 'scaleX(-1)',
+            width: "20%",
+            height: "auto",
+            maxHeight: "30%",
+            objectFit: "cover",
+            transform: "scaleX(-1)",
             borderRadius: 8,
-            border: '2px solid white',
-            zIndex: 3
+            border: "2px solid white",
+            zIndex: 3,
           }}
         />
 
@@ -262,41 +269,45 @@ function Game2() {
               try {
                 console.log(idGame);
 
-                let data = await doApiMethod('/games/updateGame/', 'PATCH', dataBody);
+                let data = await doApiMethod(
+                  "/games/updateGame/",
+                  "PATCH",
+                  dataBody
+                );
                 console.log(data.data);
 
                 if (data.status === 200) {
-                  console.log('Game data updated successfully');
+                  console.log("Game data updated successfully");
                   isValid.current = true;
                 }
-                console.log('arr sent to /games', gameArr);
+                console.log("arr sent to /games", gameArr);
               } catch (err) {
-                console.error('Failed to send arr to backend:', err);
+                console.error("Failed to send arr to backend:", err);
               }
             })();
           }}
           style={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            zIndex: 1,
           }}
         />
 
         {/* Feedback */}
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: 20,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: '#F2743E',
-            fontWeight: 'bold',
+            left: "50%",
+            transform: "translateX(-50%)",
+            color: "#F2743E",
+            fontWeight: "bold",
             fontSize: 22,
-            padding: '12px 24px',
-            zIndex: 100
+            padding: "12px 24px",
+            zIndex: 100,
           }}
         >
           {feedback}
@@ -305,26 +316,26 @@ function Game2() {
         {!isPlaying && (
           <div
             style={{
-              position: 'absolute',
+              position: "absolute",
               inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               zIndex: 10,
-              background: 'rgba(0,0,0,0.3)'
+              background: "rgba(0,0,0,0.3)",
             }}
           >
             <button
               onClick={startGame}
               style={{
-                padding: '18px 32px',
+                padding: "18px 32px",
                 fontSize: 22,
-                fontWeight: 'bold',
+                fontWeight: "bold",
                 borderRadius: 8,
-                border: 'none',
-                cursor: 'pointer',
-                background: '#F2743E',
-                color: 'white'
+                border: "none",
+                cursor: "pointer",
+                background: "#F2743E",
+                color: "white",
               }}
             >
               Start
@@ -337,21 +348,42 @@ function Game2() {
       <button
         onClick={() => {
           stopCamera();
-          nav('/performanceAnalysis', { state: { gameId: idGame, from: 'game2' } });
-          console.log('Navigating to game2 with gameId:', idGame);
+          (async () => {
+            try {
+              if (!idGame) {
+                console.warn("No game id available to fetch current game");
+                nav("/performanceAnalysis", {
+                  state: { gameId: idGame, from: "game2" },
+                });
+                return;
+              }
+              const resp = await doApiGet(`/currentGame/${idGame}`);
+              const currentGame = resp && resp.data ? resp.data : null;
+              console.log("Fetched current game before navigate:", currentGame);
+              nav("/performanceAnalysis", {
+                state: { gameId: idGame, from: "game2", gameData: currentGame },
+              });
+            } catch (err) {
+              console.error("Failed to fetch current game:", err);
+              nav("/performanceAnalysis", {
+                state: { gameId: idGame, from: "game2" },
+              });
+            }
+          })();
+          console.log("Navigating to performanceAnalysis with gameId:", idGame);
         }}
         disabled={!isValid.current}
         style={{
-          position: 'absolute',
+          position: "absolute",
           bottom: 20,
           right: 20,
-          padding: '12px 24px',
-          background: '#F2743E',
-          color: 'white',
-          border: 'none',
+          padding: "12px 24px",
+          background: "#F2743E",
+          color: "white",
+          border: "none",
           borderRadius: 6,
-          fontWeight: 'bold',
-          zIndex: 4
+          fontWeight: "bold",
+          zIndex: 4,
         }}
       >
         Continue

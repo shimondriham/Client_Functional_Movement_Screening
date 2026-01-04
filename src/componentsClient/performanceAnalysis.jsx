@@ -1,24 +1,47 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { doApiGet } from "../services/apiService";
 
 function PerformanceAnalysis() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedGameData = location.state?.gameData;
+  const passedGameId = location.state?.gameId;
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const score = 80; // Placeholder לציון האמיתי
+  let score = 0; 
 
   useEffect(() => {
     fetchGameData();
+  }, []);
+  // Ensure we start at the top of the page when this route mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
   }, []);
 
   const fetchGameData = async () => {
     try {
       setLoading(true);
-      const data = await doApiGet("/games/allUsergames");
-      console.log("Games data:", data.data);
-      setGames(data.data || []);
+      // If the page was navigated with specific game data, use it
+      if (passedGameData) {
+        console.log("Using passed game data:", passedGameData);
+        const item = Array.isArray(passedGameData)
+          ? passedGameData[passedGameData.length - 1]
+          : passedGameData;
+        setGames(item ? [item] : []);
+      } else if (passedGameId) {
+        // Fetch only the specified game
+        const data = await doApiGet(`/currentGame/${passedGameId}`);
+        console.log("Fetched currentGame:", data.data);
+        setGames(data.data ? [data.data] : []);
+      } else {
+        const data = await doApiGet("/games/allUsergames");
+        console.log("Games data:", data.data);
+        const arr = Array.isArray(data.data) ? data.data : [];
+        const latest = arr.length ? arr[arr.length - 1] : null;
+        setGames(latest ? [latest] : []);
+      }
       setError(null);
     } catch (err) {
       console.error("Error fetching games:", err);
@@ -43,16 +66,19 @@ function PerformanceAnalysis() {
       alignItems: "center",
       justifyContent: "center",
       padding: "24px",
+      boxSizing: "border-box",
     },
     card: {
       backgroundColor: "#FFFFFF",
       maxWidth: "900px",
       width: "100%",
-      borderRadius: "32px", // פינות מעוגלות מאוד כמו בעיצוב החדש
-      padding: "60px",
+      borderRadius: "32px",
+      padding: "40px",
       boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
       position: "relative",
       textAlign: "center",
+      maxHeight: "calc(100vh - 48px)",
+      overflowY: "auto",
     },
     logo: {
       position: "absolute",
@@ -193,67 +219,40 @@ function PerformanceAnalysis() {
                 textAlign: "center",
               }}
             >
-              Games Completed
+              Latest Game Session
             </h3>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-            >
-              {games.map((game, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: "15px",
-                    backgroundColor: "#F7F7F7",
-                    borderRadius: "12px",
-                    borderLeft: "4px solid #F2743E",
-                  }}
-                >
-                  {game.game1 && (
-                    <div>
-                      <p
-                        style={{
-                          fontWeight: "600",
-                          color: "#1A1A1A",
-                          margin: "5px 0",
-                        }}
-                      >
-                        Game 1
-                      </p>
-                      <p
-                        style={{
-                          color: "#666",
-                          fontSize: "0.9rem",
-                          margin: "5px 0",
-                        }}
-                      >
-                        Score: <strong>{game.game1}</strong>
-                      </p>
-                    </div>
-                  )}
-                  {game.game2 && (
-                    <div>
-                      <p
-                        style={{
-                          fontWeight: "600",
-                          color: "#1A1A1A",
-                          margin: "5px 0",
-                        }}
-                      >
-                        Game 2
-                      </p>
-                      <p
-                        style={{
-                          color: "#666",
-                          fontSize: "0.9rem",
-                          margin: "5px 0",
-                        }}
-                      >
-                        Score: <strong>{game.game2}</strong>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {games.map((game, index) => {
+                // The server stores the recorded game array at `game.game` (per Game2 PATCH)
+                // Handle nested arrays (e.g., [[true,false], ...]) by flattening.
+                let recorded = [];
+                if (Array.isArray(game.game)) recorded = game.game.flat(Infinity);
+                const total = recorded.length || 0;
+                const correct = total > 0 ? recorded.filter(Boolean).length : 0;
+                const scorePercent = total > 0 ? Math.round((correct / total) * 100) : 0;
+                const level = game.level ?? (total > 0 ? `${total} windows` : "N/A");
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "15px",
+                      backgroundColor: "#F7F7F7",
+                      borderRadius: "12px",
+                      borderLeft: "4px solid #F2743E",
+                    }}
+                  >
+                    <p style={{ fontWeight: "600", color: "#1A1A1A", margin: "5px 0" }}>
+                      Game ID: <strong>{game._id ?? game.id ?? 'Unknown'}</strong>
+                    </p>
+                    <p style={{ color: "#666", fontSize: "0.95rem", margin: "5px 0" }}>
+                      Level: <strong>{level}</strong>
+                    </p>
+                    <p style={{ color: "#666", fontSize: "0.95rem", margin: "5px 0" }}>
+                      Score: <strong>{scorePercent}%</strong> ({correct}/{total})
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
