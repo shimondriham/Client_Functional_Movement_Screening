@@ -66,7 +66,7 @@ function Instructions() {
       backgroundColor: "#F7F7F7",
       borderRadius: "24px",
       overflow: "hidden",
-      boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+      // boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
       margin: "16px 0 32px 0",
       flexShrink: 0,
       border: "1px solid #F0F0F0",

@@ -13,7 +13,6 @@ const InitializeGames = [
   { id: 3, name: "game3", locked: true },
   { id: 4, name: "game4", locked: true },
   { id: 5, name: "game5", locked: true },
-  { id: 6, name: "game6", locked: true },
 ];
 
 function Dashboard() {
@@ -105,7 +104,6 @@ function Dashboard() {
           { id: 3, name: "game3", locked: true },
           { id: 4, name: "game4", locked: true },
           { id: 5, name: "game5", locked: true },
-          { id: 6, name: "game6", locked: true },
         ]);
       }
     } catch (error) {
