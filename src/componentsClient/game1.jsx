@@ -206,20 +206,37 @@ function Game1() {
     }
   }
 
+ 
   const startGame = async () => {
-    setIsPlaying(true);
-    setElapsedTime(0);
-    setGameArr([false, false, false]);
+  setIsPlaying(true);
+  setElapsedTime(0);
+  setGameArr([false, false, false]);
 
-    // Start the timer with timestamp
+  // ⏳ wait 3 seconds before starting video + timer
+  setTimeout(() => {
+    // ▶️ start guide video
+    if (guideVideoRef.current) {
+      guideVideoRef.current
+        .play()
+        .catch(err => console.error('Guide video play error:', err));
+    }
+
+    // ▶️ ensure camera keeps running
+    if (videoRef.current && videoRef.current.paused) {
+      videoRef.current
+        .play()
+        .catch(err => console.error('Camera play error:', err));
+    }
+
+    // ⏱️ start timer AFTER delay
     const startTime = Date.now();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
-      console.log('Elapsed time:', elapsed, 'ms');
+      console.log('Elapsed time: ', elapsed, 'ms');
 
-      // Check feedback and set arr based on time window
       if (elapsed >= 5000 && elapsed <= 6000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
@@ -230,16 +247,8 @@ function Game1() {
         }
       }
     }, 100);
-
-    // Don't pause the selfie segmentation processing
-    if (guideVideoRef.current) {
-      guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
-    }
-    // Ensure camera is running and segmentation continues
-    if (videoRef.current && videoRef.current.paused) {
-      videoRef.current.play().catch(err => console.error('Camera play error:', err));
-    }
-  };
+  }, 3000);
+};
 
   const stopCamera = () => {
     try {
@@ -301,7 +310,7 @@ function Game1() {
         {/* Background MP4 */}
         <video
           ref={guideVideoRef}
-          src="src/assets/videoplayback.mp4"
+          src="src/assets/game1_video.mp4"
           muted
           playsInline
           onEnded={() => {
@@ -360,7 +369,7 @@ function Game1() {
             top: 20,
             left: '50%',
             transform: 'translateX(-50%)',
-            color: '#F2743E',
+            color: 'deepskyblue',
             fontWeight: 'bold',
             fontSize: 22
           }}
@@ -389,7 +398,7 @@ function Game1() {
                 borderRadius: 8,
                 border: 'none',
                 cursor: 'pointer',
-                background: '#F2743E',
+                background: 'deepskyblue',
                 color: 'white'
               }}
             >
@@ -414,7 +423,7 @@ function Game1() {
           bottom: 20,
           right: 20,
           padding: '12px 24px',
-          background: '#F2743E',
+          background: 'rgb(54, 227, 215)',
           color: 'white',
           border: 'none',
           borderRadius: 6,
