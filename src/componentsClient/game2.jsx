@@ -237,7 +237,7 @@ function Game2() {
         {/* Background MP4 - Large, full screen */}
         <video
           ref={guideVideoRef}
-          src="src/assets/videoplayback.mp4"
+          src="src/assets/game2_video.mp4"
           muted
           playsInline
           onEnded={() => {
