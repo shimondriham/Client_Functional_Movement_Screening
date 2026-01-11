@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import reactIcon from "../assets/react.svg";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { doApiGet, doApiMethod } from "../services/apiService";
 
@@ -8,9 +7,6 @@ function Game2() {
   const nav = useNavigate();
   const location = useLocation();
   const idGame = location.state?.gameId;
-  // const fromPage = location.state?.from;
-  const p11Y = useRef(null);
-  const p13Y = useRef(null);
   const videoRef = useRef(null);
   const guideVideoRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
@@ -68,55 +64,13 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // PROCESS LANDMARKS
-  // -------------------------------
-  const processLandmarks = () => {
-    if (!poseLandmarkerRef.current || !videoRef.current) return;
 
-    const now = performance.now();
-    const results = poseLandmarkerRef.current.detectForVideo(
-      videoRef.current,
-      now
-    );
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
-
-    if (!results.landmarks || results.landmarks.length === 0) {
-      setFeedback("No person detected");
-      return;
-    }
-
-    const landmarks = results.landmarks[0];
-
-    // Check shoulder positions (landmarks 11 and 12)
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-
-    p11Y.current = leftShoulder.y;
-    p13Y.current = rightShoulder.y;
-
-    const pixel11Y = p11Y.current * videoHeight;
-    const pixel12Y = p13Y.current * videoHeight;
-    const isBendingDown =
-      pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3;
-
-    if (!isBendingDown) setFeedback("Bend bit more down");
-    else setFeedback("Perfect!");
-  };
-
-  // -------------------------------
-  // INIT SELFIE SEGMENTATION
-  // -------------------------------
   const initSelfieSegmentation = async () => {
     try {
       await startCamera();
 
       // Start continuous pose detection loop
       const processLoop = () => {
-        if (videoRef.current && poseLandmarkerRef.current) {
-          processLandmarks();
-        }
         processLoopRef.current = requestAnimationFrame(processLoop);
       };
       processLoopRef.current = requestAnimationFrame(processLoop);
@@ -146,46 +100,78 @@ function Game2() {
     }
   };
 
-  const startGame = async () => {
-    setIsPlaying(true);
-    setElapsedTime(0);
-    setGameArr([false, false, false]);
+    const startGame = async () => {
+      setIsPlaying(true);
+      setElapsedTime(0);
+      setGameArr([false, false, false]);
 
-    // Start the timer with timestamp
-    const startTime = Date.now();
-    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      // ⏳ wait 3 seconds before starting video + timer
+      setTimeout(() => {
+      // ▶️ start guide video
+      if (guideVideoRef.current) {
+        guideVideoRef.current
+          .play()
+          .catch(err => console.error('Guide video play error:', err));
+      }
+
+      // ▶️ ensure camera keeps running
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current
+          .play()
+          .catch(err => console.error('Camera play error:', err));
+      }
+
+      // ⏱️ start timer AFTER delay
+      const startTime = Date.now();
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
-      console.log("Elapsed time:", elapsed, "ms");
+      console.log('Elapsed time: ', elapsed, 'ms');
+      if (!poseLandmarkerRef.current || !videoRef.current) return;
+      const now = performance.now();
+      const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+      const videoWidth = videoRef.current.videoWidth;
+      const videoHeight = videoRef.current.videoHeight;
 
-      // Check feedback and set arr dynamically based on window size
-      // windowSize (ms) defines how long each slot lasts (5000ms -> 5s windows)
-      const windowSize = 5000;
-      const idx = Math.floor(elapsed / windowSize);
-      if (feedback === "Perfect!" && idx >= 0 && idx < gameArr.length) {
-        setGameArr((prev) => {
-          if (prev[idx]) return prev; // already set
-          const next = [...prev];
-          next[idx] = true;
-          return next;
-        });
+      if (!results.landmarks || results.landmarks.length === 0) {
+        setFeedback('No person detected');
+        return;
+      }
+
+      const landmarks = results.landmarks[0];
+      const isRightPosition = (landmarks[12].x * videoWidth <= videoWidth * 0.30);
+      const isLeftPosition = (landmarks[11].x * videoWidth >= videoWidth * 0.70);
+
+      const leftHand = landmarks[15].y;
+      const rightHand = landmarks[16].y;
+      
+      const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
+
+      if (elapsed >= 4000 && elapsed <= 5000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 5500 && elapsed <= 6500 && isRightPosition) setFeedback('Perfect!');
+      else if (elapsed >= 6000 && elapsed <= 7000 && !handsAboveShoulders) setFeedback('Raise both hands');
+      else if (elapsed >= 5500 && elapsed <= 6500 && handsAboveShoulders) setFeedback('Perfect!');
+      else if (elapsed >= 9000 && elapsed <= 10000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 10000 && elapsed <= 12000 && isLeftPosition) setFeedback('Perfect!');
+
+      if (elapsed >= 7000 && elapsed <= 8000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [true, prev[1], prev[2]]);
+        }
+      } else if (elapsed > 9000 && elapsed <= 10000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], true, prev[2]]);
+        }
+      } else if (elapsed > 10000 && elapsed <= 15000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], prev[1], true]);
+        }
       }
     }, 100);
-
-    // Don't pause the selfie segmentation processing
-    if (guideVideoRef.current) {
-      guideVideoRef.current
-        .play()
-        .catch((err) => console.error("Guide video play error:", err));
-    }
-    // Ensure camera is running and segmentation continues
-    if (videoRef.current && videoRef.current.paused) {
-      videoRef.current
-        .play()
-        .catch((err) => console.error("Camera play error:", err));
-    }
-  };
+  }, 3000);
+};
 
   const stopCamera = () => {
     try {
