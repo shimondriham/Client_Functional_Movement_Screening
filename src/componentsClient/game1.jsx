@@ -1,16 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
+import { useNavigate } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
 import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game1() {
   const nav = useNavigate();
-  const location = useLocation();
-  // const fromPage = location.state?.from;
-  const p11Y = useRef(null);
-  const p13Y = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const guideVideoRef = useRef(null);
@@ -109,40 +104,6 @@ function Game1() {
     }
   };
 
-  // -------------------------------
-  // PROCESS LANDMARKS
-  // -------------------------------
-  const processLandmarks = () => {
-    if (!poseLandmarkerRef.current || !videoRef.current) return;
-    const now = performance.now();
-    const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
-
-    if (!results.landmarks || results.landmarks.length === 0) {
-      setFeedback('No person detected');
-      return;
-    }
-
-    const landmarks = results.landmarks[0];
-    // Check shoulder positions (landmarks 11 and 12)
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-    p11Y.current = leftShoulder.y;
-    p13Y.current = rightShoulder.y;
-    const pixel11Y = p11Y.current * videoHeight;
-    const pixel12Y = p13Y.current * videoHeight;
-    const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
-
-
-
-    if (!isBendingDown) setFeedback('Bend a bit more down');
-    else setFeedback('Perfect!');
-  };
-
-  // -------------------------------
-  // INIT SELFIE SEGMENTATION
-  // -------------------------------
   const initSelfieSegmentation = async () => {
     try {
       selfieSegmentationRef.current = new SelfieSegmentation({
@@ -166,9 +127,6 @@ function Game1() {
 
         // ציור הדמות במקום האדם
         drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
-
-        // Process landmarks for pose detection
-        processLandmarks();
       });
 
       await startCamera();
@@ -236,14 +194,44 @@ function Game1() {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
       console.log('Elapsed time: ', elapsed, 'ms');
+      if (!poseLandmarkerRef.current || !videoRef.current) return;
+      const now = performance.now();
+      const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+      const videoWidth = videoRef.current.videoWidth;
+      const videoHeight = videoRef.current.videoHeight;
 
-      if (elapsed >= 5000 && elapsed <= 6000) {
+      if (!results.landmarks || results.landmarks.length === 0) {
+        setFeedback('No person detected');
+        return;
+      }
+
+      const landmarks = results.landmarks[0];
+      const isRightPosition = (landmarks[12].x * videoWidth <= videoWidth * 0.30);
+      const isLeftPosition = (landmarks[11].x * videoWidth >= videoWidth * 0.70);
+
+      const leftHand = landmarks[15].y;
+      const rightHand = landmarks[16].y;
+      
+      const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
+
+      if (elapsed >= 4000 && elapsed <= 5000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 5500 && elapsed <= 6500 && isRightPosition) setFeedback('Perfect!');
+      else if (elapsed >= 6000 && elapsed <= 7000 && !handsAboveShoulders) setFeedback('Raise both hands');
+      else if (elapsed >= 5500 && elapsed <= 6500 && handsAboveShoulders) setFeedback('Perfect!');
+      else if (elapsed >= 9000 && elapsed <= 10000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 10000 && elapsed <= 12000 && isLeftPosition) setFeedback('Perfect!');
+
+      if (elapsed >= 7000 && elapsed <= 8000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
         }
       } else if (elapsed > 9000 && elapsed <= 10000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], true, prev[2]]);
+        }
+      } else if (elapsed > 10000 && elapsed <= 15000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], prev[1], true]);
         }
       }
     }, 100);
