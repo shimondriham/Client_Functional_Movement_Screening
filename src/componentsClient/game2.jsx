@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import reactIcon from "../assets/react.svg";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { doApiGet, doApiMethod } from "../services/apiService";
 
@@ -8,24 +7,17 @@ function Game2() {
   const nav = useNavigate();
   const location = useLocation();
   const idGame = location.state?.gameId;
-  // const fromPage = location.state?.from;
-  const p11Y = useRef(null);
-  const p13Y = useRef(null);
   const videoRef = useRef(null);
   const guideVideoRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const timerIntervalRef = useRef(null);
   const processLoopRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
 
-  // -------------------------------
-  // CAMERA START
-  // -------------------------------
   const startCamera = async () => {
     if (!videoRef.current) return;
 
@@ -43,9 +35,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // INIT POSE LANDMARKER
-  // -------------------------------
   const initPoseLandmarker = async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
@@ -68,55 +57,11 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // PROCESS LANDMARKS
-  // -------------------------------
-  const processLandmarks = () => {
-    if (!poseLandmarkerRef.current || !videoRef.current) return;
 
-    const now = performance.now();
-    const results = poseLandmarkerRef.current.detectForVideo(
-      videoRef.current,
-      now
-    );
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
-
-    if (!results.landmarks || results.landmarks.length === 0) {
-      setFeedback("No person detected");
-      return;
-    }
-
-    const landmarks = results.landmarks[0];
-
-    // Check shoulder positions (landmarks 11 and 12)
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-
-    p11Y.current = leftShoulder.y;
-    p13Y.current = rightShoulder.y;
-
-    const pixel11Y = p11Y.current * videoHeight;
-    const pixel12Y = p13Y.current * videoHeight;
-    const isBendingDown =
-      pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3;
-
-    if (!isBendingDown) setFeedback("Bend bit more down");
-    else setFeedback("Perfect!");
-  };
-
-  // -------------------------------
-  // INIT SELFIE SEGMENTATION
-  // -------------------------------
   const initSelfieSegmentation = async () => {
     try {
       await startCamera();
-
-      // Start continuous pose detection loop
       const processLoop = () => {
-        if (videoRef.current && poseLandmarkerRef.current) {
-          processLandmarks();
-        }
         processLoopRef.current = requestAnimationFrame(processLoop);
       };
       processLoopRef.current = requestAnimationFrame(processLoop);
@@ -125,9 +70,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // USE EFFECT INIT
-  // -------------------------------
   useEffect(() => {
     console.log(idGame);
 
@@ -146,46 +88,64 @@ function Game2() {
     }
   };
 
-  const startGame = async () => {
-    setIsPlaying(true);
-    setElapsedTime(0);
-    setGameArr([false, false, false]);
+    const startGame = async () => {
+      setIsPlaying(true);
+      setGameArr([false, false, false]);
 
-    // Start the timer with timestamp
-    const startTime = Date.now();
-    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      setTimeout(() => {
+      if (guideVideoRef.current) {
+        guideVideoRef.current
+          .play()
+          .catch(err => console.error('Guide video play error:', err));
+      }
+
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current
+          .play()
+          .catch(err => console.error('Camera play error:', err));
+      }
+
+      const startTime = Date.now();
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      setElapsedTime(elapsed);
-      console.log("Elapsed time:", elapsed, "ms");
+      if (!poseLandmarkerRef.current || !videoRef.current) return;
+      const now = performance.now();
+      const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
 
-      // Check feedback and set arr dynamically based on window size
-      // windowSize (ms) defines how long each slot lasts (5000ms -> 5s windows)
-      const windowSize = 5000;
-      const idx = Math.floor(elapsed / windowSize);
-      if (feedback === "Perfect!" && idx >= 0 && idx < gameArr.length) {
-        setGameArr((prev) => {
-          if (prev[idx]) return prev; // already set
-          const next = [...prev];
-          next[idx] = true;
-          return next;
-        });
+      if (!results.landmarks || results.landmarks.length === 0) {
+        setFeedback('No person detected');
+        return;
+      }
+
+      const landmarks = results.landmarks[0];
+      const isRightPosition = (landmarks[12].x <= 0.40);
+      const isLeftPosition = (landmarks[11].x >= 0.92);
+      if (elapsed >= 1000 && elapsed <= 15000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 1000 && elapsed <= 15000 && isLeftPosition) setFeedback('Perfect!');
+      else if (elapsed >= 15000 && elapsed <= 25000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 15000 && elapsed <= 25000 && isRightPosition) setFeedback('Perfect!');
+      else if (elapsed >= 25000 && elapsed <= 30000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 25000 && elapsed <= 30000 && isLeftPosition) setFeedback('Perfect!');
+      
+
+      if (elapsed >= 1000 && elapsed <= 8000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [true, prev[1], prev[2]]);
+        }
+      } else if (elapsed > 15000 && elapsed <= 20000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], true, prev[2]]);
+        }
+      } else if (elapsed > 25000 && elapsed <= 30000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], prev[1], true]);
+        }
       }
     }, 100);
-
-    // Don't pause the selfie segmentation processing
-    if (guideVideoRef.current) {
-      guideVideoRef.current
-        .play()
-        .catch((err) => console.error("Guide video play error:", err));
-    }
-    // Ensure camera is running and segmentation continues
-    if (videoRef.current && videoRef.current.paused) {
-      videoRef.current
-        .play()
-        .catch((err) => console.error("Camera play error:", err));
-    }
-  };
+  }, 3000);
+};
 
   const stopCamera = () => {
     try {
@@ -198,7 +158,6 @@ function Game2() {
       if (videoRef.current) {
         videoRef.current.pause();
       }
-      // Stop the timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -208,9 +167,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // RENDER
-  // -------------------------------
   return (
     <div
       style={{
@@ -227,7 +183,6 @@ function Game2() {
           height: "100%",
         }}
       >
-        {/* Live Camera - Small in bottom right */}
         <video
           ref={videoRef}
           autoPlay
@@ -247,11 +202,9 @@ function Game2() {
             zIndex: 3,
           }}
         />
-
-        {/* Background MP4 - Large, full screen */}
         <video
           ref={guideVideoRef}
-          src="src/assets/videoplayback.mp4"
+          src="src/assets/game2_video.mp4"
           muted
           playsInline
           onEnded={() => {
@@ -259,7 +212,6 @@ function Game2() {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
             }
-            // send to backend route /games
             (async () => {
               let dataBody = {
                 _id: idGame,
@@ -295,8 +247,6 @@ function Game2() {
             zIndex: 1,
           }}
         />
-
-        {/* Feedback */}
         <div
           style={{
             position: "absolute",
@@ -343,8 +293,6 @@ function Game2() {
           </div>
         )}
       </div>
-
-      {/* Continue Button */}
       <button
         onClick={() => {
           stopCamera();

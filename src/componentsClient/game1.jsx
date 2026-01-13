@@ -1,16 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import reactIcon from '../assets/react.svg';
+import { useNavigate } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
 import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game1() {
   const nav = useNavigate();
-  const location = useLocation();
-  // const fromPage = location.state?.from;
-  const p11Y = useRef(null);
-  const p13Y = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const guideVideoRef = useRef(null);
@@ -19,12 +14,12 @@ function Game1() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [idGame, setIdGame] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const processLoopRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
+  const noDetectionCountRef = useRef(0);
 
 
   // -------------------------------
@@ -53,7 +48,6 @@ function Game1() {
   const drawCharacter = (ctx, segmentationMask, width, height) => {
     if (!segmentationMask) return;
 
-    // קנבס זמני כדי לקרוא פיקסלים
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
@@ -72,10 +66,8 @@ function Game1() {
         const idx = (y * width + x) * 4;
         const alpha = data[idx + 3];
         if (alpha > 50) {
-          // גוף כחול
           ctx.fillStyle = 'blue';
           ctx.fillRect(x - 4, y - 4, 8, 8);
-          // ראש אדום
           ctx.fillStyle = 'gray';
           ctx.beginPath();
           ctx.arc(x, y, 4, 0, Math.PI * 2);
@@ -109,40 +101,6 @@ function Game1() {
     }
   };
 
-  // -------------------------------
-  // PROCESS LANDMARKS
-  // -------------------------------
-  const processLandmarks = () => {
-    if (!poseLandmarkerRef.current || !videoRef.current) return;
-    const now = performance.now();
-    const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
-
-    if (!results.landmarks || results.landmarks.length === 0) {
-      setFeedback('No person detected');
-      return;
-    }
-
-    const landmarks = results.landmarks[0];
-    // Check shoulder positions (landmarks 11 and 12)
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-    p11Y.current = leftShoulder.y;
-    p13Y.current = rightShoulder.y;
-    const pixel11Y = p11Y.current * videoHeight;
-    const pixel12Y = p13Y.current * videoHeight;
-    const isBendingDown = (pixel11Y >= videoHeight * 0.3 && pixel12Y >= videoHeight * 0.3);
-
-
-
-    if (!isBendingDown) setFeedback('Bend a bit more down');
-    else setFeedback('Perfect!');
-  };
-
-  // -------------------------------
-  // INIT SELFIE SEGMENTATION
-  // -------------------------------
   const initSelfieSegmentation = async () => {
     try {
       selfieSegmentationRef.current = new SelfieSegmentation({
@@ -164,16 +122,11 @@ function Game1() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // ציור הדמות במקום האדם
         drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
-
-        // Process landmarks for pose detection
-        processLandmarks();
       });
 
       await startCamera();
 
-      // לולאה לשליחת כל פריים
       const processLoop = async () => {
         if (videoRef.current && selfieSegmentationRef.current) {
           await selfieSegmentationRef.current.send({ image: videoRef.current });
@@ -206,40 +159,80 @@ function Game1() {
     }
   }
 
+ 
   const startGame = async () => {
-    setIsPlaying(true);
-    setElapsedTime(0);
-    setGameArr([false, false, false]);
+  setIsPlaying(true);
+  setGameArr([false, false, false]);
 
-    // Start the timer with timestamp
+  // ⏳ wait 3 seconds before starting video + timer
+  setTimeout(() => {
+    // ▶️ start guide video
+    if (guideVideoRef.current) {
+      guideVideoRef.current
+        .play()
+        .catch(err => console.error('Guide video play error:', err));
+    }
+
+    // ▶️ ensure camera keeps running
+    if (videoRef.current && videoRef.current.paused) {
+      videoRef.current
+        .play()
+        .catch(err => console.error('Camera play error:', err));
+    }
+
+    // ⏱️ start timer AFTER delay
     const startTime = Date.now();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      setElapsedTime(elapsed);
-      console.log('Elapsed time:', elapsed, 'ms');
+      if (!poseLandmarkerRef.current || !videoRef.current) return;
+      const now = performance.now();
+      const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
 
-      // Check feedback and set arr based on time window
-      if (elapsed >= 5000 && elapsed <= 6000) {
+      if (!results.landmarks || results.landmarks.length === 0) {
+        noDetectionCountRef.current++;
+        if (noDetectionCountRef.current >= 2) {
+          setFeedback('No person detected');
+        }
+        return;
+      }
+      noDetectionCountRef.current = 0;
+
+      const landmarks = results.landmarks[0];
+      const isRightPosition = (landmarks[12].x <= 0.40);
+      const isLeftPosition = (landmarks[11].x >= 0.92);
+
+      const leftHand = landmarks[15].y;
+      const rightHand = landmarks[16].y;
+      
+      const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
+
+      if (elapsed >= 1000 && elapsed <= 10000 && !handsAboveShoulders) setFeedback('Raise both hands up and down');
+      else if (elapsed >= 1000 && elapsed <= 10000 && handsAboveShoulders) setFeedback('Perfect!');
+      else if (elapsed >= 10000 && elapsed <= 20000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 10000 && elapsed <= 20000 && isLeftPosition) setFeedback('Perfect!');
+      else if (elapsed >= 20000 && elapsed <= 26000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 20000 && elapsed <= 26000 && isRightPosition) setFeedback('Perfect!');
+
+
+
+      if (elapsed >= 1000 && elapsed <= 10000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
         }
-      } else if (elapsed > 9000 && elapsed <= 10000) {
+      } else if (elapsed > 10000 && elapsed <= 15000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], true, prev[2]]);
         }
+      } else if (elapsed > 20000 && elapsed <= 26000) {
+        if (feedback === 'Perfect!') {
+          setGameArr(prev => [prev[0], prev[1], true]);
+        }
       }
     }, 100);
-
-    // Don't pause the selfie segmentation processing
-    if (guideVideoRef.current) {
-      guideVideoRef.current.play().catch(err => console.error('Guide video play error:', err));
-    }
-    // Ensure camera is running and segmentation continues
-    if (videoRef.current && videoRef.current.paused) {
-      videoRef.current.play().catch(err => console.error('Camera play error:', err));
-    }
-  };
+  }, 3000);
+};
 
   const stopCamera = () => {
     try {
@@ -301,7 +294,7 @@ function Game1() {
         {/* Background MP4 */}
         <video
           ref={guideVideoRef}
-          src="src/assets/videoplayback.mp4"
+          src="src/assets/game1_video.mp4"
           muted
           playsInline
           onEnded={() => {
