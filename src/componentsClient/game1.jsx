@@ -14,12 +14,12 @@ function Game1() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [idGame, setIdGame] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const processLoopRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
+  const noDetectionCountRef = useRef(0);
 
 
   // -------------------------------
@@ -48,7 +48,6 @@ function Game1() {
   const drawCharacter = (ctx, segmentationMask, width, height) => {
     if (!segmentationMask) return;
 
-    // קנבס זמני כדי לקרוא פיקסלים
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
@@ -67,10 +66,8 @@ function Game1() {
         const idx = (y * width + x) * 4;
         const alpha = data[idx + 3];
         if (alpha > 50) {
-          // גוף כחול
           ctx.fillStyle = 'blue';
           ctx.fillRect(x - 4, y - 4, 8, 8);
-          // ראש אדום
           ctx.fillStyle = 'gray';
           ctx.beginPath();
           ctx.arc(x, y, 4, 0, Math.PI * 2);
@@ -125,13 +122,11 @@ function Game1() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // ציור הדמות במקום האדם
         drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
       });
 
       await startCamera();
 
-      // לולאה לשליחת כל פריים
       const processLoop = async () => {
         if (videoRef.current && selfieSegmentationRef.current) {
           await selfieSegmentationRef.current.send({ image: videoRef.current });
@@ -167,7 +162,6 @@ function Game1() {
  
   const startGame = async () => {
   setIsPlaying(true);
-  setElapsedTime(0);
   setGameArr([false, false, false]);
 
   // ⏳ wait 3 seconds before starting video + timer
@@ -192,44 +186,46 @@ function Game1() {
 
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      setElapsedTime(elapsed);
-      console.log('Elapsed time: ', elapsed, 'ms');
       if (!poseLandmarkerRef.current || !videoRef.current) return;
       const now = performance.now();
       const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-      const videoWidth = videoRef.current.videoWidth;
-      const videoHeight = videoRef.current.videoHeight;
 
       if (!results.landmarks || results.landmarks.length === 0) {
-        setFeedback('No person detected');
+        noDetectionCountRef.current++;
+        if (noDetectionCountRef.current >= 2) {
+          setFeedback('No person detected');
+        }
         return;
       }
+      noDetectionCountRef.current = 0;
 
       const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[12].x * videoWidth <= videoWidth * 0.30);
-      const isLeftPosition = (landmarks[11].x * videoWidth >= videoWidth * 0.70);
+      const isRightPosition = (landmarks[12].x <= 0.40);
+      const isLeftPosition = (landmarks[11].x >= 0.92);
 
       const leftHand = landmarks[15].y;
       const rightHand = landmarks[16].y;
       
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
 
-      if (elapsed >= 4000 && elapsed <= 5000 && !isRightPosition) setFeedback('Move to the right');
-      else if (elapsed >= 5500 && elapsed <= 6500 && isRightPosition) setFeedback('Perfect!');
-      else if (elapsed >= 6000 && elapsed <= 7000 && !handsAboveShoulders) setFeedback('Raise both hands');
-      else if (elapsed >= 5500 && elapsed <= 6500 && handsAboveShoulders) setFeedback('Perfect!');
-      else if (elapsed >= 9000 && elapsed <= 10000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 10000 && elapsed <= 12000 && isLeftPosition) setFeedback('Perfect!');
+      if (elapsed >= 1000 && elapsed <= 10000 && !handsAboveShoulders) setFeedback('Raise both hands up and down');
+      else if (elapsed >= 1000 && elapsed <= 10000 && handsAboveShoulders) setFeedback('Perfect!');
+      else if (elapsed >= 10000 && elapsed <= 20000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 10000 && elapsed <= 20000 && isLeftPosition) setFeedback('Perfect!');
+      else if (elapsed >= 20000 && elapsed <= 26000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 20000 && elapsed <= 26000 && isRightPosition) setFeedback('Perfect!');
 
-      if (elapsed >= 7000 && elapsed <= 8000) {
+
+
+      if (elapsed >= 1000 && elapsed <= 10000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
         }
-      } else if (elapsed > 9000 && elapsed <= 10000) {
+      } else if (elapsed > 10000 && elapsed <= 15000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], true, prev[2]]);
         }
-      } else if (elapsed > 10000 && elapsed <= 15000) {
+      } else if (elapsed > 20000 && elapsed <= 26000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], prev[1], true]);
         }
@@ -357,7 +353,7 @@ function Game1() {
             top: 20,
             left: '50%',
             transform: 'translateX(-50%)',
-            color: 'deepskyblue',
+            color: '#F2743E',
             fontWeight: 'bold',
             fontSize: 22
           }}
@@ -386,7 +382,7 @@ function Game1() {
                 borderRadius: 8,
                 border: 'none',
                 cursor: 'pointer',
-                background: 'deepskyblue',
+                background: '#F2743E',
                 color: 'white'
               }}
             >
@@ -411,7 +407,7 @@ function Game1() {
           bottom: 20,
           right: 20,
           padding: '12px 24px',
-          background: 'rgb(54, 227, 215)',
+          background: '#F2743E',
           color: 'white',
           border: 'none',
           borderRadius: 6,

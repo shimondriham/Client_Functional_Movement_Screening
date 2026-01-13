@@ -12,16 +12,12 @@ function Game2() {
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [gameArr, setGameArr] = useState([false, false, false]);
   const isValid = useRef(false);
   const timerIntervalRef = useRef(null);
   const processLoopRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
 
-  // -------------------------------
-  // CAMERA START
-  // -------------------------------
   const startCamera = async () => {
     if (!videoRef.current) return;
 
@@ -39,9 +35,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // INIT POSE LANDMARKER
-  // -------------------------------
   const initPoseLandmarker = async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
@@ -68,8 +61,6 @@ function Game2() {
   const initSelfieSegmentation = async () => {
     try {
       await startCamera();
-
-      // Start continuous pose detection loop
       const processLoop = () => {
         processLoopRef.current = requestAnimationFrame(processLoop);
       };
@@ -79,9 +70,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // USE EFFECT INIT
-  // -------------------------------
   useEffect(() => {
     console.log(idGame);
 
@@ -102,38 +90,29 @@ function Game2() {
 
     const startGame = async () => {
       setIsPlaying(true);
-      setElapsedTime(0);
       setGameArr([false, false, false]);
 
-      // ⏳ wait 3 seconds before starting video + timer
       setTimeout(() => {
-      // ▶️ start guide video
       if (guideVideoRef.current) {
         guideVideoRef.current
           .play()
           .catch(err => console.error('Guide video play error:', err));
       }
 
-      // ▶️ ensure camera keeps running
       if (videoRef.current && videoRef.current.paused) {
         videoRef.current
           .play()
           .catch(err => console.error('Camera play error:', err));
       }
 
-      // ⏱️ start timer AFTER delay
       const startTime = Date.now();
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      setElapsedTime(elapsed);
-      console.log('Elapsed time: ', elapsed, 'ms');
       if (!poseLandmarkerRef.current || !videoRef.current) return;
       const now = performance.now();
       const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-      const videoWidth = videoRef.current.videoWidth;
-      const videoHeight = videoRef.current.videoHeight;
 
       if (!results.landmarks || results.landmarks.length === 0) {
         setFeedback('No person detected');
@@ -141,30 +120,25 @@ function Game2() {
       }
 
       const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[12].x * videoWidth <= videoWidth * 0.30);
-      const isLeftPosition = (landmarks[11].x * videoWidth >= videoWidth * 0.70);
-
-      const leftHand = landmarks[15].y;
-      const rightHand = landmarks[16].y;
+      const isRightPosition = (landmarks[12].x <= 0.40);
+      const isLeftPosition = (landmarks[11].x >= 0.92);
+      if (elapsed >= 1000 && elapsed <= 15000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 1000 && elapsed <= 15000 && isLeftPosition) setFeedback('Perfect!');
+      else if (elapsed >= 15000 && elapsed <= 25000 && !isRightPosition) setFeedback('Move to the right');
+      else if (elapsed >= 15000 && elapsed <= 25000 && isRightPosition) setFeedback('Perfect!');
+      else if (elapsed >= 25000 && elapsed <= 30000 && !isLeftPosition) setFeedback('Move to the left');
+      else if (elapsed >= 25000 && elapsed <= 30000 && isLeftPosition) setFeedback('Perfect!');
       
-      const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
 
-      if (elapsed >= 4000 && elapsed <= 5000 && !isRightPosition) setFeedback('Move to the right');
-      else if (elapsed >= 5500 && elapsed <= 6500 && isRightPosition) setFeedback('Perfect!');
-      else if (elapsed >= 6000 && elapsed <= 7000 && !handsAboveShoulders) setFeedback('Raise both hands');
-      else if (elapsed >= 5500 && elapsed <= 6500 && handsAboveShoulders) setFeedback('Perfect!');
-      else if (elapsed >= 9000 && elapsed <= 10000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 10000 && elapsed <= 12000 && isLeftPosition) setFeedback('Perfect!');
-
-      if (elapsed >= 7000 && elapsed <= 8000) {
+      if (elapsed >= 1000 && elapsed <= 8000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
         }
-      } else if (elapsed > 9000 && elapsed <= 10000) {
+      } else if (elapsed > 15000 && elapsed <= 20000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], true, prev[2]]);
         }
-      } else if (elapsed > 10000 && elapsed <= 15000) {
+      } else if (elapsed > 25000 && elapsed <= 30000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [prev[0], prev[1], true]);
         }
@@ -184,7 +158,6 @@ function Game2() {
       if (videoRef.current) {
         videoRef.current.pause();
       }
-      // Stop the timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -194,9 +167,6 @@ function Game2() {
     }
   };
 
-  // -------------------------------
-  // RENDER
-  // -------------------------------
   return (
     <div
       style={{
@@ -213,7 +183,6 @@ function Game2() {
           height: "100%",
         }}
       >
-        {/* Live Camera - Small in bottom right */}
         <video
           ref={videoRef}
           autoPlay
@@ -233,8 +202,6 @@ function Game2() {
             zIndex: 3,
           }}
         />
-
-        {/* Background MP4 - Large, full screen */}
         <video
           ref={guideVideoRef}
           src="src/assets/game2_video.mp4"
@@ -245,7 +212,6 @@ function Game2() {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
             }
-            // send to backend route /games
             (async () => {
               let dataBody = {
                 _id: idGame,
@@ -281,8 +247,6 @@ function Game2() {
             zIndex: 1,
           }}
         />
-
-        {/* Feedback */}
         <div
           style={{
             position: "absolute",
@@ -329,8 +293,6 @@ function Game2() {
           </div>
         )}
       </div>
-
-      {/* Continue Button */}
       <button
         onClick={() => {
           stopCamera();
