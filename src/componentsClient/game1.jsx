@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { SelfieSegmentation } from '@mediapipe/selfie_segmentation';
 import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game1() {
@@ -9,7 +8,6 @@ function Game1() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const guideVideoRef = useRef(null);
-  const selfieSegmentationRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [idGame, setIdGame] = useState('');
@@ -43,38 +41,131 @@ function Game1() {
   };
 
   // -------------------------------
-  // DRAW DRESSED CHARACTER ON BODY
+  // DRAW AVATAR FACING FROM THE BACK
   // -------------------------------
-  const drawCharacter = (ctx, segmentationMask, width, height) => {
-    if (!segmentationMask) return;
-
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(segmentationMask, 0, 0, width, height);
-
-    const maskData = tempCtx.getImageData(0, 0, width, height);
-    const data = maskData.data;
+  const drawAvatarFromBack = (ctx, landmarks, width, height) => {
+    if (!landmarks || landmarks.length === 0) return;
 
     ctx.save();
     ctx.scale(-1, 1); // Flip horizontally
     ctx.translate(-width, 0); // Shift back after flip
 
-    for (let y = 0; y < height; y += 4) {
-      for (let x = 0; x < width; x += 4) {
-        const idx = (y * width + x) * 4;
-        const alpha = data[idx + 3];
-        if (alpha > 50) {
-          ctx.fillStyle = 'blue';
-          ctx.fillRect(x - 4, y - 4, 8, 8);
-          ctx.fillStyle = 'gray';
-          ctx.beginPath();
-          ctx.arc(x, y, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
+    // Convert normalized coordinates to pixel coordinates
+    const getPoint = (index) => ({
+      x: landmarks[index].x * width,
+      y: landmarks[index].y * height
+    });
+
+    // Key points for drawing avatar from back
+    const leftShoulder = getPoint(11);
+    const rightShoulder = getPoint(12);
+    const leftHip = getPoint(23);
+    const rightHip = getPoint(24);
+    const leftElbow = getPoint(13);
+    const rightElbow = getPoint(14);
+    const leftWrist = getPoint(15);
+    const rightWrist = getPoint(16);
+    const leftKnee = getPoint(25);
+    const rightKnee = getPoint(26);
+    const leftAnkle = getPoint(27);
+    const rightAnkle = getPoint(28);
+    const nose = getPoint(0);
+    const leftEar = getPoint(7);
+    const rightEar = getPoint(8);
+
+    // Calculate center points
+    const shoulderCenter = {
+      x: (leftShoulder.x + rightShoulder.x) / 2,
+      y: (leftShoulder.y + rightShoulder.y) / 2
+    };
+    const hipCenter = {
+      x: (leftHip.x + rightHip.x) / 2,
+      y: (leftHip.y + rightHip.y) / 2
+    };
+    const headCenter = {
+      x: (leftEar.x + rightEar.x) / 2,
+      y: (leftEar.y + rightEar.y) / 2
+    };
+
+    // Draw head (back view - circular)
+    const headRadius = Math.abs(leftEar.x - rightEar.x) * 0.6;
+    ctx.fillStyle = '#8B7355'; // Skin tone
+    ctx.beginPath();
+    ctx.arc(headCenter.x, headCenter.y - headRadius * 0.3, headRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw hair (back view)
+    ctx.fillStyle = '#4A4A4A'; // Dark hair color
+    ctx.beginPath();
+    ctx.arc(headCenter.x, headCenter.y - headRadius * 0.3, headRadius * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw torso (back view - trapezoid shape)
+    const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+    const hipWidth = Math.abs(leftHip.x - rightHip.x);
+    const torsoHeight = Math.abs(hipCenter.y - shoulderCenter.y);
+    
+    ctx.fillStyle = '#2C3E50'; // Shirt color
+    ctx.beginPath();
+    ctx.moveTo(leftShoulder.x, shoulderCenter.y);
+    ctx.lineTo(rightShoulder.x, shoulderCenter.y);
+    ctx.lineTo(rightHip.x, hipCenter.y);
+    ctx.lineTo(leftHip.x, hipCenter.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw arms (back view)
+    ctx.strokeStyle = '#2C3E50';
+    ctx.lineWidth = shoulderWidth * 0.15;
+    ctx.lineCap = 'round';
+    
+    // Left arm
+    ctx.beginPath();
+    ctx.moveTo(leftShoulder.x, shoulderCenter.y);
+    ctx.lineTo(leftElbow.x, leftElbow.y);
+    ctx.lineTo(leftWrist.x, leftWrist.y);
+    ctx.stroke();
+    
+    // Right arm
+    ctx.beginPath();
+    ctx.moveTo(rightShoulder.x, shoulderCenter.y);
+    ctx.lineTo(rightElbow.x, rightElbow.y);
+    ctx.lineTo(rightWrist.x, rightWrist.y);
+    ctx.stroke();
+
+    // Draw hands (back view - simple circles)
+    ctx.fillStyle = '#8B7355';
+    ctx.beginPath();
+    ctx.arc(leftWrist.x, leftWrist.y, shoulderWidth * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(rightWrist.x, rightWrist.y, shoulderWidth * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw legs (back view)
+    ctx.strokeStyle = '#34495E'; // Pants color
+    ctx.lineWidth = hipWidth * 0.12;
+    
+    // Left leg
+    ctx.beginPath();
+    ctx.moveTo(leftHip.x, hipCenter.y);
+    ctx.lineTo(leftKnee.x, leftKnee.y);
+    ctx.lineTo(leftAnkle.x, leftAnkle.y);
+    ctx.stroke();
+    
+    // Right leg
+    ctx.beginPath();
+    ctx.moveTo(rightHip.x, hipCenter.y);
+    ctx.lineTo(rightKnee.x, rightKnee.y);
+    ctx.lineTo(rightAnkle.x, rightAnkle.y);
+    ctx.stroke();
+
+    // Draw feet (back view - simple rectangles)
+    ctx.fillStyle = '#1A1A1A'; // Shoe color
+    const footWidth = hipWidth * 0.15;
+    const footHeight = hipWidth * 0.08;
+    ctx.fillRect(leftAnkle.x - footWidth / 2, leftAnkle.y, footWidth, footHeight);
+    ctx.fillRect(rightAnkle.x - footWidth / 2, rightAnkle.y, footWidth, footHeight);
 
     ctx.restore();
   };
@@ -101,41 +192,48 @@ function Game1() {
     }
   };
 
-  const initSelfieSegmentation = async () => {
+  const initAvatarRendering = async () => {
     try {
-      selfieSegmentationRef.current = new SelfieSegmentation({
-        locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-      });
+      await startCamera();
 
-      selfieSegmentationRef.current.setOptions({
-        modelSelection: 1 // 0 = general, 1 = landscape
-      });
-
-      selfieSegmentationRef.current.onResults((results) => {
+      const processLoop = () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        if (!video || !canvas) return;
+        if (!video || !canvas || !poseLandmarkerRef.current) {
+          processLoopRef.current = requestAnimationFrame(processLoop);
+          return;
+        }
+
+        // Check if video has valid dimensions
+        if (video.videoWidth === 0 || video.videoHeight === 0) {
+          processLoopRef.current = requestAnimationFrame(processLoop);
+          return;
+        }
+
         const ctx = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        drawCharacter(ctx, results.segmentationMask, canvas.width, canvas.height);
-      });
+        // Detect pose and draw avatar
+        try {
+          const now = performance.now();
+          const results = poseLandmarkerRef.current.detectForVideo(video, now);
 
-      await startCamera();
-
-      const processLoop = async () => {
-        if (videoRef.current && selfieSegmentationRef.current) {
-          await selfieSegmentationRef.current.send({ image: videoRef.current });
+          if (results.landmarks && results.landmarks.length > 0) {
+            drawAvatarFromBack(ctx, results.landmarks[0], canvas.width, canvas.height);
+          }
+        } catch (error) {
+          // Silently handle errors during processing (video might not be ready)
+          console.warn('Pose detection error:', error);
         }
+
         processLoopRef.current = requestAnimationFrame(processLoop);
       };
       processLoopRef.current = requestAnimationFrame(processLoop);
     } catch (err) {
-      console.error('Failed to init segmentation', err);
+      console.error('Failed to init avatar rendering', err);
     }
   };
 
@@ -144,8 +242,14 @@ function Game1() {
   // -------------------------------
   useEffect(() => {
     doApi();
-    initSelfieSegmentation();
-    initPoseLandmarker();
+    const initialize = async () => {
+      await initPoseLandmarker();
+      // Wait a bit for pose landmarker to be ready
+      setTimeout(() => {
+        initAvatarRendering();
+      }, 500);
+    };
+    initialize();
   }, []);
 
 
@@ -187,8 +291,21 @@ function Game1() {
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       if (!poseLandmarkerRef.current || !videoRef.current) return;
+      
+      // Check if video has valid dimensions before processing
+      if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+        return;
+      }
+      
       const now = performance.now();
-      const results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+      let results;
+      try {
+        results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+      } catch (error) {
+        // Silently handle errors during processing
+        console.warn('Pose detection error in timer:', error);
+        return;
+      }
 
       if (!results.landmarks || results.landmarks.length === 0) {
         noDetectionCountRef.current++;
@@ -202,10 +319,8 @@ function Game1() {
       const landmarks = results.landmarks[0];
       const isRightPosition = (landmarks[12].x <= 0.40);
       const isLeftPosition = (landmarks[11].x >= 0.92);
-
       const leftHand = landmarks[15].y;
       const rightHand = landmarks[16].y;
-      
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
 
       if (elapsed >= 1000 && elapsed <= 10000 && !handsAboveShoulders) setFeedback('Raise both hands up and down');
@@ -214,9 +329,7 @@ function Game1() {
       else if (elapsed >= 10000 && elapsed <= 20000 && isLeftPosition) setFeedback('Perfect!');
       else if (elapsed >= 20000 && elapsed <= 26000 && !isRightPosition) setFeedback('Move to the right');
       else if (elapsed >= 20000 && elapsed <= 26000 && isRightPosition) setFeedback('Perfect!');
-
-
-
+      
       if (elapsed >= 1000 && elapsed <= 10000) {
         if (feedback === 'Perfect!') {
           setGameArr(prev => [true, prev[1], prev[2]]);
