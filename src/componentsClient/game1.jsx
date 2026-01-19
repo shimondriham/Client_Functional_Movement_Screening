@@ -18,6 +18,10 @@ function Game1() {
   const timerIntervalRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
   const noDetectionCountRef = useRef(0);
+  const leftStepCompletedRef = useRef(false);
+  const rightStepCompletedRef = useRef(false);
+  const handsPerfectCountRef = useRef(0);
+  const handsWerePerfectRef = useRef(false);
 
 
   // -------------------------------
@@ -73,7 +77,7 @@ function Game1() {
     const leftEar = getPoint(7);
     const rightEar = getPoint(8);
 
-    // Calculate center points
+    // Calculate center points and dimensions
     const shoulderCenter = {
       x: (leftShoulder.x + rightShoulder.x) / 2,
       y: (leftShoulder.y + rightShoulder.y) / 2
@@ -86,86 +90,262 @@ function Game1() {
       x: (leftEar.x + rightEar.x) / 2,
       y: (leftEar.y + rightEar.y) / 2
     };
-
-    // Draw head (back view - circular)
-    const headRadius = Math.abs(leftEar.x - rightEar.x) * 0.6;
-    ctx.fillStyle = '#8B7355'; // Skin tone
-    ctx.beginPath();
-    ctx.arc(headCenter.x, headCenter.y - headRadius * 0.3, headRadius, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw hair (back view)
-    ctx.fillStyle = '#4A4A4A'; // Dark hair color
-    ctx.beginPath();
-    ctx.arc(headCenter.x, headCenter.y - headRadius * 0.3, headRadius * 0.9, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw torso (back view - trapezoid shape)
     const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
     const hipWidth = Math.abs(leftHip.x - rightHip.x);
     const torsoHeight = Math.abs(hipCenter.y - shoulderCenter.y);
-    
-    ctx.fillStyle = '#2C3E50'; // Shirt color
+    const headRadius = Math.abs(leftEar.x - rightEar.x) * 0.6;
+
+    // ========== HEAD & NECK ==========
+    // Draw neck (back view)
+    const neckWidth = shoulderWidth * 0.25;
+    const neckHeight = shoulderCenter.y - headCenter.y - headRadius * 0.5;
+    ctx.fillStyle = '#D4A574'; // Skin tone (slightly lighter)
+    ctx.fillRect(
+      headCenter.x - neckWidth / 2,
+      headCenter.y + headRadius * 0.3,
+      neckWidth,
+      neckHeight
+    );
+
+    // Draw head (back view - more oval shape)
+    ctx.fillStyle = '#D4A574';
     ctx.beginPath();
-    ctx.moveTo(leftShoulder.x, shoulderCenter.y);
-    ctx.lineTo(rightShoulder.x, shoulderCenter.y);
-    ctx.lineTo(rightHip.x, hipCenter.y);
-    ctx.lineTo(leftHip.x, hipCenter.y);
+    ctx.ellipse(
+      headCenter.x,
+      headCenter.y - headRadius * 0.2,
+      headRadius * 0.85,
+      headRadius * 1.1,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // ========== HAIRCUT (Back View) ==========
+    // Base hair layer
+    ctx.fillStyle = '#2C1810'; // Dark brown hair
+    ctx.beginPath();
+    ctx.ellipse(
+      headCenter.x,
+      headCenter.y - headRadius * 0.3,
+      headRadius * 0.95,
+      headRadius * 1.15,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Hair texture layers (back view - layered effect)
+    ctx.fillStyle = '#3D2415';
+    for (let i = 0; i < 3; i++) {
+      const offsetY = i * headRadius * 0.15;
+      const offsetX = (i % 2 === 0 ? 1 : -1) * headRadius * 0.1;
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenter.x + offsetX,
+        headCenter.y - headRadius * 0.3 + offsetY,
+        headRadius * (0.85 - i * 0.05),
+        headRadius * (1.0 - i * 0.08),
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // Hair strands/details (back view)
+    ctx.strokeStyle = '#1A0F08';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const startX = headCenter.x + Math.cos(angle) * headRadius * 0.6;
+      const startY = headCenter.y - headRadius * 0.3 + Math.sin(angle) * headRadius * 0.7;
+      const endX = startX + Math.cos(angle) * headRadius * 0.3;
+      const endY = startY + Math.sin(angle) * headRadius * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+
+    // ========== CLOTHING - SHIRT ==========
+    // Main shirt body
+    ctx.fillStyle = '#3498DB'; // Blue shirt color
+    ctx.beginPath();
+    ctx.moveTo(leftShoulder.x - shoulderWidth * 0.1, shoulderCenter.y);
+    ctx.lineTo(rightShoulder.x + shoulderWidth * 0.1, shoulderCenter.y);
+    ctx.lineTo(rightHip.x + hipWidth * 0.05, hipCenter.y);
+    ctx.lineTo(leftHip.x - hipWidth * 0.05, hipCenter.y);
     ctx.closePath();
     ctx.fill();
 
-    // Draw arms (back view)
-    ctx.strokeStyle = '#2C3E50';
-    ctx.lineWidth = shoulderWidth * 0.15;
-    ctx.lineCap = 'round';
+    // Shirt collar (back view - V-neck style)
+    ctx.fillStyle = '#2980B9'; // Darker blue for collar
+    ctx.beginPath();
+    ctx.moveTo(headCenter.x - neckWidth * 0.4, shoulderCenter.y);
+    ctx.lineTo(headCenter.x, shoulderCenter.y - neckHeight * 0.3);
+    ctx.lineTo(headCenter.x + neckWidth * 0.4, shoulderCenter.y);
+    ctx.lineTo(headCenter.x + neckWidth * 0.3, shoulderCenter.y + neckHeight * 0.2);
+    ctx.lineTo(headCenter.x - neckWidth * 0.3, shoulderCenter.y + neckHeight * 0.2);
+    ctx.closePath();
+    ctx.fill();
+
+    // ========== ARMS & SLEEVES ==========
+    const armWidth = shoulderWidth * 0.18;
     
-    // Left arm
+    // Left sleeve (shirt material)
+    ctx.fillStyle = '#3498DB';
+    ctx.beginPath();
+    ctx.arc(leftShoulder.x, shoulderCenter.y, armWidth * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Right sleeve
+    ctx.beginPath();
+    ctx.arc(rightShoulder.x, shoulderCenter.y, armWidth * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Upper arms (shirt sleeves)
+    ctx.strokeStyle = '#3498DB';
+    ctx.lineWidth = armWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
     ctx.beginPath();
     ctx.moveTo(leftShoulder.x, shoulderCenter.y);
     ctx.lineTo(leftElbow.x, leftElbow.y);
-    ctx.lineTo(leftWrist.x, leftWrist.y);
     ctx.stroke();
     
-    // Right arm
     ctx.beginPath();
     ctx.moveTo(rightShoulder.x, shoulderCenter.y);
     ctx.lineTo(rightElbow.x, rightElbow.y);
+    ctx.stroke();
+
+    // Forearms (shirt sleeves)
+    ctx.lineWidth = armWidth * 0.85;
+    ctx.beginPath();
+    ctx.moveTo(leftElbow.x, leftElbow.y);
+    ctx.lineTo(leftWrist.x, leftWrist.y);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(rightElbow.x, rightElbow.y);
     ctx.lineTo(rightWrist.x, rightWrist.y);
     ctx.stroke();
 
-    // Draw hands (back view - simple circles)
-    ctx.fillStyle = '#8B7355';
+    // Hands (back view - more detailed)
+    ctx.fillStyle = '#D4A574';
+    const handSize = shoulderWidth * 0.1;
     ctx.beginPath();
-    ctx.arc(leftWrist.x, leftWrist.y, shoulderWidth * 0.08, 0, Math.PI * 2);
+    ctx.ellipse(leftWrist.x, leftWrist.y, handSize * 0.8, handSize, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(rightWrist.x, rightWrist.y, shoulderWidth * 0.08, 0, Math.PI * 2);
+    ctx.ellipse(rightWrist.x, rightWrist.y, handSize * 0.8, handSize, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw legs (back view)
-    ctx.strokeStyle = '#34495E'; // Pants color
-    ctx.lineWidth = hipWidth * 0.12;
-    
-    // Left leg
+    // ========== CLOTHING - PANTS ==========
+    // Main pants body
+    ctx.fillStyle = '#34495E'; // Dark gray/blue pants
     ctx.beginPath();
-    ctx.moveTo(leftHip.x, hipCenter.y);
+    ctx.moveTo(leftHip.x - hipWidth * 0.05, hipCenter.y);
+    ctx.lineTo(rightHip.x + hipWidth * 0.05, hipCenter.y);
+    ctx.lineTo(rightHip.x + hipWidth * 0.08, hipCenter.y + torsoHeight * 0.3);
+    ctx.lineTo(leftHip.x - hipWidth * 0.08, hipCenter.y + torsoHeight * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pants pockets (back view)
+    ctx.fillStyle = '#2C3E50';
+    const pocketWidth = hipWidth * 0.12;
+    const pocketHeight = torsoHeight * 0.15;
+    
+    // Left pocket
+    ctx.fillRect(
+      leftHip.x - hipWidth * 0.15,
+      hipCenter.y + torsoHeight * 0.1,
+      pocketWidth,
+      pocketHeight
+    );
+    
+    // Right pocket
+    ctx.fillRect(
+      rightHip.x + hipWidth * 0.03,
+      hipCenter.y + torsoHeight * 0.1,
+      pocketWidth,
+      pocketHeight
+    );
+
+    // ========== LEGS ==========
+    const legWidth = hipWidth * 0.15;
+    
+    // Left leg (pants)
+    ctx.fillStyle = '#34495E';
+    ctx.beginPath();
+    ctx.moveTo(leftHip.x, hipCenter.y + torsoHeight * 0.3);
+    ctx.lineTo(leftHip.x - legWidth * 0.5, leftKnee.x < leftHip.x ? leftKnee.x - legWidth * 0.3 : leftKnee.x + legWidth * 0.3);
     ctx.lineTo(leftKnee.x, leftKnee.y);
-    ctx.lineTo(leftAnkle.x, leftAnkle.y);
-    ctx.stroke();
+    ctx.lineTo(leftKnee.x, leftKnee.y + legWidth);
+    ctx.lineTo(leftHip.x + legWidth * 0.5, leftKnee.x < leftHip.x ? leftKnee.x - legWidth * 0.3 : leftKnee.x + legWidth * 0.3);
+    ctx.closePath();
+    ctx.fill();
     
-    // Right leg
+    // Left lower leg
     ctx.beginPath();
-    ctx.moveTo(rightHip.x, hipCenter.y);
-    ctx.lineTo(rightKnee.x, rightKnee.y);
-    ctx.lineTo(rightAnkle.x, rightAnkle.y);
-    ctx.stroke();
+    ctx.moveTo(leftKnee.x, leftKnee.y);
+    ctx.lineTo(leftKnee.x - legWidth * 0.4, leftAnkle.x < leftKnee.x ? leftAnkle.x - legWidth * 0.2 : leftAnkle.x + legWidth * 0.2);
+    ctx.lineTo(leftAnkle.x, leftAnkle.y);
+    ctx.lineTo(leftAnkle.x, leftAnkle.y + legWidth * 0.8);
+    ctx.lineTo(leftKnee.x + legWidth * 0.4, leftAnkle.x < leftKnee.x ? leftAnkle.x - legWidth * 0.2 : leftAnkle.x + legWidth * 0.2);
+    ctx.closePath();
+    ctx.fill();
 
-    // Draw feet (back view - simple rectangles)
-    ctx.fillStyle = '#1A1A1A'; // Shoe color
-    const footWidth = hipWidth * 0.15;
-    const footHeight = hipWidth * 0.08;
-    ctx.fillRect(leftAnkle.x - footWidth / 2, leftAnkle.y, footWidth, footHeight);
-    ctx.fillRect(rightAnkle.x - footWidth / 2, rightAnkle.y, footWidth, footHeight);
+    // Right leg (pants)
+    ctx.beginPath();
+    ctx.moveTo(rightHip.x, hipCenter.y + torsoHeight * 0.3);
+    ctx.lineTo(rightHip.x - legWidth * 0.5, rightKnee.x < rightHip.x ? rightKnee.x - legWidth * 0.3 : rightKnee.x + legWidth * 0.3);
+    ctx.lineTo(rightKnee.x, rightKnee.y);
+    ctx.lineTo(rightKnee.x, rightKnee.y + legWidth);
+    ctx.lineTo(rightHip.x + legWidth * 0.5, rightKnee.x < rightHip.x ? rightKnee.x - legWidth * 0.3 : rightKnee.x + legWidth * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Right lower leg
+    ctx.beginPath();
+    ctx.moveTo(rightKnee.x, rightKnee.y);
+    ctx.lineTo(rightKnee.x - legWidth * 0.4, rightAnkle.x < rightKnee.x ? rightAnkle.x - legWidth * 0.2 : rightAnkle.x + legWidth * 0.2);
+    ctx.lineTo(rightAnkle.x, rightAnkle.y);
+    ctx.lineTo(rightAnkle.x, rightAnkle.y + legWidth * 0.8);
+    ctx.lineTo(rightKnee.x + legWidth * 0.4, rightAnkle.x < rightKnee.x ? rightAnkle.x - legWidth * 0.2 : rightAnkle.x + legWidth * 0.2);
+    ctx.closePath();
+    ctx.fill();
+
+    // ========== SHOES ==========
+    ctx.fillStyle = '#1A1A1A'; // Black shoes
+    const footWidth = hipWidth * 0.18;
+    const footHeight = hipWidth * 0.12;
+    
+    // Left shoe (more detailed)
+    ctx.beginPath();
+    ctx.moveTo(leftAnkle.x - footWidth * 0.4, leftAnkle.y);
+    ctx.lineTo(leftAnkle.x + footWidth * 0.6, leftAnkle.y);
+    ctx.lineTo(leftAnkle.x + footWidth * 0.5, leftAnkle.y + footHeight);
+    ctx.lineTo(leftAnkle.x - footWidth * 0.5, leftAnkle.y + footHeight);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Right shoe
+    ctx.beginPath();
+    ctx.moveTo(rightAnkle.x - footWidth * 0.4, rightAnkle.y);
+    ctx.lineTo(rightAnkle.x + footWidth * 0.6, rightAnkle.y);
+    ctx.lineTo(rightAnkle.x + footWidth * 0.5, rightAnkle.y + footHeight);
+    ctx.lineTo(rightAnkle.x - footWidth * 0.5, rightAnkle.y + footHeight);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shoe soles
+    ctx.fillStyle = '#2C2C2C';
+    ctx.fillRect(leftAnkle.x - footWidth * 0.5, leftAnkle.y + footHeight, footWidth, footHeight * 0.3);
+    ctx.fillRect(rightAnkle.x - footWidth * 0.5, rightAnkle.y + footHeight, footWidth, footHeight * 0.3);
 
     ctx.restore();
   };
@@ -267,6 +447,10 @@ function Game1() {
   const startGame = async () => {
   setIsPlaying(true);
   setGameArr([false, false, false]);
+  leftStepCompletedRef.current = false;
+  rightStepCompletedRef.current = false;
+  handsPerfectCountRef.current = 0;
+  handsWerePerfectRef.current = false;
 
   // ⏳ wait 3 seconds before starting video + timer
   setTimeout(() => {
@@ -323,24 +507,44 @@ function Game1() {
       const rightHand = landmarks[16].y;
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
 
-      if (elapsed >= 1000 && elapsed <= 10000 && !handsAboveShoulders) setFeedback('Raise both hands up and down');
-      else if (elapsed >= 1000 && elapsed <= 10000 && handsAboveShoulders) setFeedback('Perfect!');
-      else if (elapsed >= 10000 && elapsed <= 20000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 10000 && elapsed <= 20000 && isLeftPosition) setFeedback('Perfect!');
-      else if (elapsed >= 20000 && elapsed <= 26000 && !isRightPosition) setFeedback('Move to the right');
-      else if (elapsed >= 20000 && elapsed <= 26000 && isRightPosition) setFeedback('Perfect!');
-      
+      // Update feedback and gameArr based on elapsed time and conditions
       if (elapsed >= 1000 && elapsed <= 10000) {
-        if (feedback === 'Perfect!') {
-          setGameArr(prev => [true, prev[1], prev[2]]);
+        if (!handsAboveShoulders) {
+          setFeedback('Raise both hands up and down');
+          handsWerePerfectRef.current = false; // Reset flag when hands go down so we can count again
+        } else {
+          setFeedback('Perfect!');
+          // Only increment when transitioning from "not perfect" to "perfect" (first time hands go up)
+          if (!handsWerePerfectRef.current) {
+            handsPerfectCountRef.current++;
+            handsWerePerfectRef.current = true;
+            // Set to true only after 3 separate times of raising hands up
+            if (handsPerfectCountRef.current >= 3) {
+              setGameArr(prev => [true, prev[1], prev[2]]);
+            }
+          }
         }
-      } else if (elapsed > 10000 && elapsed <= 15000) {
-        if (feedback === 'Perfect!') {
+      } else if (elapsed >= 10000 && elapsed <= 20000) {
+        // Left step: once perfect, stay perfect even if they move away
+        if (leftStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isLeftPosition) {
+          setFeedback('Move to the left');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], true, prev[2]]);
+          leftStepCompletedRef.current = true;
         }
-      } else if (elapsed > 20000 && elapsed <= 26000) {
-        if (feedback === 'Perfect!') {
+      } else if (elapsed >= 20000 && elapsed <= 26000) {
+        // Right step: once perfect, stay perfect even if they move away
+        if (rightStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isRightPosition) {
+          setFeedback('Move to the right');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], prev[1], true]);
+          rightStepCompletedRef.current = true;
         }
       }
     }, 100);
@@ -466,7 +670,7 @@ function Game1() {
             top: 20,
             left: '50%',
             transform: 'translateX(-50%)',
-            color: '#F2743E',
+            color: feedback === 'Perfect!' ? '#2ECC71' : '#F2743E',
             fontWeight: 'bold',
             fontSize: 22
           }}
