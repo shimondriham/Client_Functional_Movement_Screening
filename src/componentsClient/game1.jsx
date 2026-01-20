@@ -5,6 +5,7 @@ import { doApiGet, doApiMethod } from '../services/apiService';
 
 function Game1() {
   const nav = useNavigate();
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const guideVideoRef = useRef(null);
@@ -21,7 +22,33 @@ function Game1() {
   const leftStepCompletedRef = useRef(false);
   const rightStepCompletedRef = useRef(false);
   const handsPerfectCountRef = useRef(0);
-  const handsWerePerfectRef = useRef(false);
+  const handsWerePerfectUpRef = useRef(false);
+  const handsWerePerfectDownRef = useRef(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const lastSpokenFeedbackRef = useRef("");
+  const preferredVoiceRef = useRef(null);
+
+  // -------------------------------
+  // FULLSCREEN TOGGLE
+  // -------------------------------
+  const toggleFullscreen = () => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen?.().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.warn('Failed to enter fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen?.().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.warn('Failed to exit fullscreen:', err);
+      });
+    }
+  };
 
 
   // -------------------------------
@@ -432,6 +459,76 @@ function Game1() {
     initialize();
   }, []);
 
+  // -------------------------------
+  // VOICE FEEDBACK (TEXT-TO-SPEECH)
+  // -------------------------------
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      if (!voices.length) return;
+
+      // Prefer clearly female English voices by name
+      const femaleCandidates = voices.filter(
+        (v) =>
+          v.lang.startsWith("en") &&
+          /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(
+            v.name
+          ) &&
+          !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
+      );
+
+      preferredVoiceRef.current =
+        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+    };
+
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // Speak feedback changes
+  useEffect(() => {
+    // Only speak meaningful, short feedback messages
+    if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
+
+    // Avoid repeating the same feedback again and again
+    if (feedback === lastSpokenFeedbackRef.current) return;
+    lastSpokenFeedbackRef.current = feedback;
+
+    const utterance = new SpeechSynthesisUtterance(feedback);
+
+    // Use the preferred (female) voice if we have one
+    if (preferredVoiceRef.current) {
+      utterance.voice = preferredVoiceRef.current;
+    }
+
+    utterance.lang = "en-US";
+
+    if (feedback === "Perfect!") {
+      utterance.rate = 1.5;       // קצת יותר מהיר = אנרגיה
+      utterance.pitch = 2.0;      // גבוה יותר = שמח ומרומם
+      utterance.volume = 1.0;     // מקסימום קול
+      utterance.text = "Perfect!!!"; // הוספת סימני קריאה ואימוג׳י לחיוניות
+    } else {
+      utterance.rate = 0.9;
+      utterance.pitch = 1.2;
+      utterance.volume = 0.9;
+    }
+
+    // Cancel any ongoing speech and speak the latest feedback
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [feedback]);
+
 
   const doApi = async () => {
     let url = "/users/myInfo";
@@ -445,12 +542,18 @@ function Game1() {
 
  
   const startGame = async () => {
+  // Enter fullscreen when starting the game
+  if (!document.fullscreenElement) {
+    toggleFullscreen();
+  }
+
   setIsPlaying(true);
   setGameArr([false, false, false]);
   leftStepCompletedRef.current = false;
   rightStepCompletedRef.current = false;
   handsPerfectCountRef.current = 0;
-  handsWerePerfectRef.current = false;
+  handsWerePerfectUpRef.current = false;
+  handsWerePerfectDownRef.current = false;
 
   // ⏳ wait 3 seconds before starting video + timer
   setTimeout(() => {
@@ -506,20 +609,34 @@ function Game1() {
       const leftHand = landmarks[15].y;
       const rightHand = landmarks[16].y;
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
+      const handsBelowAlbows = (leftHand < landmarks[23].y && rightHand < landmarks[24].y);
 
       // Update feedback and gameArr based on elapsed time and conditions
       if (elapsed >= 1000 && elapsed <= 10000) {
         if (!handsAboveShoulders) {
           setFeedback('Raise both hands up and down');
-          handsWerePerfectRef.current = false; // Reset flag when hands go down so we can count again
+          handsWerePerfectUpRef.current = false; // Reset flag when hands go down so we can count again
+        }
+        else if (!handsBelowAlbows) {
+          setFeedback('Raise both hands up and down');
+          handsWerePerfectDownRef.current = false;
         } else {
-          setFeedback('Perfect!');
           // Only increment when transitioning from "not perfect" to "perfect" (first time hands go up)
-          if (!handsWerePerfectRef.current) {
+          if (!handsWerePerfectUpRef.current) {
             handsPerfectCountRef.current++;
-            handsWerePerfectRef.current = true;
+            handsWerePerfectUpRef.current = true;
             // Set to true only after 3 separate times of raising hands up
-            if (handsPerfectCountRef.current >= 3) {
+            if (handsPerfectCountRef.current >= 6) {
+              setFeedback('Perfect!');
+              setGameArr(prev => [true, prev[1], prev[2]]);
+            }
+          }
+          if (!handsWerePerfectDownRef.current) {
+            handsPerfectCountRef.current++;
+            handsWerePerfectDownRef.current = true;
+            // Set to true only after 3 separate times of raising hands up
+            if (handsPerfectCountRef.current >= 6) {
+              setFeedback('Perfect!');
               setGameArr(prev => [true, prev[1], prev[2]]);
             }
           }
@@ -577,6 +694,7 @@ function Game1() {
   // -------------------------------
   return (
     <div
+      ref={containerRef}
       style={{
         width: '100%',
         height: 'calc(100vh - 60px)',
