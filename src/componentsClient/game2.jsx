@@ -7,6 +7,7 @@ function Game2() {
   const nav = useNavigate();
   const location = useLocation();
   const idGame = location.state?.gameId;
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
   const guideVideoRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
@@ -17,6 +18,31 @@ function Game2() {
   const timerIntervalRef = useRef(null);
   const processLoopRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const lastSpokenFeedbackRef = useRef("");
+  const preferredVoiceRef = useRef(null);
+
+  // -------------------------------
+  // FULLSCREEN TOGGLE
+  // -------------------------------
+  const toggleFullscreen = () => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen?.().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.warn('Failed to enter fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen?.().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.warn('Failed to exit fullscreen:', err);
+      });
+    }
+  };
 
   const startCamera = async () => {
     if (!videoRef.current) return;
@@ -58,7 +84,8 @@ function Game2() {
   };
 
 
-  const initSelfieSegmentation = async () => {
+  // Initializes the camera and a basic render loop (no segmentation)
+  const initCameraLoop = async () => {
     try {
       await startCamera();
       const processLoop = () => {
@@ -74,9 +101,72 @@ function Game2() {
     console.log(idGame);
 
     doApi();
-    initSelfieSegmentation();
+    initCameraLoop();
     initPoseLandmarker();
   }, []);
+
+  // -------------------------------
+  // VOICE FEEDBACK (TEXT-TO-SPEECH)
+  // -------------------------------
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      if (!voices.length) return;
+
+      const femaleCandidates = voices.filter(
+        (v) =>
+          v.lang.startsWith("en") &&
+          /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(
+            v.name
+          ) &&
+          !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
+      );
+
+      preferredVoiceRef.current =
+        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+    };
+
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
+
+    if (feedback === lastSpokenFeedbackRef.current) return;
+    lastSpokenFeedbackRef.current = feedback;
+
+    const utterance = new SpeechSynthesisUtterance(feedback);
+
+    if (preferredVoiceRef.current) {
+      utterance.voice = preferredVoiceRef.current;
+    }
+
+    utterance.lang = "en-US";
+
+    if (feedback === "Perfect!") {
+      utterance.rate = 1.3;
+      utterance.pitch = 1.8;
+      utterance.volume = 1.0;
+    } else {
+      utterance.rate = 0.9;
+      utterance.pitch = 1.2;
+      utterance.volume = 0.9;
+    }
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [feedback]);
 
   const doApi = async () => {
     let url = "/users/myInfo";
@@ -89,6 +179,11 @@ function Game2() {
   };
 
     const startGame = async () => {
+      // Enter fullscreen when starting the game
+      if (!document.fullscreenElement) {
+        toggleFullscreen();
+      }
+
       setIsPlaying(true);
       setGameArr([false, false, false]);
 
@@ -169,6 +264,7 @@ function Game2() {
 
   return (
     <div
+      ref={containerRef}
       style={{
         width: "100%",
         height: "calc(100vh - 60px)",
