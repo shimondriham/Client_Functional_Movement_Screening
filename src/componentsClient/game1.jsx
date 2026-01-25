@@ -604,8 +604,8 @@ function Game1() {
       noDetectionCountRef.current = 0;
 
       const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[12].x <= 0.40);
-      const isLeftPosition = (landmarks[11].x >= 0.92);
+      const isRightPosition = (landmarks[10].x < landmarks[24].x);
+      const isLeftPosition = (landmarks[9].x > landmarks[23].x);
       const leftHand = landmarks[15].y;
       const rightHand = landmarks[16].y;
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
