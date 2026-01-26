@@ -609,15 +609,14 @@ function Game1() {
       const leftHand = landmarks[15].y;
       const rightHand = landmarks[16].y;
       const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
-      const handsBelowAlbows = (leftHand < landmarks[23].y && rightHand < landmarks[24].y);
-
+      const handsBelowKnees = (landmarks[15].y > landmarks[25].y && landmarks[16].y > landmarks[26].y);
       // Update feedback and gameArr based on elapsed time and conditions
       if (elapsed >= 1000 && elapsed <= 10000) {
         if (!handsAboveShoulders) {
           setFeedback('Raise both hands up and down');
           handsWerePerfectUpRef.current = false; // Reset flag when hands go down so we can count again
         }
-        else if (!handsBelowAlbows) {
+        else if (!handsBelowKnees) {
           setFeedback('Raise both hands up and down');
           handsWerePerfectDownRef.current = false;
         } else {

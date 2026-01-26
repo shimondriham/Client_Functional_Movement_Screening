@@ -215,8 +215,8 @@ function Game2() {
       }
 
       const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[12].x <= 0.40);
-      const isLeftPosition = (landmarks[11].x >= 0.92);
+      const isRightPosition = (landmarks[10].x < landmarks[24].x);
+      const isLeftPosition = (landmarks[9].x > landmarks[23].x);
       if (elapsed >= 1000 && elapsed <= 15000 && !isLeftPosition) setFeedback('Move to the left');
       else if (elapsed >= 1000 && elapsed <= 15000 && isLeftPosition) setFeedback('Perfect!');
       else if (elapsed >= 15000 && elapsed <= 25000 && !isRightPosition) setFeedback('Move to the right');
@@ -349,7 +349,7 @@ function Game2() {
             top: 20,
             left: "50%",
             transform: "translateX(-50%)",
-            color: "#F2743E",
+            color: feedback === 'Perfect!' ? '#2ECC71' : '#F2743E',
             fontWeight: "bold",
             fontSize: 22,
             padding: "12px 24px",
