@@ -18,7 +18,7 @@ function Game1() {
   const processLoopRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
-  const noDetectionCountRef = useRef(0);
+  // const noDetectionCountRef = useRef(0);
   const leftStepCompletedRef = useRef(false);
   const rightStepCompletedRef = useRef(false);
   const handsPerfectCountRef = useRef(0);
@@ -27,6 +27,7 @@ function Game1() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const lastSpokenFeedbackRef = useRef("");
   const preferredVoiceRef = useRef(null);
+  // const test = useRef(0);
 
   // -------------------------------
   // FULLSCREEN TOGGLE
@@ -510,9 +511,9 @@ function Game1() {
     utterance.lang = "en-US";
 
     if (feedback === "Perfect!") {
-      utterance.rate = 1.5;       // קצת יותר מהיר = אנרגיה
-      utterance.pitch = 2.0;      // גבוה יותר = שמח ומרומם
-      utterance.volume = 1.0;     // מקסימום קול
+      utterance.rate = 1.5;        // קצת יותר מהיר = אנרגיה
+      utterance.pitch = 2.0;       // גבוה יותר = שמח ומרומם
+      utterance.volume = 1.0;      // מקסימום קול
       utterance.text = "Perfect!!!"; // הוספת סימני קריאה ואימוג׳י לחיוניות
     } else {
       utterance.rate = 0.9;
@@ -540,7 +541,6 @@ function Game1() {
     }
   }
 
- 
   const startGame = async () => {
   // Enter fullscreen when starting the game
   if (!document.fullscreenElement) {
@@ -595,52 +595,41 @@ function Game1() {
       }
 
       if (!results.landmarks || results.landmarks.length === 0) {
-        noDetectionCountRef.current++;
-        if (noDetectionCountRef.current >= 2) {
-          setFeedback('No person detected');
-        }
+        setFeedback('No person detected');
         return;
       }
-      noDetectionCountRef.current = 0;
+      // noDetectionCountRef.current = 0;
 
       const landmarks = results.landmarks[0];
       const isRightPosition = (landmarks[10].x < landmarks[24].x);
       const isLeftPosition = (landmarks[9].x > landmarks[23].x);
-      const leftHand = landmarks[15].y;
-      const rightHand = landmarks[16].y;
-      const handsAboveShoulders = (leftHand < landmarks[11].y && rightHand < landmarks[12].y);
-      const handsBelowKnees = (landmarks[15].y > landmarks[25].y && landmarks[16].y > landmarks[26].y);
-      // Update feedback and gameArr based on elapsed time and conditions
+      
+      // FIX START: Hand Repetition Logic
       if (elapsed >= 1000 && elapsed <= 10000) {
-        if (!handsAboveShoulders) {
-          setFeedback('Raise both hands up and down');
-          handsWerePerfectUpRef.current = false; // Reset flag when hands go down so we can count again
-        }
-        else if (!handsBelowKnees) {
-          setFeedback('Raise both hands up and down');
-          handsWerePerfectDownRef.current = false;
-        } else {
-          // Only increment when transitioning from "not perfect" to "perfect" (first time hands go up)
-          if (!handsWerePerfectUpRef.current) {
-            handsPerfectCountRef.current++;
+        if (handsPerfectCountRef.current < 3) {
+          setFeedback(`Raise both hands up and down (${handsPerfectCountRef.current}/3)`);
+          
+          const handsAboveShoulders = (landmarks[15].y < landmarks[11].y && landmarks[16].y < landmarks[12].y);
+          const handsBelowHips = (landmarks[15].y > landmarks[23].y && landmarks[16].y > landmarks[24].y);
+
+          if (handsAboveShoulders) {
             handsWerePerfectUpRef.current = true;
-            // Set to true only after 3 separate times of raising hands up
-            if (handsPerfectCountRef.current >= 6) {
-              setFeedback('Perfect!');
-              setGameArr(prev => [true, prev[1], prev[2]]);
-            }
           }
-          if (!handsWerePerfectDownRef.current) {
+
+          if (handsBelowHips && handsWerePerfectUpRef.current) {
             handsPerfectCountRef.current++;
-            handsWerePerfectDownRef.current = true;
-            // Set to true only after 3 separate times of raising hands up
-            if (handsPerfectCountRef.current >= 6) {
-              setFeedback('Perfect!');
-              setGameArr(prev => [true, prev[1], prev[2]]);
+            handsWerePerfectUpRef.current = false; // Reset for next rep
+            if (handsPerfectCountRef.current >= 3) {
+               setFeedback('Perfect!');
+               setGameArr(prev => [true, prev[1], prev[2]]);
             }
           }
+        } else {
+          setFeedback('Perfect!');
         }
-      } else if (elapsed >= 10000 && elapsed <= 20000) {
+      } 
+      // FIX END
+      else if (elapsed >= 10000 && elapsed <= 20000) {
         // Left step: once perfect, stay perfect even if they move away
         if (leftStepCompletedRef.current) {
           setFeedback('Perfect!');

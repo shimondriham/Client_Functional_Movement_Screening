@@ -21,6 +21,8 @@ function Game2() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const lastSpokenFeedbackRef = useRef("");
   const preferredVoiceRef = useRef(null);
+  const leftStepCompletedRef = useRef(false);
+  const rightStepCompletedRef = useRef(false);
 
   // -------------------------------
   // FULLSCREEN TOGGLE
@@ -186,6 +188,8 @@ function Game2() {
 
       setIsPlaying(true);
       setGameArr([false, false, false]);
+      leftStepCompletedRef.current = false;
+      rightStepCompletedRef.current = false;
 
       setTimeout(() => {
       if (guideVideoRef.current) {
@@ -217,25 +221,38 @@ function Game2() {
       const landmarks = results.landmarks[0];
       const isRightPosition = (landmarks[10].x < landmarks[24].x);
       const isLeftPosition = (landmarks[9].x > landmarks[23].x);
-      if (elapsed >= 1000 && elapsed <= 15000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 1000 && elapsed <= 15000 && isLeftPosition) setFeedback('Perfect!');
-      else if (elapsed >= 15000 && elapsed <= 25000 && !isRightPosition) setFeedback('Move to the right');
-      else if (elapsed >= 15000 && elapsed <= 25000 && isRightPosition) setFeedback('Perfect!');
-      else if (elapsed >= 25000 && elapsed <= 30000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 25000 && elapsed <= 30000 && isLeftPosition) setFeedback('Perfect!');
-      
-
-      if (elapsed >= 1000 && elapsed <= 8000) {
-        if (feedback === 'Perfect!') {
+      if (elapsed >= 1000 && elapsed <= 15000) {
+        if (leftStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isLeftPosition) {
+          setFeedback('Move to the left');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [true, prev[1], prev[2]]);
+          leftStepCompletedRef.current = true;
         }
-      } else if (elapsed > 15000 && elapsed <= 20000) {
-        if (feedback === 'Perfect!') {
+      } 
+      else if (elapsed > 15000 && elapsed <= 25000) {
+        if (rightStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isRightPosition) {
+          setFeedback('Move to the right');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], true, prev[2]]);
+          rightStepCompletedRef.current = true;
         }
-      } else if (elapsed > 25000 && elapsed <= 30000) {
-        if (feedback === 'Perfect!') {
+        leftStepCompletedRef.current = false;
+      } 
+      else if (elapsed > 25000 && elapsed <= 30000) {
+        if (leftStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isLeftPosition) {
+          setFeedback('Move to the left');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], prev[1], true]);
+          leftStepCompletedRef.current = true;
         }
       }
     }, 100);
