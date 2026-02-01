@@ -16,7 +16,74 @@ function CameraCalibration() {
   const [feedback, setFeedback] = useState('Initializing...');
   const isValid = useRef(false);
   const poseLandmarkerRef = useRef(null);
+  
+  // Refs for logic and voice tracking
+  const currentFeedbackRef = useRef('Initializing...');
+  const lastSpokenFeedbackRef = useRef("");
+  const preferredVoiceRef = useRef(null);
 
+  // -------------------------------
+  // VOICE INITIALIZATION
+  // -------------------------------
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      if (!voices.length) return;
+
+      const femaleCandidates = voices.filter(
+        (v) =>
+          v.lang.startsWith("en") &&
+          /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(v.name) &&
+          !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
+      );
+
+      preferredVoiceRef.current =
+        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+    };
+
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // -------------------------------
+  // VOICE FEEDBACK TRIGGER
+  // -------------------------------
+  useEffect(() => {
+    if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
+    if (feedback === lastSpokenFeedbackRef.current || feedback === 'Initializing...') return;
+
+    lastSpokenFeedbackRef.current = feedback;
+    const utterance = new SpeechSynthesisUtterance(feedback);
+
+    if (preferredVoiceRef.current) {
+      utterance.voice = preferredVoiceRef.current;
+    }
+
+    utterance.lang = "en-US";
+
+    if (feedback === "Perfect!") {
+      utterance.rate = 1.3;
+      utterance.pitch = 1.4;
+      utterance.volume = 1.0;
+    } else {
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.9;
+    }
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }, [feedback]);
+
+  // -------------------------------
+  // MAIN AI LOGIC
+  // -------------------------------
   useEffect(() => {
     let animationId;
 
@@ -79,7 +146,10 @@ function CameraCalibration() {
           ctx.translate(-videoWidth, 0);
 
           if (!results.landmarks || results.landmarks.length === 0) {
-            setFeedback('No person detected');
+            if (currentFeedbackRef.current !== 'No person detected') {
+              currentFeedbackRef.current = 'No person detected';
+              setFeedback('No person detected');
+            }
           } else {
             const landmarks = results.landmarks[0];
             
@@ -127,12 +197,19 @@ function CameraCalibration() {
               Math.abs(centerY - videoHeight / 2) < toleranceY;
             const isVisible = boxHeight > videoHeight * 0.5 && boxHeight < videoHeight * 0.95;
 
-            if(!isValid.current)
+            // RESTORED LOGIC: Permanent activation once perfect
+            if(!isValid.current) {
               isValid.current = isCentered && isVisible;
+            }
 
-            if (!isCentered) setFeedback('Move to center');
-            else if (!isVisible) setFeedback('Adjust distance');
-            else setFeedback('Perfect!');
+            let newFeedback = 'Perfect!';
+            if (!isCentered) newFeedback = 'Move to the center';
+            else if (!isVisible) newFeedback = 'Adjust distance';
+
+            if (currentFeedbackRef.current !== newFeedback) {
+              currentFeedbackRef.current = newFeedback;
+              setFeedback(newFeedback);
+            }
           }
         }
         animationId = requestAnimationFrame(loop);
@@ -141,8 +218,11 @@ function CameraCalibration() {
     };
 
     initPoseLandmarker();
-    return () => { if (animationId) cancelAnimationFrame(animationId); };
-  }, [feedback]); 
+    return () => { 
+      if (animationId) cancelAnimationFrame(animationId); 
+      window.speechSynthesis.cancel();
+    };
+  }, []); 
 
   const stopCamera = () => {
     try {
@@ -211,7 +291,6 @@ function CameraCalibration() {
       zIndex: 20,
       whiteSpace: 'nowrap'
     },
-    // סטייל חדש ללוגו
     logoImg: {
         position: 'absolute',
         top: '25px',
@@ -226,7 +305,6 @@ function CameraCalibration() {
 
   return (
     <div style={styles.wrapper}>
-      {/* הלוגו החדש במקום הטקסט הישן */}
       <img 
         src={Logo} 
         alt="Fitwave.ai" 

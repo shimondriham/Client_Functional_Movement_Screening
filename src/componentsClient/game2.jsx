@@ -7,6 +7,7 @@ function Game2() {
   const nav = useNavigate();
   const location = useLocation();
   const idGame = location.state?.gameId;
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
   const guideVideoRef = useRef(null);
   const poseLandmarkerRef = useRef(null);
@@ -17,6 +18,33 @@ function Game2() {
   const timerIntervalRef = useRef(null);
   const processLoopRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const lastSpokenFeedbackRef = useRef("");
+  const preferredVoiceRef = useRef(null);
+  const leftStepCompletedRef = useRef(false);
+  const rightStepCompletedRef = useRef(false);
+
+  // -------------------------------
+  // FULLSCREEN TOGGLE
+  // -------------------------------
+  const toggleFullscreen = () => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen?.().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.warn('Failed to enter fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen?.().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.warn('Failed to exit fullscreen:', err);
+      });
+    }
+  };
 
   const startCamera = async () => {
     if (!videoRef.current) return;
@@ -58,7 +86,8 @@ function Game2() {
   };
 
 
-  const initSelfieSegmentation = async () => {
+  // Initializes the camera and a basic render loop (no segmentation)
+  const initCameraLoop = async () => {
     try {
       await startCamera();
       const processLoop = () => {
@@ -74,9 +103,72 @@ function Game2() {
     console.log(idGame);
 
     doApi();
-    initSelfieSegmentation();
+    initCameraLoop();
     initPoseLandmarker();
   }, []);
+
+  // -------------------------------
+  // VOICE FEEDBACK (TEXT-TO-SPEECH)
+  // -------------------------------
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      if (!voices.length) return;
+
+      const femaleCandidates = voices.filter(
+        (v) =>
+          v.lang.startsWith("en") &&
+          /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(
+            v.name
+          ) &&
+          !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
+      );
+
+      preferredVoiceRef.current =
+        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+    };
+
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
+
+    if (feedback === lastSpokenFeedbackRef.current) return;
+    lastSpokenFeedbackRef.current = feedback;
+
+    const utterance = new SpeechSynthesisUtterance(feedback);
+
+    if (preferredVoiceRef.current) {
+      utterance.voice = preferredVoiceRef.current;
+    }
+
+    utterance.lang = "en-US";
+
+    if (feedback === "Perfect!") {
+      utterance.rate = 1.3;
+      utterance.pitch = 1.8;
+      utterance.volume = 1.0;
+    } else {
+      utterance.rate = 0.9;
+      utterance.pitch = 1.2;
+      utterance.volume = 0.9;
+    }
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [feedback]);
 
   const doApi = async () => {
     let url = "/users/myInfo";
@@ -89,8 +181,15 @@ function Game2() {
   };
 
     const startGame = async () => {
+      // Enter fullscreen when starting the game
+      if (!document.fullscreenElement) {
+        toggleFullscreen();
+      }
+
       setIsPlaying(true);
       setGameArr([false, false, false]);
+      leftStepCompletedRef.current = false;
+      rightStepCompletedRef.current = false;
 
       setTimeout(() => {
       if (guideVideoRef.current) {
@@ -120,27 +219,40 @@ function Game2() {
       }
 
       const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[12].x <= 0.40);
-      const isLeftPosition = (landmarks[11].x >= 0.92);
-      if (elapsed >= 1000 && elapsed <= 15000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 1000 && elapsed <= 15000 && isLeftPosition) setFeedback('Perfect!');
-      else if (elapsed >= 15000 && elapsed <= 25000 && !isRightPosition) setFeedback('Move to the right');
-      else if (elapsed >= 15000 && elapsed <= 25000 && isRightPosition) setFeedback('Perfect!');
-      else if (elapsed >= 25000 && elapsed <= 30000 && !isLeftPosition) setFeedback('Move to the left');
-      else if (elapsed >= 25000 && elapsed <= 30000 && isLeftPosition) setFeedback('Perfect!');
-      
-
-      if (elapsed >= 1000 && elapsed <= 8000) {
-        if (feedback === 'Perfect!') {
+      const isRightPosition = (landmarks[10].x < landmarks[24].x);
+      const isLeftPosition = (landmarks[9].x > landmarks[23].x);
+      if (elapsed >= 1000 && elapsed <= 15000) {
+        if (leftStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isLeftPosition) {
+          setFeedback('Move to the left');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [true, prev[1], prev[2]]);
+          leftStepCompletedRef.current = true;
         }
-      } else if (elapsed > 15000 && elapsed <= 20000) {
-        if (feedback === 'Perfect!') {
+      } 
+      else if (elapsed > 15000 && elapsed <= 25000) {
+        if (rightStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isRightPosition) {
+          setFeedback('Move to the right');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], true, prev[2]]);
+          rightStepCompletedRef.current = true;
         }
-      } else if (elapsed > 25000 && elapsed <= 30000) {
-        if (feedback === 'Perfect!') {
+        leftStepCompletedRef.current = false;
+      } 
+      else if (elapsed > 25000 && elapsed <= 30000) {
+        if (leftStepCompletedRef.current) {
+          setFeedback('Perfect!');
+        } else if (!isLeftPosition) {
+          setFeedback('Move to the left');
+        } else {
+          setFeedback('Perfect!');
           setGameArr(prev => [prev[0], prev[1], true]);
+          leftStepCompletedRef.current = true;
         }
       }
     }, 100);
@@ -169,6 +281,7 @@ function Game2() {
 
   return (
     <div
+      ref={containerRef}
       style={{
         width: "100%",
         height: "calc(100vh - 60px)",
@@ -253,7 +366,7 @@ function Game2() {
             top: 20,
             left: "50%",
             transform: "translateX(-50%)",
-            color: "#F2743E",
+            color: feedback === 'Perfect!' ? '#2ECC71' : '#F2743E',
             fontWeight: "bold",
             fontSize: 22,
             padding: "12px 24px",
