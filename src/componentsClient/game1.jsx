@@ -18,20 +18,16 @@ function Game1() {
   const processLoopRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
-  // const noDetectionCountRef = useRef(0);
   const leftStepCompletedRef = useRef(false);
   const rightStepCompletedRef = useRef(false);
-  const handsPerfectCountRef = useRef(0);
+  const handsPositionCountRef = useRef(0);
   const handsWerePerfectUpRef = useRef(false);
   const handsWerePerfectDownRef = useRef(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const lastSpokenFeedbackRef = useRef("");
-  const preferredVoiceRef = useRef(null);
-  // const test = useRef(0);
+  const lastFeedbackVoiceRef = useRef("");
+  const voiceRef = useRef(null);
+  const bgMusicRef = useRef(new Audio("src/assets/background_music.mp4"));
 
-  // -------------------------------
-  // FULLSCREEN TOGGLE
-  // -------------------------------
   const toggleFullscreen = () => {
     const elem = containerRef.current;
     if (!elem) return;
@@ -51,10 +47,6 @@ function Game1() {
     }
   };
 
-
-  // -------------------------------
-  // CAMERA START
-  // -------------------------------
   const startCamera = async () => {
     if (!videoRef.current) return;
 
@@ -72,23 +64,18 @@ function Game1() {
     }
   };
 
-  // -------------------------------
-  // DRAW AVATAR FACING FROM THE BACK
-  // -------------------------------
-  const drawAvatarFromBack = (ctx, landmarks, width, height) => {
+  const drawAvatar = (ctx, landmarks, width, height) => {
     if (!landmarks || landmarks.length === 0) return;
 
     ctx.save();
-    ctx.scale(-1, 1); // Flip horizontally
-    ctx.translate(-width, 0); // Shift back after flip
+    ctx.scale(-1, 1);
+    ctx.translate(-width, 0);
 
-    // Convert normalized coordinates to pixel coordinates
     const getPoint = (index) => ({
       x: landmarks[index].x * width,
       y: landmarks[index].y * height
     });
 
-    // Key points for drawing avatar from back
     const leftShoulder = getPoint(11);
     const rightShoulder = getPoint(12);
     const leftHip = getPoint(23);
@@ -101,11 +88,9 @@ function Game1() {
     const rightKnee = getPoint(26);
     const leftAnkle = getPoint(27);
     const rightAnkle = getPoint(28);
-    const nose = getPoint(0);
     const leftEar = getPoint(7);
     const rightEar = getPoint(8);
 
-    // Calculate center points and dimensions
     const shoulderCenter = {
       x: (leftShoulder.x + rightShoulder.x) / 2,
       y: (leftShoulder.y + rightShoulder.y) / 2
@@ -123,11 +108,9 @@ function Game1() {
     const torsoHeight = Math.abs(hipCenter.y - shoulderCenter.y);
     const headRadius = Math.abs(leftEar.x - rightEar.x) * 0.6;
 
-    // ========== HEAD & NECK ==========
-    // Draw neck (back view)
     const neckWidth = shoulderWidth * 0.25;
     const neckHeight = shoulderCenter.y - headCenter.y - headRadius * 0.5;
-    ctx.fillStyle = '#D4A574'; // Skin tone (slightly lighter)
+    ctx.fillStyle = '#D4A574';
     ctx.fillRect(
       headCenter.x - neckWidth / 2,
       headCenter.y + headRadius * 0.3,
@@ -135,7 +118,6 @@ function Game1() {
       neckHeight
     );
 
-    // Draw head (back view - more oval shape)
     ctx.fillStyle = '#D4A574';
     ctx.beginPath();
     ctx.ellipse(
@@ -149,9 +131,7 @@ function Game1() {
     );
     ctx.fill();
 
-    // ========== HAIRCUT (Back View) ==========
-    // Base hair layer
-    ctx.fillStyle = '#2C1810'; // Dark brown hair
+    ctx.fillStyle = '#2C1810';
     ctx.beginPath();
     ctx.ellipse(
       headCenter.x,
@@ -164,7 +144,6 @@ function Game1() {
     );
     ctx.fill();
 
-    // Hair texture layers (back view - layered effect)
     ctx.fillStyle = '#3D2415';
     for (let i = 0; i < 3; i++) {
       const offsetY = i * headRadius * 0.15;
@@ -182,7 +161,6 @@ function Game1() {
       ctx.fill();
     }
 
-    // Hair strands/details (back view)
     ctx.strokeStyle = '#1A0F08';
     ctx.lineWidth = 2;
     for (let i = 0; i < 8; i++) {
@@ -197,9 +175,7 @@ function Game1() {
       ctx.stroke();
     }
 
-    // ========== CLOTHING - SHIRT ==========
-    // Main shirt body
-    ctx.fillStyle = '#3498DB'; // Blue shirt color
+    ctx.fillStyle = '#2f8ac7';
     ctx.beginPath();
     ctx.moveTo(leftShoulder.x - shoulderWidth * 0.1, shoulderCenter.y);
     ctx.lineTo(rightShoulder.x + shoulderWidth * 0.1, shoulderCenter.y);
@@ -208,8 +184,7 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // Shirt collar (back view - V-neck style)
-    ctx.fillStyle = '#2980B9'; // Darker blue for collar
+    ctx.fillStyle = '#2980B9';
     ctx.beginPath();
     ctx.moveTo(headCenter.x - neckWidth * 0.4, shoulderCenter.y);
     ctx.lineTo(headCenter.x, shoulderCenter.y - neckHeight * 0.3);
@@ -219,49 +194,35 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // ========== ARMS & SLEEVES ==========
     const armWidth = shoulderWidth * 0.18;
-    
-    // Left sleeve (shirt material)
-    ctx.fillStyle = '#3498DB';
+    ctx.fillStyle = '#2f8ac7';
     ctx.beginPath();
     ctx.arc(leftShoulder.x, shoulderCenter.y, armWidth * 0.6, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Right sleeve
     ctx.beginPath();
     ctx.arc(rightShoulder.x, shoulderCenter.y, armWidth * 0.6, 0, Math.PI * 2);
     ctx.fill();
-
-    // Upper arms (shirt sleeves)
-    ctx.strokeStyle = '#3498DB';
+    ctx.strokeStyle = '#2f8ac7';
     ctx.lineWidth = armWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    
     ctx.beginPath();
     ctx.moveTo(leftShoulder.x, shoulderCenter.y);
     ctx.lineTo(leftElbow.x, leftElbow.y);
     ctx.stroke();
-    
     ctx.beginPath();
     ctx.moveTo(rightShoulder.x, shoulderCenter.y);
     ctx.lineTo(rightElbow.x, rightElbow.y);
     ctx.stroke();
-
-    // Forearms (shirt sleeves)
     ctx.lineWidth = armWidth * 0.85;
     ctx.beginPath();
     ctx.moveTo(leftElbow.x, leftElbow.y);
     ctx.lineTo(leftWrist.x, leftWrist.y);
     ctx.stroke();
-    
     ctx.beginPath();
     ctx.moveTo(rightElbow.x, rightElbow.y);
     ctx.lineTo(rightWrist.x, rightWrist.y);
     ctx.stroke();
-
-    // Hands (back view - more detailed)
     ctx.fillStyle = '#D4A574';
     const handSize = shoulderWidth * 0.1;
     ctx.beginPath();
@@ -271,9 +232,7 @@ function Game1() {
     ctx.ellipse(rightWrist.x, rightWrist.y, handSize * 0.8, handSize, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // ========== CLOTHING - PANTS ==========
-    // Main pants body
-    ctx.fillStyle = '#34495E'; // Dark gray/blue pants
+    ctx.fillStyle = '#34495E';
     ctx.beginPath();
     ctx.moveTo(leftHip.x - hipWidth * 0.05, hipCenter.y);
     ctx.lineTo(rightHip.x + hipWidth * 0.05, hipCenter.y);
@@ -282,20 +241,17 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // Pants pockets (back view)
     ctx.fillStyle = '#2C3E50';
     const pocketWidth = hipWidth * 0.12;
     const pocketHeight = torsoHeight * 0.15;
-    
-    // Left pocket
+
     ctx.fillRect(
       leftHip.x - hipWidth * 0.15,
       hipCenter.y + torsoHeight * 0.1,
       pocketWidth,
       pocketHeight
     );
-    
-    // Right pocket
+
     ctx.fillRect(
       rightHip.x + hipWidth * 0.03,
       hipCenter.y + torsoHeight * 0.1,
@@ -303,10 +259,8 @@ function Game1() {
       pocketHeight
     );
 
-    // ========== LEGS ==========
     const legWidth = hipWidth * 0.15;
-    
-    // Left leg (pants)
+
     ctx.fillStyle = '#34495E';
     ctx.beginPath();
     ctx.moveTo(leftHip.x, hipCenter.y + torsoHeight * 0.3);
@@ -316,8 +270,7 @@ function Game1() {
     ctx.lineTo(leftHip.x + legWidth * 0.5, leftKnee.x < leftHip.x ? leftKnee.x - legWidth * 0.3 : leftKnee.x + legWidth * 0.3);
     ctx.closePath();
     ctx.fill();
-    
-    // Left lower leg
+
     ctx.beginPath();
     ctx.moveTo(leftKnee.x, leftKnee.y);
     ctx.lineTo(leftKnee.x - legWidth * 0.4, leftAnkle.x < leftKnee.x ? leftAnkle.x - legWidth * 0.2 : leftAnkle.x + legWidth * 0.2);
@@ -327,7 +280,6 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // Right leg (pants)
     ctx.beginPath();
     ctx.moveTo(rightHip.x, hipCenter.y + torsoHeight * 0.3);
     ctx.lineTo(rightHip.x - legWidth * 0.5, rightKnee.x < rightHip.x ? rightKnee.x - legWidth * 0.3 : rightKnee.x + legWidth * 0.3);
@@ -336,8 +288,7 @@ function Game1() {
     ctx.lineTo(rightHip.x + legWidth * 0.5, rightKnee.x < rightHip.x ? rightKnee.x - legWidth * 0.3 : rightKnee.x + legWidth * 0.3);
     ctx.closePath();
     ctx.fill();
-    
-    // Right lower leg
+
     ctx.beginPath();
     ctx.moveTo(rightKnee.x, rightKnee.y);
     ctx.lineTo(rightKnee.x - legWidth * 0.4, rightAnkle.x < rightKnee.x ? rightAnkle.x - legWidth * 0.2 : rightAnkle.x + legWidth * 0.2);
@@ -347,12 +298,10 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // ========== SHOES ==========
-    ctx.fillStyle = '#1A1A1A'; // Black shoes
+    ctx.fillStyle = '#1A1A1A';
     const footWidth = hipWidth * 0.18;
     const footHeight = hipWidth * 0.12;
-    
-    // Left shoe (more detailed)
+
     ctx.beginPath();
     ctx.moveTo(leftAnkle.x - footWidth * 0.4, leftAnkle.y);
     ctx.lineTo(leftAnkle.x + footWidth * 0.6, leftAnkle.y);
@@ -360,8 +309,7 @@ function Game1() {
     ctx.lineTo(leftAnkle.x - footWidth * 0.5, leftAnkle.y + footHeight);
     ctx.closePath();
     ctx.fill();
-    
-    // Right shoe
+
     ctx.beginPath();
     ctx.moveTo(rightAnkle.x - footWidth * 0.4, rightAnkle.y);
     ctx.lineTo(rightAnkle.x + footWidth * 0.6, rightAnkle.y);
@@ -370,7 +318,6 @@ function Game1() {
     ctx.closePath();
     ctx.fill();
 
-    // Shoe soles
     ctx.fillStyle = '#2C2C2C';
     ctx.fillRect(leftAnkle.x - footWidth * 0.5, leftAnkle.y + footHeight, footWidth, footHeight * 0.3);
     ctx.fillRect(rightAnkle.x - footWidth * 0.5, rightAnkle.y + footHeight, footWidth, footHeight * 0.3);
@@ -378,9 +325,6 @@ function Game1() {
     ctx.restore();
   };
 
-  // -------------------------------
-  // INIT POSE LANDMARKER
-  // -------------------------------
   const initPoseLandmarker = async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
@@ -396,7 +340,7 @@ function Game1() {
         numPoses: 1
       });
     } catch (error) {
-      console.error('Error initializing PoseLandmarker:', error);
+      console.error('Error initializing PoseLandmarker: ', error);
     }
   };
 
@@ -412,7 +356,6 @@ function Game1() {
           return;
         }
 
-        // Check if video has valid dimensions
         if (video.videoWidth === 0 || video.videoHeight === 0) {
           processLoopRef.current = requestAnimationFrame(processLoop);
           return;
@@ -424,16 +367,14 @@ function Game1() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Detect pose and draw avatar
         try {
           const now = performance.now();
           const results = poseLandmarkerRef.current.detectForVideo(video, now);
 
           if (results.landmarks && results.landmarks.length > 0) {
-            drawAvatarFromBack(ctx, results.landmarks[0], canvas.width, canvas.height);
+            drawAvatar(ctx, results.landmarks[0], canvas.width, canvas.height);
           }
         } catch (error) {
-          // Silently handle errors during processing (video might not be ready)
           console.warn('Pose detection error:', error);
         }
 
@@ -445,14 +386,10 @@ function Game1() {
     }
   };
 
-  // -------------------------------
-  // USE EFFECT INIT
-  // -------------------------------
   useEffect(() => {
     doApi();
     const initialize = async () => {
       await initPoseLandmarker();
-      // Wait a bit for pose landmarker to be ready
       setTimeout(() => {
         initAvatarRendering();
       }, 500);
@@ -460,70 +397,53 @@ function Game1() {
     initialize();
   }, []);
 
-  // -------------------------------
-  // VOICE FEEDBACK (TEXT-TO-SPEECH)
-  // -------------------------------
+
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-    const pickVoice = () => {
+    const specificVoice = () => {
       const voices = window.speechSynthesis.getVoices?.() || [];
       if (!voices.length) return;
-
-      // Prefer clearly female English voices by name
-      const femaleCandidates = voices.filter(
-        (v) =>
-          v.lang.startsWith("en") &&
-          /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(
-            v.name
-          ) &&
+      const females = voices.filter(
+        (v) => v.lang.startsWith("en") && 
+        /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(v.name) &&
           !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
       );
 
-      preferredVoiceRef.current =
-        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+      voiceRef.current = females[0] || voices.find((v) => v.lang.startsWith("en")) || null;
     };
-
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
+    specificVoice();
+    window.speechSynthesis.onvoiceschanged = specificVoice;
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
   }, []);
 
-  // Speak feedback changes
   useEffect(() => {
-    // Only speak meaningful, short feedback messages
     if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
 
-    // Avoid repeating the same feedback again and again
-    if (feedback === lastSpokenFeedbackRef.current) return;
-    lastSpokenFeedbackRef.current = feedback;
+    if (feedback === lastFeedbackVoiceRef.current) return;
 
-    const utterance = new SpeechSynthesisUtterance(feedback);
+    lastFeedbackVoiceRef.current = feedback;
+    const phrase = new SpeechSynthesisUtterance(feedback);
 
-    // Use the preferred (female) voice if we have one
-    if (preferredVoiceRef.current) {
-      utterance.voice = preferredVoiceRef.current;
-    }
+    if (voiceRef.current) phrase.voice = voiceRef.current;
 
-    utterance.lang = "en-US";
+    phrase.lang = "en-US";
 
     if (feedback === "Perfect!") {
-      utterance.rate = 1.5;        // קצת יותר מהיר = אנרגיה
-      utterance.pitch = 2.0;       // גבוה יותר = שמח ומרומם
-      utterance.volume = 1.0;      // מקסימום קול
-      utterance.text = "Perfect!!!"; // הוספת סימני קריאה ואימוג׳י לחיוניות
+      phrase.rate = 1.5;
+      phrase.pitch = 2.0;
+      phrase.volume = 1.0;
     } else {
-      utterance.rate = 0.9;
-      utterance.pitch = 1.2;
-      utterance.volume = 0.9;
+      phrase.rate = 0.9;
+      phrase.pitch = 1.2;
+      phrase.volume = 0.9;
     }
 
-    // Cancel any ongoing speech and speak the latest feedback
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(phrase);
 
     return () => {
       window.speechSynthesis.cancel();
@@ -542,118 +462,105 @@ function Game1() {
   }
 
   const startGame = async () => {
-  // Enter fullscreen when starting the game
-  if (!document.fullscreenElement) {
-    toggleFullscreen();
-  }
+    bgMusicRef.current.loop = true;
+    bgMusicRef.current.volume = 0.1;
+    bgMusicRef.current.play().catch(err => console.error("Audio play error:", err));
 
-  setIsPlaying(true);
-  setGameArr([false, false, false]);
-  leftStepCompletedRef.current = false;
-  rightStepCompletedRef.current = false;
-  handsPerfectCountRef.current = 0;
-  handsWerePerfectUpRef.current = false;
-  handsWerePerfectDownRef.current = false;
-
-  // ⏳ wait 3 seconds before starting video + timer
-  setTimeout(() => {
-    // ▶️ start guide video
-    if (guideVideoRef.current) {
-      guideVideoRef.current
-        .play()
-        .catch(err => console.error('Guide video play error:', err));
+    setIsPlaying(true);
+    if (!document.fullscreenElement) {
+      toggleFullscreen();
     }
 
-    // ▶️ ensure camera keeps running
-    if (videoRef.current && videoRef.current.paused) {
-      videoRef.current
-        .play()
-        .catch(err => console.error('Camera play error:', err));
-    }
+    setIsPlaying(true);
+    setGameArr([false, false, false]);
+    leftStepCompletedRef.current = false;
+    rightStepCompletedRef.current = false;
+    handsPositionCountRef.current = 0;
+    handsWerePerfectUpRef.current = false;
+    handsWerePerfectDownRef.current = false;
 
-    // ⏱️ start timer AFTER delay
-    const startTime = Date.now();
-    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-
-    timerIntervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      if (!poseLandmarkerRef.current || !videoRef.current) return;
-      
-      // Check if video has valid dimensions before processing
-      if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
-        return;
-      }
-      
-      const now = performance.now();
-      let results;
-      try {
-        results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
-      } catch (error) {
-        // Silently handle errors during processing
-        console.warn('Pose detection error in timer:', error);
-        return;
+    setTimeout(() => {
+      if (guideVideoRef.current) {
+        guideVideoRef.current
+          .play()
+          .catch(err => console.error('Guide video play error:', err));
       }
 
-      if (!results.landmarks || results.landmarks.length === 0) {
-        setFeedback('No person detected');
-        return;
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current
+          .play()
+          .catch(err => console.error('Camera play error:', err));
       }
-      // noDetectionCountRef.current = 0;
 
-      const landmarks = results.landmarks[0];
-      const isRightPosition = (landmarks[10].x < landmarks[24].x);
-      const isLeftPosition = (landmarks[9].x > landmarks[23].x);
-      
-      // FIX START: Hand Repetition Logic
-      if (elapsed >= 1000 && elapsed <= 10000) {
-        if (handsPerfectCountRef.current < 3) {
-          setFeedback(`Raise both hands up and down (${handsPerfectCountRef.current}/3)`);
-          
-          const handsAboveShoulders = (landmarks[15].y < landmarks[11].y && landmarks[16].y < landmarks[12].y);
-          const handsBelowHips = (landmarks[15].y > landmarks[23].y && landmarks[16].y > landmarks[24].y);
+      const startTime = Date.now();
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
-          if (handsAboveShoulders) {
-            handsWerePerfectUpRef.current = true;
-          }
+      timerIntervalRef.current = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if (!poseLandmarkerRef.current || !videoRef.current) return;
 
-          if (handsBelowHips && handsWerePerfectUpRef.current) {
-            handsPerfectCountRef.current++;
-            handsWerePerfectUpRef.current = false; // Reset for next rep
-            if (handsPerfectCountRef.current >= 3) {
-               setFeedback('Perfect!');
-               setGameArr(prev => [true, prev[1], prev[2]]);
+        if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+          return;
+        }
+        
+        const now = performance.now();
+        let results;
+        try {
+          results = poseLandmarkerRef.current.detectForVideo(videoRef.current, now);
+        } catch (error) {
+          console.warn('Pose detection error in timer:', error);
+          return;
+        }
+
+        if (!results.landmarks || results.landmarks.length === 0) {
+          setFeedback('No person detected');
+          return;
+        }
+        const landmarks = results.landmarks[0];
+        const isRightPosition = (landmarks[10].x < landmarks[24].x);
+        const isLeftPosition = (landmarks[9].x > landmarks[23].x);
+
+        if (elapsed >= 1000 && elapsed <= 10000) {
+          if (handsPositionCountRef.current < 3) {
+            setFeedback(`Raise both hands up and down`);
+            const handsAboveShoulders = (landmarks[15].y < landmarks[11].y && landmarks[16].y < landmarks[12].y);
+            const handsBelowHips = (landmarks[15].y > landmarks[23].y && landmarks[16].y > landmarks[24].y);
+
+            if (handsAboveShoulders) handsWerePerfectUpRef.current = true;
+
+            if (handsBelowHips && handsWerePerfectUpRef.current) {
+              handsPositionCountRef.current++;
+              handsWerePerfectUpRef.current = false;
+              if (handsPositionCountRef.current >= 3) {
+                setFeedback('Perfect!');
+                setGameArr(prev => [true, prev[1], prev[2]]);
+              }
             }
+          } else setFeedback('Perfect!');
+        } 
+        else if (elapsed >= 10000 && elapsed <= 20000) {
+          if (leftStepCompletedRef.current) {
+            setFeedback('Perfect!');
+          } else if (!isLeftPosition) {
+            setFeedback('Move to the left');
+          } else {
+            setFeedback('Perfect!');
+            setGameArr(prev => [prev[0], true, prev[2]]);
+            leftStepCompletedRef.current = true;
           }
-        } else {
-          setFeedback('Perfect!');
+        } else if (elapsed >= 20000 && elapsed <= 26000) {
+          if (rightStepCompletedRef.current) {
+            setFeedback('Perfect!');
+          } else if (!isRightPosition) {
+            setFeedback('Move to the right');
+          } else {
+            setFeedback('Perfect!');
+            setGameArr(prev => [prev[0], prev[1], true]);
+            rightStepCompletedRef.current = true;
+          }
         }
-      } 
-      // FIX END
-      else if (elapsed >= 10000 && elapsed <= 20000) {
-        // Left step: once perfect, stay perfect even if they move away
-        if (leftStepCompletedRef.current) {
-          setFeedback('Perfect!');
-        } else if (!isLeftPosition) {
-          setFeedback('Move to the left');
-        } else {
-          setFeedback('Perfect!');
-          setGameArr(prev => [prev[0], true, prev[2]]);
-          leftStepCompletedRef.current = true;
-        }
-      } else if (elapsed >= 20000 && elapsed <= 26000) {
-        // Right step: once perfect, stay perfect even if they move away
-        if (rightStepCompletedRef.current) {
-          setFeedback('Perfect!');
-        } else if (!isRightPosition) {
-          setFeedback('Move to the right');
-        } else {
-          setFeedback('Perfect!');
-          setGameArr(prev => [prev[0], prev[1], true]);
-          rightStepCompletedRef.current = true;
-        }
-      }
-    }, 100);
-  }, 3000);
+      }, 100);
+    }, 3000);
 };
 
   const stopCamera = () => {
@@ -667,7 +574,6 @@ function Game1() {
       if (videoRef.current) {
         videoRef.current.pause();
       }
-      // Stop the timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -677,9 +583,6 @@ function Game1() {
     }
   };
 
-  // -------------------------------
-  // RENDER
-  // -------------------------------
   return (
     <div
       ref={containerRef}
@@ -697,7 +600,6 @@ function Game1() {
           height: '100%'
         }}
       >
-        {/* Live Camera */}
         <video
           ref={videoRef}
           autoPlay
@@ -713,19 +615,18 @@ function Game1() {
             opacity: 0
           }}
         />
-
-        {/* Background MP4 */}
         <video
           ref={guideVideoRef}
           src="src/assets/game1_video.mp4"
           muted
           playsInline
           onEnded={() => {
+            bgMusicRef.current.pause();
+            bgMusicRef.current.currentTime = 0;
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
             }
-            // send to backend route /games
             (async () => {
               let dataBody = {
                 level: myInfo.difficulty,
@@ -740,9 +641,9 @@ function Game1() {
                   isValid.current = true;
 
                 }
-                console.log('arr sent to /games', gameArr);
+                console.log('Game results sent to /games', gameArr);
               } catch (err) {
-                console.error('Failed to send arr to backend:', err);
+                console.error('Failed to send game results to backend:', err);
               }
             })();
           }}
@@ -756,8 +657,6 @@ function Game1() {
             opacity: 0.7
           }}
         />
-
-        {/* Pose Canvas */}
         <canvas
           ref={canvasRef}
           style={{
@@ -768,8 +667,6 @@ function Game1() {
             pointerEvents: 'none'
           }}
         />
-
-        {/* Feedback */}
         <div
           style={{
             position: 'absolute',
@@ -814,14 +711,11 @@ function Game1() {
           </div>
         )}
       </div>
-
-      {/* Continue Button */}
       <button
         onClick={() => {
-
           stopCamera();
           nav('/game2', { state: { gameId: idGame, from: 'game1' } });
-          console.log('Navigating to game2 with gameId:', idGame);
+          console.log('Navigating to game2 with gameId: ', idGame);
           // nav('/' + fromPage);
         }}
         disabled={!isValid.current}
