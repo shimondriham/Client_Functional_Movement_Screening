@@ -5,7 +5,7 @@ import HeaderClient from './headerClient';
 function LayoutClient() {
     return (
         <React.Fragment>
-            <HeaderClient />
+            {/* <HeaderClient /> */}
             <Outlet />
         </React.Fragment>
     )
