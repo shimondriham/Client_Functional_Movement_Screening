@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
-// ייבוא הלוגו כ-PNG
 import Logo from '../assets/logo.png';
 
 function CameraCalibration() {
@@ -13,77 +12,67 @@ function CameraCalibration() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [feedback, setFeedback] = useState('Initializing...');
+  const [feedback, setFeedback] = useState('');
   const isValid = useRef(false);
   const poseLandmarkerRef = useRef(null);
-  
-  // Refs for logic and voice tracking
-  const currentFeedbackRef = useRef('Initializing...');
-  const lastSpokenFeedbackRef = useRef("");
-  const preferredVoiceRef = useRef(null);
 
-  // -------------------------------
-  // VOICE INITIALIZATION
-  // -------------------------------
+  const currentFeedbackRef = useRef('');
+  const lastFeedbackVoiceRef = useRef("");
+  const voiceRef = useRef(null);
+
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-    const pickVoice = () => {
+    const specificVoice = () => {
       const voices = window.speechSynthesis.getVoices?.() || [];
       if (!voices.length) return;
 
-      const femaleCandidates = voices.filter(
+      const females = voices.filter(
         (v) =>
           v.lang.startsWith("en") &&
           /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(v.name) &&
           !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
       );
 
-      preferredVoiceRef.current =
-        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+      voiceRef.current =
+        females[0] || voices.find((v) => v.lang.startsWith("en")) || null;
     };
 
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
+    specificVoice();
+    window.speechSynthesis.onvoiceschanged = specificVoice;
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
   }, []);
 
-  // -------------------------------
-  // VOICE FEEDBACK TRIGGER
-  // -------------------------------
   useEffect(() => {
     if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
-    if (feedback === lastSpokenFeedbackRef.current || feedback === 'Initializing...') return;
+    if (feedback === lastFeedbackVoiceRef.current) return;
 
-    lastSpokenFeedbackRef.current = feedback;
-    const utterance = new SpeechSynthesisUtterance(feedback);
+    lastFeedbackVoiceRef.current = feedback;
+    const phrase = new SpeechSynthesisUtterance(feedback);
 
-    if (preferredVoiceRef.current) {
-      utterance.voice = preferredVoiceRef.current;
+    if (voiceRef.current) {
+      phrase.voice = voiceRef.current;
     }
 
-    utterance.lang = "en-US";
+    phrase.lang = "en-US";
 
     if (feedback === "Perfect!") {
-      utterance.rate = 1.3;
-      utterance.pitch = 1.4;
-      utterance.volume = 1.0;
+      phrase.rate = 1.3;
+      phrase.pitch = 1.4;
+      phrase.volume = 1.0;
     } else {
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.9;
+      phrase.rate = 1.0;
+      phrase.pitch = 1.0;
+      phrase.volume = 0.9;
     }
 
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(phrase);
   }, [feedback]);
 
-  // -------------------------------
-  // MAIN AI LOGIC
-  // -------------------------------
   useEffect(() => {
     let animationId;
 
@@ -123,7 +112,7 @@ function CameraCalibration() {
         };
       } catch (err) {
         console.error('Camera access error:', err);
-        setFeedback('Camera access denied');
+        setFeedback('Camera access denied!');
       }
     };
 
@@ -153,7 +142,7 @@ function CameraCalibration() {
           } else {
             const landmarks = results.landmarks[0];
             
-            ctx.fillStyle = '#F2743E';
+            ctx.fillStyle = '#e4713f';
             landmarks.forEach(point => {
               const x = point.x * videoWidth;
               const y = point.y * videoHeight;
@@ -162,14 +151,14 @@ function CameraCalibration() {
               ctx.fill();
             });
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.68)';
             ctx.lineWidth = 3; 
-            const connections = [
+            const bodyConnections = [
               [11, 12], [12, 14], [14, 16], [11, 13], [13, 15],
               [12, 24], [11, 23], [23, 24],
               [24, 26], [26, 28], [28, 32], [23, 25], [25, 27], [27, 31]
             ];
-            connections.forEach(([start, end]) => {
+            bodyConnections.forEach(([start, end]) => {
               const p1 = landmarks[start];
               const p2 = landmarks[end];
               ctx.beginPath();
@@ -197,7 +186,6 @@ function CameraCalibration() {
               Math.abs(centerY - videoHeight / 2) < toleranceY;
             const isVisible = boxHeight > videoHeight * 0.5 && boxHeight < videoHeight * 0.95;
 
-            // RESTORED LOGIC: Permanent activation once perfect
             if(!isValid.current) {
               isValid.current = isCentered && isVisible;
             }
@@ -246,7 +234,7 @@ function CameraCalibration() {
       position: 'relative'
     },
     header: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '8px' },
-    brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#F2743E' },
+    brandItalic: { fontFamily: 'cursive', fontStyle: 'italic', color: '#e4713f' },
     videoBox: {
       position: 'relative',
       width: '900px', 
@@ -268,7 +256,7 @@ function CameraCalibration() {
       borderRadius: '50px',
       fontWeight: '800',
       fontSize: '1.2rem',
-      color: feedback === 'Perfect!' ? '#28a745' : '#F2743E',
+      color: feedback === 'Perfect!' ? '#28a745' : '#e4713f',
       zIndex: 10,
       boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
     },
@@ -277,7 +265,7 @@ function CameraCalibration() {
       bottom: '40px',
       left: '50%',
       transform: 'translateX(-50%)',
-      backgroundColor: '#F2743E',
+      backgroundColor: '#e4713f',
       color: 'white',
       border: 'none',
       borderRadius: '50px',

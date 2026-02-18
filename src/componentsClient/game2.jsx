@@ -19,14 +19,13 @@ function Game2() {
   const processLoopRef = useRef(null);
   const [myInfo, setmyInfo] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const lastSpokenFeedbackRef = useRef("");
-  const preferredVoiceRef = useRef(null);
+  const lastFeedbackVoiceRef = useRef("");
+  const voiceRef = useRef(null);
   const leftStepCompletedRef = useRef(false);
   const rightStepCompletedRef = useRef(false);
+  const bgMusicRef = useRef(new Audio("src/assets/background_music.mp4"));
 
-  // -------------------------------
-  // FULLSCREEN TOGGLE
-  // -------------------------------
+
   const toggleFullscreen = () => {
     const elem = containerRef.current;
     if (!elem) return;
@@ -85,8 +84,6 @@ function Game2() {
     }
   };
 
-
-  // Initializes the camera and a basic render loop (no segmentation)
   const initCameraLoop = async () => {
     try {
       await startCamera();
@@ -107,17 +104,14 @@ function Game2() {
     initPoseLandmarker();
   }, []);
 
-  // -------------------------------
-  // VOICE FEEDBACK (TEXT-TO-SPEECH)
-  // -------------------------------
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-    const pickVoice = () => {
+    const specificVoice = () => {
       const voices = window.speechSynthesis.getVoices?.() || [];
       if (!voices.length) return;
 
-      const femaleCandidates = voices.filter(
+      const females = voices.filter(
         (v) =>
           v.lang.startsWith("en") &&
           /female|woman|zira|susan|samantha|eva|sofia|nova|jenny|aria|helena/i.test(
@@ -126,12 +120,12 @@ function Game2() {
           !/david|mark|george|michael|daniel|james|guy/i.test(v.name)
       );
 
-      preferredVoiceRef.current =
-        femaleCandidates[0] || voices.find((v) => v.lang.startsWith("en")) || null;
+      voiceRef.current =
+        females[0] || voices.find((v) => v.lang.startsWith("en")) || null;
     };
 
-    pickVoice();
-    window.speechSynthesis.onvoiceschanged = pickVoice;
+    specificVoice();
+    window.speechSynthesis.onvoiceschanged = specificVoice;
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
@@ -141,30 +135,29 @@ function Game2() {
   useEffect(() => {
     if (!feedback || typeof window === "undefined" || !window.speechSynthesis) return;
 
-    if (feedback === lastSpokenFeedbackRef.current) return;
-    lastSpokenFeedbackRef.current = feedback;
+    if (feedback === lastFeedbackVoiceRef.current) return;
+    lastFeedbackVoiceRef.current = feedback;
 
-    const utterance = new SpeechSynthesisUtterance(feedback);
+    const phrase = new SpeechSynthesisUtterance(feedback);
 
-    if (preferredVoiceRef.current) {
-      utterance.voice = preferredVoiceRef.current;
+    if (voiceRef.current) {
+      phrase.voice = voiceRef.current;
     }
 
-    utterance.lang = "en-US";
+    phrase.lang = "en-US";
 
     if (feedback === "Perfect!") {
-      utterance.rate = 1.3;
-      utterance.pitch = 1.8;
-      utterance.volume = 1.0;
+      phrase.rate = 1.3;
+      phrase.pitch = 1.8;
+      phrase.volume = 1.0;
     } else {
-      utterance.rate = 0.9;
-      utterance.pitch = 1.2;
-      utterance.volume = 0.9;
+      phrase.rate = 0.9;
+      phrase.pitch = 1.2;
+      phrase.volume = 0.9;
     }
 
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-
+    window.speechSynthesis.speak(phrase);
     return () => {
       window.speechSynthesis.cancel();
     };
@@ -181,7 +174,9 @@ function Game2() {
   };
 
     const startGame = async () => {
-      // Enter fullscreen when starting the game
+      bgMusicRef.current.loop = true;
+      bgMusicRef.current.volume = 0.1;
+      bgMusicRef.current.play().catch(err => console.error("Audio play error:", err));
       if (!document.fullscreenElement) {
         toggleFullscreen();
       }
@@ -321,6 +316,8 @@ function Game2() {
           muted
           playsInline
           onEnded={() => {
+            bgMusicRef.current.pause();
+            bgMusicRef.current.currentTime = 0;
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
